@@ -1,18 +1,33 @@
 import { useForm } from "react-hook-form";
+import { registerUser } from "../../lib/api/authApi";
+
 import FormInput from "../../components/ui/FormInput";
 import Button from "../../components/ui/Button";
 
 const Register = () => {
-
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => {
-    console.log(data);
-    alert("Registered Successfully");
+  const password = watch("password");
+
+  const onSubmit = async (data) => {
+    try {
+      // Don't send confirmPassword to backend
+      const { confirmPassword, ...registerData } = data;
+
+      const response = await registerUser(registerData);
+
+      console.log("Register Response:", response.data);
+
+      alert("Registration Successful");
+    } catch (error) {
+      console.error(error.response?.data || error.message);
+      alert("Registration Failed");
+    }
   };
 
   return (
@@ -28,6 +43,7 @@ const Register = () => {
 
         <form onSubmit={handleSubmit(onSubmit)}>
 
+          {/* Name */}
           <div className="mb-5">
             <span className="text-2xl flex font-semibold text-gray-900">
               Name
@@ -37,12 +53,15 @@ const Register = () => {
               type="text"
               placeholder="Enter your name"
               name="name"
-              label="Name"
               register={register}
               errors={errors}
+              rules={{
+                required: "Name is required",
+              }}
             />
           </div>
 
+          {/* Email */}
           <div className="mb-5">
             <span className="text-2xl flex font-semibold text-gray-900">
               Email
@@ -52,12 +71,15 @@ const Register = () => {
               type="email"
               placeholder="Enter your email"
               name="email"
-              label="Email"
               register={register}
               errors={errors}
+              rules={{
+                required: "Email is required",
+              }}
             />
           </div>
 
+          {/* Password */}
           <div className="mb-5">
             <span className="text-2xl flex font-semibold text-gray-900">
               Password
@@ -67,9 +89,31 @@ const Register = () => {
               type="password"
               placeholder="Enter your password"
               name="password"
-              label="Password"
               register={register}
               errors={errors}
+              rules={{
+                required: "Password is required",
+              }}
+            />
+          </div>
+
+          {/* Confirm Password */}
+          <div className="mb-5">
+            <span className="text-2xl flex font-semibold text-gray-900">
+              Confirm Password
+            </span>
+
+            <FormInput
+              type="password"
+              placeholder="Confirm your password"
+              name="confirmPassword"
+              register={register}
+              errors={errors}
+              rules={{
+                required: "Confirm Password is required",
+                validate: (value) =>
+                  value === password || "Passwords do not match",
+              }}
             />
           </div>
 
@@ -79,7 +123,6 @@ const Register = () => {
           />
 
         </form>
-
       </div>
     </section>
   );
