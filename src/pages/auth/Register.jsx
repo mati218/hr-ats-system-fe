@@ -12,23 +12,26 @@ const Register = () => {
     formState: { errors },
   } = useForm();
 
-  const password = watch("password");
 
-  const onSubmit = async (data) => {
-    try {
-      // Don't send confirmPassword to backend
-      const { confirmPassword, ...registerData } = data;
+const password = watch("password");
+const onSubmit = async (data) => {
+  console.log("FORM DATA:", data);
 
-      const response = await registerUser(registerData);
 
-      console.log("Register Response:", response.data);
+  try {
+   console.log("SENDING:", data);
 
-      alert("Registration Successful");
-    } catch (error) {
-      console.error(error.response?.data || error.message);
-      alert("Registration Failed");
-    }
-  };
+  const response = await registerUser(data);  
+
+    console.log("Register Response:", response.data);
+
+    alert("Registration Successful");
+
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    alert("Registration Failed");
+  }
+};
 
   return (
     <section
