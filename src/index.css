@@ -12,7 +12,17 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-* {
+body {
+  margin: 0;
+}
+
+#root {
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
 }
 
@@ -20,10 +30,6 @@ html,
 body,
 #root {
   min-height: 100%;
-}
-
-body {
-  margin: 0;
 }
 
 input,
