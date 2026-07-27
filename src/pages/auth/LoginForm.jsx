@@ -1,6 +1,5 @@
 import { useForm } from "react-hook-form";
-
-import loginUser from "../../lib/api/authApi";
+import { loginUser } from "../../lib/api/authApi";
 
 import Checkbox from "../../components/ui/Checkbox";
 import Button from "../../components/ui/Button";
@@ -16,23 +15,39 @@ const LoginForm = () => {
 
 
 const onSubmit = async (data) => {
-
   try {
-
     const response = await loginUser(data);
 
-    console.log(response.data);
+    console.log("Response:", response.data);
+
+    // Save token
+    localStorage.setItem("token", response.data.token);
+
+    // Save logged-in user
+    localStorage.setItem(
+      "user",
+      JSON.stringify(response.data.data)
+    );
 
     alert("Successfully logged in");
 
-  } catch (error) {
+    // Verify localStorage
+    console.log("Token:", localStorage.getItem("token"));
+    console.log(
+      "User:",
+      JSON.parse(localStorage.getItem("user"))
+    );
 
-    console.log(error);
-    alert("Login failed");
+  }catch (error) {
+  console.log("Full Error:", error);
+  console.log("Response:", error.response);
+  console.log("Data:", error.response?.data);
+  console.log("Status:", error.response?.status);
 
-  }
-
+  alert("Login failed");
+}
 };
+
 
   return (
     <section
@@ -119,4 +134,4 @@ const onSubmit = async (data) => {
   );
 };
 
-export default LoginForm;
+export default LoginForm;     
