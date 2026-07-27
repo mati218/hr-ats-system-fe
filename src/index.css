@@ -12,16 +12,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  min-height: 100%;
-}
-
 body {
   margin: 0;
 }
@@ -34,6 +24,17 @@ body {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+input,
+button {
+  font: inherit;
 }
 
 button {
