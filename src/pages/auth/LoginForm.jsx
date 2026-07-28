@@ -1,17 +1,21 @@
 import { useForm } from "react-hook-form";
 import { loginUser } from "../../lib/api/authApi";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext"
 
 import Checkbox from "../../components/ui/Checkbox";
 import Button from "../../components/ui/Button";
 import FormInput from "../../components/ui/FormInput";
 
 const LoginForm = () => {
-
-  const {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+    const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
+
 
 
 const onSubmit = async (data) => {
@@ -20,10 +24,11 @@ const onSubmit = async (data) => {
 
     console.log("Response:", response.data);
 
-    // Save token
+    login(response.data.data, response.data.token);
+   
     localStorage.setItem("token", response.data.token);
 
-    // Save logged-in user
+    
     localStorage.setItem(
       "user",
       JSON.stringify(response.data.data)
@@ -31,7 +36,8 @@ const onSubmit = async (data) => {
 
     alert("Successfully logged in");
 
-    // Verify localStorage
+     navigate("/dashboard");
+
     console.log("Token:", localStorage.getItem("token"));
     console.log(
       "User:",
@@ -39,9 +45,13 @@ const onSubmit = async (data) => {
     );
 
   }catch (error) {
+
   console.log("Full Error:", error);
+
   console.log("Response:", error.response);
+
   console.log("Data:", error.response?.data);
+
   console.log("Status:", error.response?.status);
 
   alert("Login failed");

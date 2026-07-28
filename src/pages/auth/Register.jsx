@@ -28,7 +28,9 @@ const onSubmit = async (data) => {
     alert("Registration Successful");
 
   } catch (error) {
+    
     console.error(error.response?.data || error.message);
+
     alert("Registration Failed");
   }
 };
