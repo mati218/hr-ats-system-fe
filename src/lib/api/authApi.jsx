@@ -7,3 +7,10 @@ export const registerUser = (data) => {
 export const loginUser = (data) => {
   return api.post("/auth/login", data);
 };
+
+export const ForgotPasswordApi = (data) => {
+  return api.post("/auth/forgot-password", data);
+};
+export const ResetPasswordApi = (data) => {
+  return api.post("/auth/reset-password", data);
+};

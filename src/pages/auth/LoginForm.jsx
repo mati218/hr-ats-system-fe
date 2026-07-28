@@ -4,6 +4,7 @@ import { loginUser } from "../../lib/api/authApi";
 import Checkbox from "../../components/ui/Checkbox";
 import Button from "../../components/ui/Button";
 import FormInput from "../../components/ui/FormInput";
+import { Link } from "react-router-dom";
 
 const LoginForm = () => {
 
@@ -106,12 +107,12 @@ const onSubmit = async (data) => {
               errors={errors}
             />
 
-            <a
-              href="#"
+            <Link
+              to="/forgot-password"
               className="text-blue-500 text-base sm:text-xl lg:text-2xl"
             >
               Forgot password?
-            </a>
+            </Link>
 
           </div>
 
