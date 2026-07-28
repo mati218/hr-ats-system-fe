@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext"
 import Checkbox from "../../components/ui/Checkbox";
 import Button from "../../components/ui/Button";
 import FormInput from "../../components/ui/FormInput";
+import { Link } from "react-router-dom";
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -116,12 +117,12 @@ const onSubmit = async (data) => {
               errors={errors}
             />
 
-            <a
-              href="#"
+            <Link
+              to="/forgot-password"
               className="text-blue-500 text-base sm:text-xl lg:text-2xl"
             >
               Forgot password?
-            </a>
+            </Link>
 
           </div>
 
