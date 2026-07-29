@@ -5,6 +5,7 @@ import NewUserModal from "./NewUserModal";
 
 const users = [
   {
+    _id: "6a6910bbbb30171f36e8bdfe",
     avatar: "SA",
     name: "Super Admin",
     email: "superadmin@gmail.com",
@@ -14,6 +15,7 @@ const users = [
     lastLogin: "Today - 09:14",
   },
   {
+    _id: "6a6910bbbb30171f36e8bdff",
     avatar: "AK",
     name: "Ayesha Khan",
     email: "recruiter@gmail.com",
@@ -23,6 +25,7 @@ const users = [
     lastLogin: "Today - 08:52",
   },
   {
+    _id: "6a6910bbbb30171f36e8be01",
     avatar: "ZR",
     name: "Zehshan Raza",
     email: "interviewer@gmail.com",
@@ -32,6 +35,7 @@ const users = [
     lastLogin: "Yesterday",
   },
   {
+    _id: "6a6910bbbb30171f36e8bdff",
     avatar: "SF",
     name: "Sana Farooq",
     email: "sana.f@gmail.com",
@@ -43,6 +47,7 @@ const users = [
 ];
 
 const UserManagement = () => {
+  const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
   const columns = [
@@ -81,16 +86,25 @@ const UserManagement = () => {
 
       </div>
 
+     <Table
+  columns={columns}
+  data={users}
+  onEdit={(user) => {
+    setSelectedUser(user);
+    setShowModal(true);
+  }}
+/>
 
-      <Table 
-        columns={columns} 
-        data={users} 
-      />
       <NewUserModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-      />
-    </div>
+      isOpen={showModal}
+     onClose={() => {
+    setShowModal(false);
+    setSelectedUser(null);
+  }}
+  user={selectedUser}
+  />
+</div>
+
   );
 };
 

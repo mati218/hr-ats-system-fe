@@ -14,3 +14,27 @@ export const ForgotPasswordApi = (data) => {
 export const ResetPasswordApi = (data) => {
   return api.post("/auth/reset-password", data);
 };
+
+export const createUser = (data) => {
+  const token = localStorage.getItem("token");
+
+  return api.post(
+    "/user",
+    data,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+};
+
+export const updateUser = (id, data) => {
+  const token = localStorage.getItem("token");
+
+  return api.put("/user/" + id, data, {
+  headers: {
+    Authorization: "Bearer " + localStorage.getItem("token"),
+  },
+})
+};
