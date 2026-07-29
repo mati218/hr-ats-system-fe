@@ -1,73 +1,62 @@
-﻿import { useState } from "react";
-import { Link } from "react-router-dom";
-import InputField from "../components/InputField";
-import Button from "../components/Button";
-import { ResetPasswordApi } from "../lib/api/authApi";
+﻿import { Link, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import InputField from "../components/InputField";
+import Button from "../components/ui/Button";
+import { ResetPasswordApi } from "../lib/api/authApi";
+import { useNavigate } from "react-router-dom";
 
 function ResetPassword() {
+  const { token } = useParams();
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
-    watch,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting, errors },
   } = useForm();
 
-  const password = watch("password");
-
   const submit = async (data) => {
-    console.log("FORM DATA:", data);
+    console.log(data);
 
     try {
-      console.log("SENDING:", data);
+      const response = await ResetPasswordApi({
+        token,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+      });
 
-      const response = await ResetPasswordApi(data);
-
-      console.log("Reset Response:", response.data);
-
-      alert("Password Reset Successfully");
-
+      alert(response.data.message);
+      
+       navigate("/login");
       reset();
     } catch (error) {
-      console.error(error.response?.data || error.message);
-      alert(error.response?.data?.message || "Password Reset Failed");
+      alert(error.response?.data?.message);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-xl rounded-3xl bg-white p-6 shadow-xl ring-1 ring-slate-200 sm:p-8 lg:p-10">
-        <div className="mb-6">
-          <p className="text-sm font-medium text-slate-500">
-            Security
-          </p>
+    <div className="min-h-screen flex justify-center items-center bg-gray-100">
 
-          <h2 className="mt-1 text-2xl font-bold text-slate-900">
-            Reset Password
-          </h2>
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
 
-          <p className="mt-2 text-sm text-slate-600">
-            Choose a new password to secure your account.
-          </p>
-        </div>
+        <h2 className="text-3xl font-bold mb-5">
+          Reset Password
+        </h2>
 
-        <form onSubmit={handleSubmit(submit)} className="space-y-4">
+        <form onSubmit={handleSubmit(submit)}>
+
           <InputField
             label="New Password"
             name="password"
             type="password"
-            placeholder="Enter New Password"
+            placeholder="Enter Password"
             {...register("password", {
               required: "Password is required",
-              minLength: {
-                value: 6,
-                message: "Password must be at least 6 characters",
-              },
             })}
           />
+
           {errors.password && (
-            <p className="text-red-500 text-sm">
+            <p className="text-red-500 mb-3">
               {errors.password.message}
             </p>
           )}
@@ -79,12 +68,11 @@ function ResetPassword() {
             placeholder="Confirm Password"
             {...register("confirmPassword", {
               required: "Confirm Password is required",
-              validate: (value) =>
-                value === password || "Passwords do not match",
             })}
           />
+
           {errors.confirmPassword && (
-            <p className="text-red-500 text-sm">
+            <p className="text-red-500 mb-3">
               {errors.confirmPassword.message}
             </p>
           )}
@@ -92,20 +80,16 @@ function ResetPassword() {
           <Button
             text={isSubmitting ? "Resetting..." : "Reset Password"}
             type="submit"
-            className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700"
           />
 
-          <p className="text-center text-sm text-slate-600">
-            Back to{" "}
-            <Link
-              to="/login"
-              className="font-semibold text-indigo-600 hover:text-indigo-700"
-            >
-              Login
-            </Link>
-          </p>
         </form>
+
+        <Link to="/login">
+          Back to Login
+        </Link>
+
       </div>
+
     </div>
   );
 }
