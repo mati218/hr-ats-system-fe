@@ -1,56 +1,77 @@
-﻿const Table = ({ columns, data }) => {
+﻿const Table = ({ columns, data, onEdit }) => {
+
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <table className="w-full border bg-white">
 
-      <div className="grid grid-cols-[2.2fr_2.5fr_1.5fr_2fr_1.2fr_1.6fr_0.8fr] bg-gray-50 border-b px-6 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
-        {columns.map((column, index) => (
-          <div key={index}>{column}</div>
-        ))}
-      </div>
+      <thead>
+        <tr className="bg-gray-50">
 
-      {data.map((row, index) => (
-        <div
-          key={index}
-          className="grid grid-cols-[2.2fr_2.5fr_1.5fr_2fr_1.2fr_1.6fr_0.8fr] items-center border-b px-6 py-5 hover:bg-gray-50"
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-400 font-semibold text-white">
-              {row.avatar}
-            </div>
+          {
+            columns.map((column, index) => (
+              <th key={index} className="px-4 py-3 text-left">
+                {column}
+              </th>
+            ))
+          }
 
-            <span className="font-medium text-gray-900">
-              {row.name}
-            </span>
-          </div>
+        </tr>
+      </thead>
 
-          <div className="text-gray-600">
-            {row.email}
-          </div>
+      <tbody>
 
-          <div className="text-gray-700">
-            {row.role}
-          </div>
+        {
+          data.map((user, index) => (
+            <tr key={index} className="border-b">
 
-          <div className="text-gray-700">
-            {row.department}
-          </div>
+              <td className="px-4 py-3 flex items-center gap-3">
 
-         <div className="text-gray-700 font-medium">
-          {row.status}
-          </div>
+                <div className="h-10 w-10 rounded-full bg-violet-400 text-white flex items-center justify-center">
 
-          <div className="text-gray-600">
-            {row.lastLogin}
-          </div>
+                  {user.avatar}
 
-          <div>
-            <button className="font-medium text-blue-600 hover:text-blue-700">
-              Edit →
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
+                </div>
+
+                {user.name}
+
+              </td>
+
+              <td className="px-4 py-3">
+                {user.email}
+              </td>
+
+              <td className="px-4 py-3">
+                {user.role}
+              </td>
+
+              <td className="px-4 py-3">
+                {user.department}
+              </td>
+
+              <td className="px-4 py-3">
+                {user.status}
+              </td>
+
+              <td className="px-4 py-3">
+                {user.lastLogin}
+              </td>
+
+              <td className="px-4 py-3">
+                <button
+                  onClick={() => onEdit(user)}
+                  className="text-blue-600"
+                >
+                  Edit
+                </button>
+
+              </td>
+
+            </tr>
+
+          ))
+        }
+      </tbody>
+
+    </table>
   );
 };
 
