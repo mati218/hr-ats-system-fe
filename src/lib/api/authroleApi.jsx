@@ -5,7 +5,6 @@ import axiosInstance from "./axiosInstance";
 export const getRoles = async()=>{
 
  const response = await axiosInstance.get("/roles");
-
  return response.data;
 
 };
@@ -18,6 +17,19 @@ export const createRole = async(data)=>{
  const response = await axiosInstance.post(
    "/roles",
    data
+ );
+
+ return response.data;
+
+};
+
+
+
+// GET ROLE
+export const getRole = async(id)=>{
+
+ const response = await axiosInstance.get(
+   `/roles/${id}`
  );
 
  return response.data;

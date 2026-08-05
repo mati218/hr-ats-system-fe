@@ -1,82 +1,44 @@
 import Checkbox from "./Checkbox";
 
-function PermissionTable({ modules, register, errors }) {
+function PermissionTable({ modules, register, errors, disabled = false }) {
   return (
-    <div className="overflow-x-auto rounded-lg  bg-white shadow-sm">
+    <div className="mt-4 overflow-x-auto">
       <table className="w-full border-collapse text-left">
-        
         <thead>
           <tr className="bg-slate-50 border-b border-slate-200">
-            <th className="py-3.5 pl-4 text-xs font-semibold uppercase tracking-wider text-slate-600">
-              Module
-            </th>
-            <th className="py-3.5 px-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">
-              View
-            </th>
-            <th className="py-3.5 px-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">
-              Create
-            </th>
-            <th className="py-3.5 px-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">
-              Edit
-            </th>
-            <th className="py-3.5 px-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">
-              Delete
-            </th>
+            <th className="py-3.5 pl-4 text-xs font-semibold uppercase tracking-wider text-slate-600">Module</th>
+            <th className="py-3.5 px-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">View</th>
+            <th className="py-3.5 px-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">Create</th>
+            <th className="py-3.5 px-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">Edit</th>
+            <th className="py-3.5 px-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">Delete</th>
           </tr>
         </thead>
+
         <tbody className="divide-y divide-slate-100">
-          {modules.map((module, index) => (
-            <tr
-              key={index}
-              className="transition-colors hover:bg-slate-50/80"
-            >
+          {modules.map((module) => (
+            <tr key={module.key} className="transition-colors hover:bg-slate-50/80">
               <td className="py-3.5 pl-4 text-sm font-medium text-slate-800">
-                {module}
+                {module.label}
+                <input
+                  type="hidden"
+                  value={module.key}
+                  {...register(`permissions.${module.key}.module`)}
+                />
               </td>
 
-              <td className="py-3.5 px-3 text-center">
-                <div className="flex justify-center">
+              {["view", "create", "edit", "delete"].map((action) => (
+                <td key={action} className="py-3.5 px-3 text-center">
                   <Checkbox
-                    name={`permissions.${index}.view`}
+                    name={`permissions.${module.key}.${action}`}
                     register={register}
                     errors={errors}
+                    disabled={disabled}
                   />
-                </div>
-              </td>
-
-              <td className="py-3.5 px-3 text-center">
-                <div className="flex justify-center">
-                  <Checkbox
-                    name={`permissions.${index}.create`}
-                    register={register}
-                    errors={errors}
-                  />
-                </div>
-              </td>
-
-              <td className="py-3.5 px-3 text-center">
-                <div className="flex justify-center">
-                  <Checkbox
-                    name={`permissions.${index}.edit`}
-                    register={register}
-                    errors={errors}
-                  />
-                </div>
-              </td>
-
-              <td className="py-3.5 px-3 text-center">
-                <div className="flex justify-center">
-                  <Checkbox
-                    name={`permissions.${index}.delete`}
-                    register={register}
-                    errors={errors}
-                  />
-                </div>
-              </td>
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>
-
       </table>
     </div>
   );
