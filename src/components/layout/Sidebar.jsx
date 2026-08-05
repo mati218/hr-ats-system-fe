@@ -70,7 +70,7 @@ const Sidebar = () => {
   ];
 
   return (
-<aside className="w-64 min-h-screen bg-[#11131d] text-white flex flex-col">
+<aside className="w-78 min-h-screen bg-[#11131d] text-white flex flex-col">
       <div className="flex items-center gap-3 p-7">
         <div className="h-11 w-11 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-lg">
           T
@@ -84,14 +84,14 @@ const Sidebar = () => {
 
       <div className="px-6 flex-1">
 
-        <p className="text-xs text-gray-500 uppercase mb-3">
+        <p className="text-s text-gray-500 uppercase mb-3 flex">
           Overview
         </p>
-
+        
         <NavLink
           to="/dashboard"
           className={({ isActive }) =>
-            `flex items-center gap-3 p-3 rounded-xl mb-2 ${
+            `flex items-center gap-1 p-2 rounded-xl mb-2 ${
               isActive
                 ? "bg-blue-600 text-white"
                 : "text-gray-300 hover:bg-gray-800"
@@ -102,7 +102,7 @@ const Sidebar = () => {
           Dashboard
         </NavLink>
 
-        <p className="text-xs text-gray-500 uppercase mt-8 mb-3">
+        <p className="text-s text-gray-500 uppercase gap-1.5 mt-8 mb-3 flex font-semibold">
           Recruitment
         </p>
 
@@ -111,7 +111,7 @@ const Sidebar = () => {
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center gap-3 p-3 rounded-xl mb-2 ${
+              `flex items-center gap-1 p-2 rounded-xl mb-2 ${
                 isActive
                   ? "bg-blue-600 text-white"
                   : "text-gray-300 hover:bg-gray-800"
@@ -123,7 +123,7 @@ const Sidebar = () => {
           </NavLink>
         ))}
 
-        <p className="text-xs text-gray-500 uppercase mt-8 mb-3">
+        <p className="text-s text-gray-500 uppercase mt-8 mb-3 flex">
           Administration
         </p>
 
@@ -132,7 +132,7 @@ const Sidebar = () => {
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center gap-3 p-3 rounded-xl mb-2 ${
+              `flex items-center gap-1 p-2 rounded-xl mb-2 ${
                 isActive
                   ? "bg-blue-600 text-white"
                   : "text-gray-300 hover:bg-gray-800"
@@ -157,7 +157,7 @@ const Sidebar = () => {
           </div>
         </div>
 
-        <button className="mt-5 text-sm text-gray-400 hover:text-white">
+        <button className="mt-4 text-sm text-gray-400 hover:text-white">
           Log out / switch role →
         </button>
       </div>
