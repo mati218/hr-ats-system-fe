@@ -5,15 +5,15 @@ const Checkbox = ({
   errors,
 }) => {
   return (
-    <div>
+    <div className="flex justify-center">
       <label className="flex items-center gap-2">
         <input
           type="checkbox"
-          className="size-6"
+          className="w-5 h-5 cursor-pointer accent-blue-600"
           {...register(name)}
         />
 
-        <span>{label}</span>
+        {label && <span>{label}</span>}
       </label>
 
       {errors?.[name] && (

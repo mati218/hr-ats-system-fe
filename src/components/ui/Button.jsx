@@ -1,10 +1,25 @@
-function Button(props) {
+function Button({
+  type = "button",
+  text,
+  onClick,
+  variant = "primary",
+  className = "",
+}) {
+  const base =
+    "inline-flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-medium transition";
+
+  const styles =
+    variant === "secondary"
+      ? "border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+      : "bg-blue-600 text-white hover:bg-blue-700";
 
   return (
-    <button type={props.type}
-    onClick={props.onClick}
-      className='h-13 w-full rounded-xl bg-blue-600 font-semibold text-2xl text-white hover:bg-blue-700'>
-      {props.text}
+    <button
+      type={type}
+      onClick={onClick}
+      className={`${base} ${styles} ${className}`}
+    >
+      {text}
     </button>
   );
 }

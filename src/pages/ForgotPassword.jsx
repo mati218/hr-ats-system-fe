@@ -1,33 +1,28 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import InputField from "../components/InputField";
-import Button from "../components/Button";
-import { ForgotPasswordApi } from "../lib/api/authApi";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import Button from "../components/ui/Button";
 import FormInput from "../components/ui/FormInput";
+import { ForgotPasswordApi } from "../lib/api/authApi";
 
 const ForgotPassword = () => {
+  const [emailSent, setEmailSent] = useState(false);
+
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm();
 
-  const navigate = useNavigate();
-
   const onSubmit = async (data) => {
-    console.log("FORM DATA:", data);
-
     try {
-      console.log("SENDING:", data);
-
       const response = await ForgotPasswordApi(data);
 
       console.log("Forgot Password Response:", response.data);
 
-      alert("Reset Link Sent Successfully");
-
-      navigate("/reset-password");
+      setEmailSent(true);
+      reset();
     } catch (error) {
       console.error(error.response?.data || error.message);
       alert(error.response?.data?.message || "Failed to Send Reset Link");
@@ -37,41 +32,48 @@ const ForgotPassword = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
+
         <h2 className="text-3xl font-bold text-center mb-6">
           Forgot Password
         </h2>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-         <FormInput
+        {!emailSent ? (
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <FormInput
               type="email"
-              placeholder="Email"
+              placeholder="Enter Email"
               register={register}
               name="email"
               errors={errors}
             />
 
-          {errors.email && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.email.message}
-            </p>
-          )}
+            <Button
+              title="Send Reset Link"
+              type="submit"
+              className="mt-4 w-full"
+            />
+          </form>
+        ) : (
+          <div className="rounded-lg border border-green-500 bg-green-100 p-5 text-center">
+            <div className="text-5xl mb-3">✅</div>
 
-          <Button
-            title="Send Reset Link"
-            type="submit"
-            className="mt-4"
-          />
-        </form>
+            <h3 className="text-xl font-bold text-green-700">
+              Email Sent Successfully
+            </h3>
+
+          </div>
+        )}
 
         <p className="text-center mt-5">
-          Back to
+          Back to{" "}
           <Link
             to="/login"
-            className="text-purple-700 font-semibold ml-1"
+            className="text-purple-700 font-semibold"
           >
             Login
           </Link>
         </p>
+
       </div>
     </div>
   );

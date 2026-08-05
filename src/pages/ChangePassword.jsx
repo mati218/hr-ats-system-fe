@@ -1,6 +1,6 @@
 import { useState } from "react";
-import InputField from "../components/InputField";
-import Button from "../components/Button";
+import FormInput from "../components/ui/FormInput";
+import Button from "../components/ui/Button";
 
 function ChangePassword() {
   const [formData, setFormData] = useState({
