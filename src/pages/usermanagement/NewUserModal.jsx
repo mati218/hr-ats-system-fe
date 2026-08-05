@@ -98,18 +98,18 @@ const handleUpdate = async (data) => {
     >
 
       <form
-        onSubmit={handleSubmit(handleCreate)}
-        className="space-y-4"
-      >
+  onSubmit={handleSubmit(user ? handleUpdate : handleCreate)}
+  className="space-y-4"
+>
 
         <div>
 
-          <label className="text-sm font-semibold text-gray-800">
+          <label className="text-sm font-semibold text-gray-800 flex ">
             Full Name
           </label>
 
 
-          <FormInput
+          <FormInput 
             type="text"
             placeholder="Enter full name"
             name="name"
@@ -124,7 +124,7 @@ const handleUpdate = async (data) => {
 
         <div>
 
-          <label className="text-sm font-semibold text-gray-800">
+          <label className="text-sm font-semibold text-gray-800 flex ">
             Work Email
           </label>
 
@@ -144,7 +144,7 @@ const handleUpdate = async (data) => {
 
         <div>
 
-          <label className="text-sm font-semibold text-gray-800">
+          <label className="text-sm font-semibold text-gray-800 flex ">
             Phone
           </label>
 
@@ -160,7 +160,7 @@ const handleUpdate = async (data) => {
         </div>
                <div>
 
-          <label className="text-sm font-semibold text-gray-800">
+          <label className="text-sm font-semibold text-gray-800 flex">
             Role
           </label>
 
@@ -188,7 +188,7 @@ const handleUpdate = async (data) => {
         </div>
 
         <div>
-          <label className="text-sm font-semibold text-gray-800">
+          <label className="text-sm font-semibold text-gray-800 flex">
             Department
           </label>
 
