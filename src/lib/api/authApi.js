@@ -11,6 +11,7 @@ export const loginUser = (data) => {
 export const ForgotPasswordApi = (data) => {
   return api.post("/auth/forgot-password", data);
 };
+
 export const ResetPasswordApi = (data) => {
   return api.post("/auth/reset-password", data);
 };
@@ -18,23 +19,19 @@ export const ResetPasswordApi = (data) => {
 export const createUser = (data) => {
   const token = localStorage.getItem("token");
 
-  return api.post(
-    "/user",
-    data,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  return api.post("/user", data, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 };
 
 export const updateUser = (id, data) => {
   const token = localStorage.getItem("token");
 
   return api.put("/user/" + id, data, {
-  headers: {
-    Authorization: "Bearer " + localStorage.getItem("token"),
-  },
-})
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 };
