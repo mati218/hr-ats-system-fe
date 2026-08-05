@@ -98,9 +98,9 @@ const handleUpdate = async (data) => {
     >
 
       <form
-        onSubmit={handleSubmit(handleCreate)}
-        className="space-y-4"
-      >
+  onSubmit={handleSubmit(user ? handleUpdate : handleCreate)}
+  className="space-y-4"
+>
 
         <div>
 
