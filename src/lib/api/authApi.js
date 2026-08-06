@@ -21,23 +21,19 @@ export const ResetPasswordApi = ({ token, password, confirmPassword }) => {
 export const createUser = (data) => {
   const token = localStorage.getItem("token");
 
-  return api.post(
-    "/user",
-    data,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  return api.post("/user", data, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 };
 
 export const updateUser = (id, data) => {
   const token = localStorage.getItem("token");
 
   return api.put("/user/" + id, data, {
-  headers: {
-    Authorization: "Bearer " + localStorage.getItem("token"),
-  },
-})
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 };

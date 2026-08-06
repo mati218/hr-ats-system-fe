@@ -1,47 +1,32 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
 import Button from "../../components/ui/Button";
 import RoleCard from "../../components/ui/RoleCard";
-import PermissionTable from "../../components/ui/PermissionTable";
 import CreateRoleModal from "../../components/ui/CreateRoleModal";
+
 import {
   getRoles,
+  getRole,
   createRole,
   updateRole,
   deleteRole,
 } from "../../lib/api/authroleApi";
-const modules = [
-    { label: "Job Requisitions", key: "jobRequisitions" },
-    { label: "Candidates", key: "candidates" },
-    { label: "Interviews", key: "interviews" },
-    { label: "Offer Letters", key: "offerLetters" },
-    { label: "Users", key: "users" },
-    { label: "Reports", key: "reports" },
-  ];
+
 function RolesPermissions() {
   const [roles, setRoles] = useState([]);
-  const [selectedRole, setSelectedRole] = useState(null);
   const [openModal, setOpenModal] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm();
+  const [editingRole, setEditingRole] = useState(null);
+  const [saveError, setSaveError] = useState("");
+  const [loadingRole, setLoadingRole] = useState(false);
 
   const fetchRoles = async () => {
     try {
-      console.log("Fetching Roles...");
       const res = await getRoles();
-      console.log("API Response:", res);
-
-      if (res.data?.length > 0) {
-        setRoles(res.data);
-        setSelectedRole(res.data[0]);
-      }
+      const roleData = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      setRoles(roleData);
+      return roleData;
     } catch (error) {
-      console.log(error);
+      console.log("FETCH ROLES ERROR:", error.response?.data || error.message);
+      return [];
     }
   };
 
@@ -49,110 +34,106 @@ function RolesPermissions() {
     fetchRoles();
   }, []);
 
-  // Jab bhi selectedRole change ho, form ki values ko update/reset karein
-  useEffect(() => {
-    if (selectedRole) {
-      reset({
-        permissions: selectedRole.permissions || [],
-      });
-    }
-  }, [selectedRole, reset]);
+  const handleNewRoleClick = () => {
+    setEditingRole(null);
+    setSaveError("");
+    setOpenModal(true);
+  };
 
-  const handleCreateRole = async (data) => {
+  // Card click par local array pe bharosa nahi — seedha DB se fresh data lo
+  const handleCardClick = async (roleStub) => {
+    if (!roleStub?._id) return;
+    setSaveError("");
+    setLoadingRole(true);
+    setOpenModal(true);
+    setEditingRole(null); // purana data flash na ho, jab tak fresh na aaye
+
     try {
-      console.log("CREATE DATA:", data);
-      const res = await createRole(data);
-      console.log("CREATE RESPONSE:", res);
+      const res = await getRole(roleStub._id);
+      setEditingRole(res.data);
+    } catch (error) {
+      console.log("GET ROLE ERROR:", error.response?.data || error.message);
+      setSaveError("Role ka data load nahi ho saka.");
+    } finally {
+      setLoadingRole(false);
+    }
+  };
+
+  const handleSaveRole = async (payload) => {
+    setSaveError("");
+    try {
+      if (editingRole?._id) {
+        await updateRole(editingRole._id, payload);
+      } else {
+        await createRole(payload);
+      }
       await fetchRoles();
       setOpenModal(false);
+      setEditingRole(null);
     } catch (error) {
-      console.log(
-        "CREATE ERROR:",
-        error.response?.data || error.message
+      console.log("SAVE ROLE ERROR:", error.response?.data || error.message);
+      setSaveError(
+        error.response?.data?.message || "Role save nahi hua, dobara try karein."
       );
     }
   };
 
-  const modules = [
-    "Job Requisitions",
-    "Candidates",
-    "Interviews",
-    "Offer Letters",
-    "Users",
-    "Reports",
-  ];
-
-  const onSubmit = async (data) => {
+  const handleDeleteRole = async () => {
+    if (!editingRole?._id) return;
+    setSaveError("");
     try {
-      console.log("FORM DATA:", data);
-      const response = await updateRole(
-        selectedRole._id,
-        data
-      );
-      console.log("API RESPONSE:", response);
-      // Optional: Aap yahan dobara fetchRoles() call kar saktay hain taake updated data refresh ho jaye
+      await deleteRole(editingRole._id);
+      await fetchRoles();
+      setOpenModal(false);
+      setEditingRole(null);
     } catch (error) {
-      console.log(
-        "API ERROR:",
-        error.response?.data || error.message
+      console.log("DELETE ROLE ERROR:", error.response?.data || error.message);
+      setSaveError(
+        error.response?.data?.message || "Role delete nahi hua, dobara try karein."
       );
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-10">
-      {/* Header */}
-      <div className="mt-6 mb-6 flex items-start justify-between">
-        <div className="text-left">
-          <h1 className="text-2xl font-bold text-slate-900">
-            Roles & Permissions
-          </h1>
-          <p className="mt-1 text-slate-500">
-            Control what each role can view, create, edit or delete.
+    <div className="min-h-screen bg-slate-50 p-6">
+
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Roles & Permissions</h1>
+          <p className="text-gray-500 mt-2 pl-10">
+            Control what each role can view, create, edit and delete.
           </p>
         </div>
-
-        <Button
-          text="+ New Role"
-          onClick={() => setOpenModal(true)}
-        />
+        <Button text="+ New Role" onClick={handleNewRoleClick} />
       </div>
 
-      {/* Role Cards */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+      {/* Backend se jo bhi roles aayein, sab seedha render */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3 text-left">
         {roles.map((role) => (
           <RoleCard
             key={role._id}
             role={role}
-            selectedRole={selectedRole}
-            setSelectedRole={setSelectedRole}
+            selectedRole={editingRole}
+            setSelectedRole={handleCardClick}
           />
         ))}
       </div>
 
-      {/* Permission Table */}
-      <div className="mt-6 rounded-2xl ">
-        <h2 className="text-left text-xl font-bold text-slate-900">
-          Permission Matrix
-        </h2>
-        <p className="mb-6 mt-2 text-left text-slate-500">
-          Toggle module-level access. Changes apply immediately to all users with this role.
-        </p>
+      {openModal && (
+        <CreateRoleModal
+          isOpen={openModal}
+          role={editingRole}
+          loading={loadingRole}
+          onClose={() => {
+            setOpenModal(false);
+            setEditingRole(null);
+          }}
+          onSave={handleSaveRole}
+          onDelete={handleDeleteRole}
+          errorMessage={saveError}
+        />
+      )}
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <PermissionTable
-            modules={modules}
-            register={register}
-            errors={errors}
-          />
-        </form>
-      </div>
-
-      <CreateRoleModal
-        isOpen={openModal}
-        onClose={() => setOpenModal(false)}
-        onSave={handleCreateRole}
-      />
     </div>
   );
 }
