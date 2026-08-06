@@ -47,10 +47,10 @@ const ForgotPassword = () => {
               errors={errors}
             />
 
-            <Button
+            <Button className="w-95 rounded-2xl"
               title="Send Reset Link"
               type="submit"
-              className="mt-4 w-full"
+             
             />
           </form>
         ) : (

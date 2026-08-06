@@ -95,8 +95,8 @@ function RolesPermissions() {
 
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Roles & Permissions</h1>
-          <p className="text-gray-500 mt-2 pl-10">
+          <h1 className="text-3xl font-bold float-left gap-2">Roles & Permissions</h1>
+          <p className="text-gray-500 mt-12 flex ">
             Control what each role can view, create, edit and delete.
           </p>
         </div>
