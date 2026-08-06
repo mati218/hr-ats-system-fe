@@ -102,6 +102,7 @@ const handleUpdate = async (data) => {
   className="space-y-4"
 >
 
+
         <div>
 
           <label className="text-sm font-semibold text-gray-800 flex ">
@@ -144,7 +145,7 @@ const handleUpdate = async (data) => {
 
         <div>
 
-          <label className="text-sm font-semibold text-gray-800 flex ">
+          <label className="text-sm font-semibold text-gray-800 float-left  ">
             Phone
           </label>
 
