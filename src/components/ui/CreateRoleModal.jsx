@@ -13,9 +13,6 @@ const modules = [
   { label: "Reports", key: "reports" },
 ];
 
-// Ye 4 roles ke liye update AND delete dono blocked
-const LOCKED_ROLES = ["SuperAdmin", "Admin", "HR", "Employee"];
-
 function buildDefaultPermissions(role) {
   const permissionData = {};
   modules.forEach((m) => {
@@ -36,7 +33,7 @@ function buildDefaultPermissions(role) {
 
 function CreateRoleModal({ isOpen, onClose, onSave, onDelete, errorMessage, role, loading }) {
   const isEditing = Boolean(role?._id);
-  const isLocked = isEditing && LOCKED_ROLES.includes(role.roleName);
+  const isLocked = isEditing && role?.isSystemRole === true; // ⬅️ ab naam se nahi, flag se
 
   const {
     register,
@@ -72,11 +69,12 @@ function CreateRoleModal({ isOpen, onClose, onSave, onDelete, errorMessage, role
       delete: data.permissions?.[module.key]?.delete || false,
     }));
 
-    await onSave({
-      roleName: data.roleName,
-      description: data.description || "",
-      permissions,
-    });
+    // roleName sirf create ke waqt bheji jaye — edit me backend ise ignore/reject karta hai
+    const payload = isEditing
+      ? { description: data.description, permissions }
+      : { roleName: data.roleName, description: data.description, permissions };
+
+    await onSave(payload);
   };
 
   return (
@@ -93,7 +91,7 @@ function CreateRoleModal({ isOpen, onClose, onSave, onDelete, errorMessage, role
                 : isLocked
                 ? "This is a system role. It cannot be edited or deleted."
                 : isEditing
-                ? "Update the role name and module-level permissions"
+                ? "Update the description and module-level permissions"
                 : "Define a name and module-level permissions"}
             </p>
           </div>
@@ -127,8 +125,12 @@ function CreateRoleModal({ isOpen, onClose, onSave, onDelete, errorMessage, role
                   placeholder="e.g. Hiring Manager"
                   register={register}
                   errors={errors}
+                  disabled={isEditing} // edit me roleName kabhi change nahi ho sakti (backend reject karega)
                   rules={{ required: "Role Name is required" }}
                 />
+                {isEditing && !isLocked && (
+                  <p className="mt-1 text-xs text-slate-400">Role name cannot be changed after creation.</p>
+                )}
               </div>
 
               <div>
@@ -139,6 +141,7 @@ function CreateRoleModal({ isOpen, onClose, onSave, onDelete, errorMessage, role
                   placeholder="Role description"
                   register={register}
                   errors={errors}
+                  rules={{ required: "Description is required" }}
                 />
               </div>
 
