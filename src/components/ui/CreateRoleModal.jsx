@@ -13,7 +13,8 @@ const modules = [
   { label: "Reports", key: "reports" },
 ];
 
-const UPDATE_LOCKED_ROLES = ["SuperAdmin", "Admin", "HR", "Employee"];
+// Ye 4 roles ke liye update AND delete dono blocked
+const LOCKED_ROLES = ["SuperAdmin", "Admin", "HR", "Employee"];
 
 function buildDefaultPermissions(role) {
   const permissionData = {};
@@ -33,9 +34,9 @@ function buildDefaultPermissions(role) {
   return permissionData;
 }
 
-function CreateRoleModal({ isOpen, onClose, onSave, errorMessage, role, loading }) {
+function CreateRoleModal({ isOpen, onClose, onSave, onDelete, errorMessage, role, loading }) {
   const isEditing = Boolean(role?._id);
-  const isLocked = isEditing && UPDATE_LOCKED_ROLES.includes(role.roleName);
+  const isLocked = isEditing && LOCKED_ROLES.includes(role.roleName);
 
   const {
     register,
@@ -90,7 +91,7 @@ function CreateRoleModal({ isOpen, onClose, onSave, errorMessage, role, loading 
               {loading
                 ? "Loading role data..."
                 : isLocked
-                ? "This is a system role. Permissions are fixed and cannot be edited."
+                ? "This is a system role. It cannot be edited or deleted."
                 : isEditing
                 ? "Update the role name and module-level permissions"
                 : "Define a name and module-level permissions"}
@@ -114,7 +115,7 @@ function CreateRoleModal({ isOpen, onClose, onSave, errorMessage, role, loading 
 
               {isLocked && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                  🔒 {role.roleName} is a protected system role and cannot be modified.
+                  🔒 {role.roleName} is a protected system role and cannot be modified or deleted.
                 </div>
               )}
 
@@ -151,14 +152,28 @@ function CreateRoleModal({ isOpen, onClose, onSave, errorMessage, role, loading 
               </div>
             </fieldset>
 
-            <div className="flex justify-end gap-3 border-t px-8 py-5">
-              <Button type="button" text="Cancel" variant="secondary" onClick={onClose} />
-              {!isLocked && (
-                <Button
-                  type="submit"
-                  text={isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Save Role"}
-                />
-              )}
+            <div className="flex items-center justify-between border-t px-8 py-5">
+              <div>
+                {isEditing && !isLocked && (
+                  <button
+                    type="button"
+                    onClick={onDelete}
+                    className="text-sm font-semibold text-red-600 hover:text-red-700"
+                  >
+                    Delete Role
+                  </button>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <Button type="button" text="Cancel" variant="secondary" onClick={onClose} />
+                {!isLocked && (
+                  <Button
+                    type="submit"
+                    text={isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Save Role"}
+                  />
+                )}
+              </div>
             </div>
           </form>
         )}

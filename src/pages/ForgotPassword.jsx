@@ -44,14 +44,8 @@ const ForgotPassword = () => {
               placeholder="Enter Email"
               register={register}
               name="email"
-              errors={errors}
-            />
-
-            <Button className="w-95 rounded-2xl"
-              title="Send Reset Link"
-              type="submit"
-             
-            />
+              errors={errors}/>
+            <Button className="mt-5 w-90" text="Send Reset Link" />
           </form>
         ) : (
           <div className="rounded-lg border border-green-500 bg-green-100 p-5 text-center">

@@ -3,9 +3,9 @@ import Checkbox from "./Checkbox";
 function PermissionTable({ modules, register, errors, disabled = false }) {
   return (
     <div className="mt-4 overflow-x-auto">
-      <table className="w-full border-collapse text-left">
+      <table className="w-full text-left">
         <thead>
-          <tr className="bg-slate-50 border-b border-slate-200">
+          <tr className="bg-slate-50 ">
             <th className="py-3.5 pl-4 text-xs font-semibold uppercase tracking-wider text-slate-600">Module</th>
             <th className="py-3.5 px-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">View</th>
             <th className="py-3.5 px-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">Create</th>
@@ -16,7 +16,7 @@ function PermissionTable({ modules, register, errors, disabled = false }) {
 
         <tbody className="divide-y divide-slate-100">
           {modules.map((module) => (
-            <tr key={module.key} className="transition-colors hover:bg-slate-50/80">
+            <tr key={module.key}>
               <td className="py-3.5 pl-4 text-sm font-medium text-slate-800">
                 {module.label}
                 <input
