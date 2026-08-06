@@ -55,7 +55,7 @@ const Sidebar = () => {
     {
       name: "Roles & Permissions",
       icon: <FaShield />,
-      path: "/roles",
+      path: "/roles-permissions",
     },
     {
       name: "Departments & Types",

@@ -81,7 +81,7 @@ function CreateRoleModal({ isOpen, onClose, onSave, onDelete, errorMessage, role
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-[900px] rounded-[24px] bg-white shadow-2xl">
+      <div className="w-full max-w-225 rounded-3xl bg-white shadow-2xl">
         <div className="flex items-start justify-between border-b border-gray-200 px-8 py-6">
           <div className="text-left">
             <h2 className="text-3xl font-bold text-slate-900">

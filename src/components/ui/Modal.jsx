@@ -1,4 +1,4 @@
-const Modal = ({ isOpen, onClose, title, subtitle, children, footer }) => {
+const Modal = ({ isOpen, onClose, title, subtitle, children }) => {
 
   if (!isOpen) {
     return null;
@@ -20,11 +20,11 @@ const Modal = ({ isOpen, onClose, title, subtitle, children, footer }) => {
 
           <div>
 
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl text-left font-bold text-gray-900">
               {title}
             </h2>
 
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 mt-1 float-left text-left">
               {subtitle}
             </p>
 
@@ -38,12 +38,9 @@ const Modal = ({ isOpen, onClose, title, subtitle, children, footer }) => {
           {children}
         </div>
 
-        <div className="flex justify-end gap-3 mt-6 border-t pt-4">
+      
 
-          {footer}
-
-        </div>
-
+       
 
       </div>
 
