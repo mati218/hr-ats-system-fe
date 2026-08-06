@@ -48,10 +48,6 @@ function RoleCard({ role, selectedRole, setSelectedRole }) {
         <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${badgeClass}`}>
           {role.roleName}
         </span>
-
-        <span className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${badgeClass}`}>
-          {getInitial(role.roleName)}
-        </span>
       </div>
 
       <p className="mt-4 text-base text-slate-600">
