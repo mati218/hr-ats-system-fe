@@ -126,7 +126,7 @@ const onSubmit = async (data) => {
 
           </div>
 
-          <Button
+          <Button className="w-125 h-12"
             type="submit"
             text="Sign in"
           />
