@@ -216,7 +216,7 @@ const handleUpdate = async (data) => {
           <Button
             type="button"
             text="Cancel"
-            onClick={onClose}
+            onClick={onClose} variant="secondary"
           />
 
           <Button
