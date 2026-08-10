@@ -1,9 +1,8 @@
-function getInitial(name = "") {
-  return name.trim().charAt(0).toUpperCase() || "?";
-}
+import { Lock, Trash2 } from "lucide-react";
 
-function RoleCard({ role, selectedRole, setSelectedRole }) {
+function RoleCard({ role, selectedRole, setSelectedRole, onDelete }) {
   const active = selectedRole?._id === role._id;
+  const isLocked = role.isSystemRole === true;
 
   let badgeClass = "bg-slate-100 text-slate-700";
   let hoverBorder = "hover:border-slate-300";
@@ -37,17 +36,43 @@ function RoleCard({ role, selectedRole, setSelectedRole }) {
     ringColor = "border-cyan-500";
   }
 
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${role.roleName}"? This action cannot be undone.`
+    );
+    if (confirmed) {
+      onDelete(role);
+    }
+  };
+
   return (
     <div
       onClick={() => setSelectedRole(role)}
-      className={`cursor-pointer rounded-2xl border bg-white text-left p-6 shadow-sm transition-all duration-150 hover:shadow-md ${
+      className={`relative cursor-pointer rounded-2xl border bg-white text-left p-6 shadow-sm transition-all duration-150 hover:shadow-md ${
         active ? `${ringColor} shadow` : `border-slate-200 ${hoverBorder}`
       }`}
     >
-      <div className="flex items-center justify-between">
+      {!isLocked && (
+        <button
+          type="button"
+          onClick={handleDeleteClick}
+          title="Delete role"
+          className="absolute right-4 top-4 rounded-full p-1.5 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-500"
+        >
+          <Trash2 className="h-4.5 w-4.5" />
+        </button>
+      )}
+
+      <div className="flex items-center justify-between pr-6">
         <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${badgeClass}`}>
           {role.roleName}
         </span>
+        {isLocked && (
+          <span className="text-amber-500" title="System role — protected">
+            <Lock className="h-4.5 w-4.5" />
+          </span>
+        )}
       </div>
 
       <p className="mt-4 text-base text-slate-600">

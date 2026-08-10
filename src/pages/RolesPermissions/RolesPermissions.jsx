@@ -78,22 +78,23 @@ function RolesPermissions() {
     }
   };
 
-  const handleDeleteRole = async () => {
-    if (!editingRole?._id) return;
-    setSaveError("");
-    try {
-      await deleteRole(editingRole._id);
-      await fetchRoles();
-      setOpenModal(false);
-      setEditingRole(null);
-    } catch (error) {
-      console.log("DELETE ROLE ERROR:", error.response?.data || error.message);
-      setSaveError(
-        error.response?.data?.message || "Role delete nahi hua, dobara try karein."
-      );
-    }
-  };
+ const handleDeleteRole = async (roleToDelete) => {
+  const targetId = roleToDelete?._id || editingRole?._id;
+  if (!targetId) return;
 
+  setSaveError("");
+  try {
+    await deleteRole(targetId);
+    await fetchRoles();
+    setOpenModal(false);
+    setEditingRole(null);
+  } catch (error) {
+    console.log("DELETE ROLE ERROR:", error.response?.data || error.message);
+    alert(
+      error.response?.data?.message || "Role delete nahi hua, dobara try karein."
+    );
+  }
+};
   return (
     <div className="min-h-screen bg-slate-50 p-6">
 
@@ -107,17 +108,17 @@ function RolesPermissions() {
         <Button text="+ New Role" onClick={handleNewRoleClick} />
       </div>
 
-      {/* Backend se jo bhi roles aayein, sab seedha render */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3 text-left">
-        {roles.map((role) => (
-          <RoleCard
-            key={role._id}
-            role={role}
-            selectedRole={editingRole}
-            setSelectedRole={handleCardClick}
-          />
-        ))}
-      </div>
+     <div className="grid grid-cols-1 gap-6 md:grid-cols-3 text-left">
+  {roles.map((role) => (
+    <RoleCard
+      key={role._id}
+      role={role}
+      selectedRole={editingRole}
+      setSelectedRole={handleCardClick}
+      onDelete={handleDeleteRole}
+    />
+  ))}
+</div>
 
       {openModal && (
         <CreateRoleModal

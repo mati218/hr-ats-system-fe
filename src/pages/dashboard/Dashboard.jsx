@@ -1,54 +1,71 @@
-const Dashboard = () => {
+import StatCard from "../../components/ui/StatCard";
+import HiringFunnel from "../../components/ui/HiringFunnel";
+import RecentApplications from "../../components/ui/RecentApplications";
+
+const stats = [
+  {
+    title: "OPEN ROLES",
+    value: "14",
+    sub: "▲ 3 this month",
+    color: "text-green-600",
+  },
+  {
+    title: "ACTIVE CANDIDATES",
+    value: "238",
+    sub: "▲ 41 this week",
+    color: "text-green-600",
+  },
+  {
+    title: "OFFER ACCEPTANCE",
+    value: "78%",
+    sub: "▲ 5 pts vs Q2",
+    color: "text-green-600",
+    progress: true,
+  },
+  {
+    title: "AVG. TIME TO HIRE",
+    value: "18d",
+    sub: "▼ 2d faster",
+    color: "text-red-500",
+  },
+];
+
+function Dashboard() {
   return (
-    <div className="min-h-[calc(100vh-72px)] w-full bg-[#f5f7fb] px-8 py-8">
-
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900">
-          Dashboard
-        </h1>
-
-        <p className="mt-2 text-base text-gray-500">
-          Hiring overview -- updated 6 minutes ago.
-        </p>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <p className="text-sm text-gray-500">Employees</p>
-          <h2 className="mt-2 text-4xl font-bold text-gray-900">60</h2>
-        </div>
-
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <p className="text-sm text-gray-500">Candidates</p>
-          <h2 className="mt-2 text-4xl font-bold text-gray-900">10</h2>
-        </div>
-
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <p className="text-sm text-gray-500">Interviews</p>
-          <h2 className="mt-2 text-4xl font-bold text-gray-900">6</h2>
-        </div>
-
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <p className="text-sm text-gray-500">Open Jobs</p>
-          <h2 className="mt-2 text-4xl font-bold text-gray-900">4</h2>
-        </div>
-      </div>
-
-
-      <div className="mt-8 flex h-105 items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-white shadow-sm">
-        <div className="text-center">
-          <h2 className="text-3xl font-semibold text-gray-800">
-            COMING SOON...
-          </h2>
-
-          <p className="mt-3 text-gray-500">
-            Dashboard widgets and analytics will appear here.
+    <div className="min-h-screen bg-slate-100 p-8">
+      <div className="mb-6 flex items-start justify-between  text-left">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">
+            Dashboard
+          </h1>
+          <p className="mt-2 text-lg text-slate-500">
+            Hiring overview — updated 6 minutes ago
           </p>
         </div>
+        <button className="rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white">
+          + New Requisition
+        </button>
       </div>
-
+      <div className="grid gap-6 lg:grid-cols-4">
+        {stats.map((item) => (
+          <StatCard
+            key={item.title}
+            title={item.title}
+            value={item.value}
+            subtitle={item.sub}
+            subtitleColor={item.color}
+            showProgress={item.progress}
+          />
+        ))}
+      </div>
+      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <HiringFunnel />
+        </div>
+        <RecentApplications />
+      </div>
     </div>
   );
-};
+}
 
 export default Dashboard;
