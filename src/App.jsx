@@ -6,6 +6,7 @@ import ResetPassword from "./pages/ResetPassword";
 import ChangePassword from "./pages/ChangePassword";
 import MainLayout from "./layouts/MainLayout";
 import Dashboard from "./pages/dashboard/Dashboard";
+import JobRequisition from "./pages/JobRequistitions/JobRequisition";
 import UserManagement from "./pages/usermanagement/UserManagement";
 import RolesPermissions from "./pages/RolesPermissions/RolesPermissions";
 import Departmenttype from "./pages/DepartmentTypes.jsx/Departmenttype";
@@ -15,7 +16,7 @@ function App() {
     <BrowserRouter>
 
       <Routes>
-        
+
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -29,9 +30,10 @@ function App() {
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/roles-permissions" element={<RolesPermissions />} />
           <Route path="/roles" element={<Navigate to="/roles-permissions" replace />} />
-          <Route path="/departments" element={<Departmenttype/>} />
+          <Route path="/departments" element={<Departmenttype />} />
+          <Route path="/job-requisitions" element={<JobRequisition />} />
 
-       </Route>
+        </Route>
 
       </Routes>
 
