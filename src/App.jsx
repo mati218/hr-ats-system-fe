@@ -6,6 +6,7 @@ import ResetPassword from "./pages/ResetPassword";
 import ChangePassword from "./pages/ChangePassword";
 import MainLayout from "./layouts/MainLayout";
 import Dashboard from "./pages/dashboard/Dashboard";
+import JobRequisition from "./pages/JobRequistitions/JobRequisition";
 import UserManagement from "./pages/usermanagement/UserManagement";
 import RolesPermissions from "./pages/RolesPermissions/RolesPermissions";
 import Departmenttype from "./pages/DepartmentTypes.jsx/Departmenttype";
@@ -33,6 +34,8 @@ function App() {
           <Route path="/departments" element={<Departmenttype />} />
           <Route path="/audit-log" element={<AuditLog />} />
           <Route path="/ats-ranking" element={<ATSRanking />} />
+          <Route path="/job-requisitions" element={<JobRequisition />} />
+
         </Route>
 
       </Routes>
