@@ -1,3 +1,4 @@
+import { Lock } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import Button from "./Button";
@@ -12,9 +13,6 @@ const modules = [
   { label: "Users", key: "users" },
   { label: "Reports", key: "reports" },
 ];
-
-// Ye 4 roles ke liye update AND delete dono blocked
-const LOCKED_ROLES = ["SuperAdmin", "Admin", "HR", "Employee"];
 
 function buildDefaultPermissions(role) {
   const permissionData = {};
@@ -34,9 +32,9 @@ function buildDefaultPermissions(role) {
   return permissionData;
 }
 
-function CreateRoleModal({ isOpen, onClose, onSave, onDelete, errorMessage, role, loading }) {
+function CreateRoleModal({ isOpen, onClose, onSave, errorMessage, role, loading }) {
   const isEditing = Boolean(role?._id);
-  const isLocked = isEditing && LOCKED_ROLES.includes(role.roleName);
+  const isLocked = isEditing && role?.isSystemRole === true; // sirf SuperAdmin — name+description lock
 
   const {
     register,
@@ -63,7 +61,6 @@ function CreateRoleModal({ isOpen, onClose, onSave, onDelete, errorMessage, role
   if (!isOpen) return null;
 
   const submitHandler = async (data) => {
-    if (isLocked) return;
     const permissions = modules.map((module) => ({
       module: module.key,
       view: data.permissions?.[module.key]?.view || false,
@@ -72,11 +69,11 @@ function CreateRoleModal({ isOpen, onClose, onSave, onDelete, errorMessage, role
       delete: data.permissions?.[module.key]?.delete || false,
     }));
 
-    await onSave({
-      roleName: data.roleName,
-      description: data.description || "",
-      permissions,
-    });
+    const payload = isEditing
+      ? { description: data.description, permissions }
+      : { roleName: data.roleName, description: data.description, permissions };
+
+    await onSave(payload);
   };
 
   return (
@@ -91,9 +88,9 @@ function CreateRoleModal({ isOpen, onClose, onSave, onDelete, errorMessage, role
               {loading
                 ? "Loading role data..."
                 : isLocked
-                ? "This is a system role. It cannot be edited or deleted."
+                ? "This is a protected system role. Name and description are fixed, but permissions can still be updated."
                 : isEditing
-                ? "Update the role name and module-level permissions"
+                ? "Update the description and module-level permissions"
                 : "Define a name and module-level permissions"}
             </p>
           </div>
@@ -106,17 +103,20 @@ function CreateRoleModal({ isOpen, onClose, onSave, onDelete, errorMessage, role
           <div className="px-8 py-16 text-center text-slate-400">Loading...</div>
         ) : (
           <form onSubmit={handleSubmit(submitHandler)}>
-            <fieldset disabled={isLocked} className="space-y-6 px-8 py-6 text-left disabled:opacity-60">
+            <div className="space-y-6 px-8 py-6 text-left">
               {errorMessage && (
                 <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
                   {errorMessage}
                 </div>
               )}
 
-              {isLocked && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                  🔒 {role.roleName} is a protected system role and cannot be modified or deleted.
-                </div>
+            {isLocked && (
+  <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+    <Lock className="h-4 w-4 flex-shrink-0" />
+    <span>
+      {role.roleName} is a protected system role — name and description are fixed, but you can still update its permissions.
+    </span>
+  </div>
               )}
 
               <div>
@@ -127,8 +127,12 @@ function CreateRoleModal({ isOpen, onClose, onSave, onDelete, errorMessage, role
                   placeholder="e.g. Hiring Manager"
                   register={register}
                   errors={errors}
+                  disabled={isEditing} // kisi bhi role ki naam edit me change nahi hoti
                   rules={{ required: "Role Name is required" }}
                 />
+                {isEditing && (
+                  <p className="mt-1 text-xs text-slate-400">Role name cannot be changed after creation.</p>
+                )}
               </div>
 
               <div>
@@ -139,6 +143,8 @@ function CreateRoleModal({ isOpen, onClose, onSave, onDelete, errorMessage, role
                   placeholder="Role description"
                   register={register}
                   errors={errors}
+                  disabled={isLocked} // sirf SuperAdmin ke liye description disabled
+                  rules={{ required: "Description is required" }}
                 />
               </div>
 
@@ -150,30 +156,14 @@ function CreateRoleModal({ isOpen, onClose, onSave, onDelete, errorMessage, role
                   <PermissionTable modules={modules} register={register} errors={errors} />
                 </div>
               </div>
-            </fieldset>
+            </div>
 
-            <div className="flex items-center justify-between border-t px-8 py-5">
-              <div>
-                {isEditing && !isLocked && (
-                  <button
-                    type="button"
-                    onClick={onDelete}
-                    className="text-sm font-semibold text-red-600 hover:text-red-700"
-                  >
-                    Delete Role
-                  </button>
-                )}
-              </div>
-
-              <div className="flex gap-3">
-                <Button type="button" text="Cancel" variant="secondary" onClick={onClose} />
-                {!isLocked && (
-                  <Button
-                    type="submit"
-                    text={isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Save Role"}
-                  />
-                )}
-              </div>
+            <div className="flex justify-end gap-3 border-t px-8 py-5">
+              <Button type="button" text="Cancel" variant="secondary" onClick={onClose} />
+              <Button
+                type="submit"
+                text={isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Save Role"}
+              />
             </div>
           </form>
         )}

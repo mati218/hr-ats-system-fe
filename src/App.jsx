@@ -10,11 +10,13 @@ import JobRequisition from "./pages/JobRequistitions/JobRequisition";
 import UserManagement from "./pages/usermanagement/UserManagement";
 import RolesPermissions from "./pages/RolesPermissions/RolesPermissions";
 import Departmenttype from "./pages/DepartmentTypes.jsx/Departmenttype";
+import AuditLog from "./pages/Audit Log/AuditLog"; 
+import ATSRanking from "./pages/ATSRanking/ATSRanking";
 
 function App() {
   return (
+  
     <BrowserRouter>
-
       <Routes>
 
         <Route path="/" element={<Login />} />
@@ -25,18 +27,18 @@ function App() {
         <Route path="/change-password" element={<ChangePassword />} />
 
         <Route element={<MainLayout />}>
-
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/roles-permissions" element={<RolesPermissions />} />
           <Route path="/roles" element={<Navigate to="/roles-permissions" replace />} />
           <Route path="/departments" element={<Departmenttype />} />
+          <Route path="/audit-log" element={<AuditLog />} />
+          <Route path="/ats-ranking" element={<ATSRanking />} />
           <Route path="/job-requisitions" element={<JobRequisition />} />
 
         </Route>
 
       </Routes>
-
     </BrowserRouter>
   );
 }
