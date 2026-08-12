@@ -1,16 +1,13 @@
-const TypeTable = ({ title, tableType, data }) => {
+const TypeTable = ({ title, tableType, data, handleEdit }) => {
   return (
     <div className="w-full h-full rounded-3xl border border-gray-200 bg-white p-6">
-
       <h2 className="mb-6 text-xl float-left font-semibold">
         {title}
       </h2>
 
       <table className="w-full">
-
         <thead>
           <tr className="border-b border-gray-200">
-
             {tableType === "department" ? (
               <>
                 <th className="px-3 py-3 text-left text-md font-semibold uppercase text-gray-500">
@@ -18,7 +15,7 @@ const TypeTable = ({ title, tableType, data }) => {
                 </th>
 
                 <th className="px-3 py-3 text-left text-md font-semibold uppercase text-gray-500">
-                  Open Roles
+                  Employees
                 </th>
               </>
             ) : (
@@ -33,23 +30,20 @@ const TypeTable = ({ title, tableType, data }) => {
               </>
             )}
 
-           <th>  </th>
-
+            <th></th>
           </tr>
         </thead>
 
         <tbody>
-
-          {data.map((item, index) => (
+          {(Array.isArray(data) ? data : []).map((item, index) => (
             <tr
-              key={index}
+              key={item?._id || index}
               className="border-b border-gray-100 hover:bg-gray-50 text-left"
             >
-
               {tableType === "department" ? (
                 <>
                   <td className="px-3 py-4">{item.name}</td>
-                  <td className="px-3 py-4">{item.roles}</td>
+                  <td className="px-3 py-4">{item.employees}</td>
                 </>
               ) : (
                 <>
@@ -59,18 +53,14 @@ const TypeTable = ({ title, tableType, data }) => {
               )}
 
               <td className="px-3 py-4 text-right">
-                <button className="text-blue-600 hover:text-blue-800">
+                <button className="text-blue-600 hover:text-blue-800" onClick={() => handleEdit(item)}>
                   Edit
                 </button>
               </td>
-
             </tr>
           ))}
-
         </tbody>
-
       </table>
-
     </div>
   );
 };
