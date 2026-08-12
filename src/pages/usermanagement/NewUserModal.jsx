@@ -1,134 +1,176 @@
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useEffect } from "react";
 
 import Modal from "../../components/ui/Modal";
 import FormInput from "../../components/ui/FormInput";
 import Button from "../../components/ui/Button";
-import { createUser } from "../../lib/api/authApi";
-import { updateUser } from "../../lib/api/authApi";
 
-const NewUserModal = ({
-  isOpen,
-  onClose,
-  onCreated,
-  user,
-}) => {
+import { createUser, updateUser } from "../../lib/api/authApi";
+import {
+  getDepartmentLookup,
+  getRolesLookup,
+} from "../../lib/api/authdepApi";
+
+const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
+  const [roles, setRoles] = useState([]);
+  const [departments, setDepartments] = useState([]);
 
   const {
     register,
     handleSubmit,
     setValue,
+    reset,
     formState: { errors },
   } = useForm();
+
   useEffect(() => {
+    if (!isOpen) return;
+
+    const loadLookups = async () => {
+      try {
+        const [roleResponse, departmentResponse] =
+          await Promise.all([
+            getRolesLookup(),
+            getDepartmentLookup(),
+          ]);
+
+        setRoles(roleResponse.data.data ?? []);
+        setDepartments(departmentResponse.data.data ?? []);
+
+      } catch (error) {
+        console.log(
+          "Lookup Error:",
+          error.response?.data
+        );
+      }
+    };
+
+    loadLookups();
 
     if (user) {
+      setValue("name", user.name ?? "");
+      setValue("email", user.email ?? "");
+      setValue(
+        "phoneNumber",
+        user.phoneNumber ?? ""
+      );
 
-      setValue("name", user.name);
-      setValue("email", user.email);
-      setValue("phoneNumber", user.phoneNumber);
-      setValue("role", user.role);
-      setValue("department", user.department);
+      setValue(
+        "role",
+        user.role?._id ??
+        user.role?.id ??
+        user.role ??
+        ""
+      );
 
+      setValue(
+        "department",
+        user.department?._id ??
+        user.department?.id ??
+        user.department ??
+        ""
+      );
+
+    } else {
+      reset({
+        name: "",
+        email: "",
+        phoneNumber: "",
+        role: "",
+        department: "",
+      });
     }
 
-  }, [user, setValue]);
+  }, [isOpen, user, setValue, reset]);
 
-const handleCreate = async (data) => {
-  try {
-    const response = await createUser(data);
 
-    console.log("Create Response:", response.data);
+  const handleCreate = async (data) => {
+    try {
+      const response = await createUser(data);
 
-    alert("User created successfully");
+      console.log(
+        "Create Response:",
+        response.data
+      );
 
-    if (onCreated) {
-      onCreated(response.data.data);
+      alert("User created successfully");
+
+      if (onCreated) {
+        await onCreated();
+      }
+
+      onClose();
+
+    } catch (error) {
+      console.log(error.response?.data);
+      alert("Failed to create user");
     }
+  };
 
-    onClose();
 
-  } catch (error) {
+  const handleUpdate = async (data) => {
+    try {
+      const response = await updateUser(
+        user._id,
+        data
+      );
 
-    console.log("Full Error:", error);
-    console.log("Response:", error.response);
+      console.log(
+        "Update Response:",
+        response.data
+      );
 
-    console.log("Data:", error.response?.data);
+      alert("User updated successfully");
 
-    console.log("Status:", error.response?.status);
+      if (onCreated) {
+        await onCreated();
+      }
 
-    alert("Failed to create user");
-  }
-};
+      onClose();
 
-const handleUpdate = async (data) => {
-  try {
-    const response = await updateUser(user._id, data);
+    } catch (error) {
+      console.log(error.response?.data);
+      alert("Failed to update user");
+    }
+  };
 
-    console.log("Update Response:", response.data);
 
-    alert("User updated successfully");
-
-    if (onCreated) {
-  onCreated(response.data.data);
-}
-
-    onClose();
-
-  } catch (error) {
-
-    console.log("Full Error:", error);
-
-    console.log("Response:", error.response);
-
-    console.log("Data:", error.response?.data);
-
-    console.log("Status:", error.response?.status);
-
-    alert("Failed to update user");
-  }
-};
   return (
-
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={user ? "Update User" : "New User"}
       subtitle="Grant system access and assign a role"
     >
-
       <form
-  onSubmit={handleSubmit(user ? handleUpdate : handleCreate)}
-  className="space-y-4"
->
-
+        onSubmit={handleSubmit(
+          user ? handleUpdate : handleCreate
+        )}
+        className="space-y-4"
+      >
 
         <div>
-
-          <label className="text-sm font-semibold text-gray-800 flex ">
+          <label className="text-sm font-semibold text-gray-800 flex">
             Full Name
           </label>
 
-
-          <FormInput 
+          <FormInput
             type="text"
             placeholder="Enter full name"
             name="name"
             register={register}
             errors={errors}
             rules={{
-              required:"Name is required"
+              required: "Name is required",
             }}
           />
-
         </div>
 
-        <div>
 
-          <label className="text-sm font-semibold text-gray-800 flex ">
+        <div>
+          <label className="text-sm font-semibold text-gray-800 flex">
             Work Email
           </label>
-
 
           <FormInput
             type="email"
@@ -137,18 +179,16 @@ const handleUpdate = async (data) => {
             register={register}
             errors={errors}
             rules={{
-              required:"Email is required"
+              required: "Email is required",
             }}
           />
-
         </div>
 
-        <div>
 
-          <label className="text-sm font-semibold text-gray-800 float-left  ">
+        <div>
+          <label className="text-sm font-semibold text-gray-800 flex">
             Phone
           </label>
-
 
           <FormInput
             type="text"
@@ -157,36 +197,46 @@ const handleUpdate = async (data) => {
             register={register}
             errors={errors}
           />
-
         </div>
-               <div>
 
+
+        <div>
           <label className="text-sm font-semibold text-gray-800 flex">
             Role
           </label>
 
-
           <select
             className="w-full rounded-lg border border-gray-300 px-4 py-3"
-            {...register("role")}
+            {...register("role", {
+              required: "Role is required",
+            })}
           >
-
-            <option value="Recruiter">
-              Recruiter
-            </option>
-           <option value="Interviewer">
-              Interviewer
-            </option>
-           <option value="Hiring Manager">
-              Hiring Manager
+            <option value="">
+              Select Role
             </option>
 
-            <option value="Super Admin">
-              Super Admin
-            </option>
-         </select>
+            {roles.map((role) => (
+              <option
+                key={role._id ?? role.id}
+                value={role._id ?? role.id}
+              >
+                {
+                  role.name ??
+                  role.roleName ??
+                  role.label ??
+                  role.title
+                }
+              </option>
+            ))}
+          </select>
 
+          {errors.role && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.role.message}
+            </p>
+          )}
         </div>
+
 
         <div>
           <label className="text-sm font-semibold text-gray-800 flex">
@@ -195,22 +245,39 @@ const handleUpdate = async (data) => {
 
           <select
             className="w-full rounded-lg border border-gray-300 px-4 py-3"
-            {...register("department")}
+            {...register("department", {
+              required: "Department is required",
+            })}
           >
-            <option>
-              Engineering
+            <option value="">
+              Select Department
             </option>
-            <option>
-              Design
-            </option>
-            <option>
-              People Ops
-            </option>
-            <option>
-              Analytics
-            </option>
+
+            {departments.map((department) => (
+              <option
+                key={
+                  department._id ?? department.id
+                }
+                value={
+                  department._id ?? department.id
+                }
+              >
+                {
+                  department.name ??
+                  department.label ??
+                  department.title
+                }
+              </option>
+            ))}
           </select>
+
+          {errors.department && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.department.message}
+            </p>
+          )}
         </div>
+
 
         <div className="flex justify-end gap-3 pt-4">
           <Button
@@ -221,11 +288,15 @@ const handleUpdate = async (data) => {
 
           <Button
             type="submit"
-            text={user ? "Update User" : "Create User"}
+            text={
+              user
+                ? "Update User"
+                : "Create User"
+            }
           />
         </div>
-      </form>
 
+      </form>
     </Modal>
   );
 };

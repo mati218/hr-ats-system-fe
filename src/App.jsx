@@ -26,6 +26,7 @@ function App() {
         <Route element={<MainLayout />}>
 
           <Route path="/dashboard" element={<Dashboard />} />
+          
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/roles-permissions" element={<RolesPermissions />} />
           <Route path="/roles" element={<Navigate to="/roles-permissions" replace />} />
