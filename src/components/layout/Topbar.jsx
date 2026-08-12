@@ -3,7 +3,7 @@ import { FaBars, FaMagnifyingGlass } from "react-icons/fa6";
 function Topbar({ toggle }) {
   return (
     <header className="sticky top-0 h-16 w-full bg-white border-b border-slate-200">
-      <div className="flex h-full items-center justify-between px-8">
+      <div className="flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
 
        
         <div className="flex items-center gap-4 flex-1">
@@ -17,7 +17,7 @@ function Topbar({ toggle }) {
           </button>
 
          
-          <div className="hidden sm:flex h-10 w-90 items-center rounded-xl border border-slate-200 bg-slate-100 px-4">
+          <div className="hidden sm:flex h-10 w-full max-w-[360px] items-center rounded-xl border border-slate-200 bg-slate-100 px-4">
             <FaMagnifyingGlass className="text-slate-400 text-sm" />
 
             <input

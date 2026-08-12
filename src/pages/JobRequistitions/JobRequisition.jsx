@@ -1,15 +1,38 @@
 import { useState, useEffect } from "react";
 import RequisitionTable from "../../components/ui/RequisitionTable";
 import NewRequisition from "./NewRequisition";
-import { getRequisitions } from "../../lib/api/requisitionApi";
+
+import {
+  getRequisitions,
+  getRequisitionCounts,
+  getRequisition,
+  deleteRequisition,
+} from "../../lib/api/requisitionApi";
+
+import RequisitionDetailsModal from "../../components/ui/RequisitionDetailsModal";
 
 const tabs = ["All", "Open", "Draft", "Closed", "Archived"];
 
 const JobRequisition = () => {
   const [requisitions, setRequisitions] = useState([]);
+
+  const [tabCounts, setTabCounts] = useState({
+    All: 0,
+    Open: 0,
+    Draft: 0,
+    Closed: 0,
+    Archived: 0,
+  });
+
   const [loading, setLoading] = useState(true);
+
   const [selectedRequisition, setSelectedRequisition] = useState(null);
+
   const [showModal, setShowModal] = useState(false);
+
+  // NEW: controls the View Details card
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+
   const [activeTab, setActiveTab] = useState("All");
 
   const columns = [
@@ -19,11 +42,17 @@ const JobRequisition = () => {
     "STATUS",
     "CANDIDATES",
     "POSTED",
+    "ACTION", // NEW
   ];
 
-  const fetchRequisitions = () => {
+  // =========================
+  // FETCH REQUISITIONS
+  // =========================
 
-    getRequisitions()
+  const fetchRequisitions = (status) => {
+    setLoading(true);
+
+    getRequisitions(status)
       .then((res) => {
         setRequisitions(res.data.data);
       })
@@ -35,74 +64,174 @@ const JobRequisition = () => {
       });
   };
 
-  useEffect(() => {
-    fetchRequisitions();
-  }, []);
+  // =========================
+  // FETCH COUNTS
+  // =========================
 
-  const filteredData =
-    activeTab === "All"
-      ? requisitions
-      : requisitions.filter((req) => req.status === activeTab);
-
-  const tabCounts = {
-    All: requisitions.length,
-    Open: requisitions.filter((req) => req.status === "Open").length,
-    Draft: requisitions.filter((req) => req.status === "Draft").length,
-    Closed: requisitions.filter((req) => req.status === "Closed").length,
-    Archived: requisitions.filter((req) => req.status === "Archived").length,
+  const fetchCounts = () => {
+    getRequisitionCounts()
+      .then((res) => {
+        setTabCounts(res.data.data);
+      })
+      .catch((error) => {
+        console.log("Failed to fetch counts:", error);
+      });
   };
 
+  // =========================
+  // VIEW REQUISITION
+  // =========================
+
+  const handleView = async (id) => {
+    try {
+      const response = await getRequisition(id);
+
+      setSelectedRequisition(response.data.data || response.data);
+
+      setShowDetailsModal(true);
+    } catch (error) {
+      console.log("Failed to fetch requisition details:", error);
+    }
+  };
+
+  // =========================
+  // DELETE REQUISITION
+  // =========================
+
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this requisition?"
+    );
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      await deleteRequisition(id);
+
+      // Remove deleted requisition from current table
+      setRequisitions((prev) =>
+        prev.filter((item) => item._id !== id)
+      );
+
+      // Update counts
+      fetchCounts();
+    } catch (error) {
+      console.log("Failed to delete requisition:", error);
+    }
+  };
+
+  // =========================
+  // EFFECTS
+  // =========================
+
+  useEffect(() => {
+    const loadRequisitions = async () => {
+      setLoading(true);
+
+      try {
+        const res = await getRequisitions(activeTab);
+        setRequisitions(res.data.data);
+      } catch (error) {
+        console.log("Failed to fetch requisitions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRequisitions();
+  }, [activeTab]);
+
+  useEffect(() => {
+    fetchCounts();
+  }, []);
+
+  // =========================
+  // UI
+  // =========================
+
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6">
+
+      {/* HEADER */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl text-[#181B25] font-bold font-sans">
             Job Requisitions
-          </h2>
+          </h1>
 
-          <p className="text-gray-500 mt-1">
-            {tabCounts.Open} open · {tabCounts.Draft} draft · {tabCounts.Closed} closed
+          <p className="text-[13px] text-[#666E80] font-sans mt-1">
+            {tabCounts.Open} open · {tabCounts.Draft} draft ·{" "}
+            {tabCounts.Closed} closed
           </p>
         </div>
 
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            setSelectedRequisition(null);
+            setShowModal(true);
+          }}
           className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow-sm transition"
         >
           + New Requisition
         </button>
       </div>
 
-      <div className="flex items-center gap-2 mb-6">
+      {/* TABS */}
+      <div className="flex items-center gap-2 mb-6 overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-full text-sm font-medium border transition ${activeTab === tab
-                ? "bg-black text-white border-black"
-                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-              }`}
+            className={`
+    shrink-0
+    px-[14px]
+    py-[7px]
+    rounded-[20px]
+    !text-[12.5px]
+    !font-semibold
+    border
+    cursor-pointer
+    font-sans
+    ${activeTab === tab
+                ? "bg-[#12141C] text-white border-[#12141C]"
+                : "bg-white text-[#666E80] border-[#E1E5EC]"
+              }
+  `}
           >
             {tab} ({tabCounts[tab]})
           </button>
         ))}
       </div>
 
+      {/* TABLE */}
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
         {loading ? (
-          <div className="p-10 text-center text-gray-500">Loading requisitions...</div>
+          <div className="p-10 text-center text-gray-500">
+            Loading requisitions...
+          </div>
         ) : (
           <RequisitionTable
             columns={columns}
-            data={filteredData}
+            data={requisitions}
+
+            // EXISTING EDIT
             onEdit={(req) => {
               setSelectedRequisition(req);
               setShowModal(true);
             }}
+
+            // NEW VIEW
+            onView={handleView}
+
+            // NEW DELETE
+            onDelete={handleDelete}
           />
         )}
       </div>
 
+      {/* CREATE / EDIT MODAL */}
       <NewRequisition
         isOpen={showModal}
         onClose={() => {
@@ -111,9 +240,21 @@ const JobRequisition = () => {
         }}
         requisition={selectedRequisition}
         onSaved={() => {
-          fetchRequisitions();
+          fetchRequisitions(activeTab);
+          fetchCounts();
         }}
       />
+
+      {/* VIEW DETAILS MODAL */}
+      <RequisitionDetailsModal
+        isOpen={showDetailsModal}
+        requisition={selectedRequisition}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedRequisition(null);
+        }}
+      />
+
     </div>
   );
 };

@@ -1,7 +1,13 @@
 import api from "./axios";
 
-export const getRequisitions = () => {
-  return api.get("/requisitions");
+export const getRequisitions = (status) => {
+  return api.get("/requisitions", {
+    params: status && status !== "All" ? { status } : {},
+  });
+};
+
+export const getRequisitionCounts = () => {
+  return api.get("/requisitions/counts");
 };
 
 export const getRequisition = (id) => {
