@@ -70,7 +70,7 @@ const Sidebar = () => {
   ];
 
   return (
-<aside className="w-78 min-h-screen bg-[#11131d] text-white flex flex-col">
+<aside className="w-72 h-full min-h-screen overflow-y-auto bg-[#11131d] text-white flex flex-col">
       <div className="flex items-center gap-3 p-7">
         <div className="h-11 w-11 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-lg">
           T

@@ -13,6 +13,7 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition }) => {
     register,
     handleSubmit,
     setValue,
+    reset,
     watch,
     formState: { errors },
   } = useForm({
@@ -30,22 +31,50 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition }) => {
       .catch((error) => console.log("Failed to load employment types:", error));
   }, []);
 
+  const getTomorrowDate = () => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return tomorrow.toISOString().split("T")[0]; // "YYYY-MM-DD"
+};
+
   useEffect(() => {
-    if (requisition) {
-      setValue("jobTitle", requisition.role);
-      setValue("department", requisition.department);
-      setValue("employmentType", requisition.type);
-      setValue("location", requisition.location);
-      setValue("openings", requisition.openings);
-      setValue("experienceLevel", requisition.experienceLevel);
-      setValue("deadline", requisition.deadline);
-      setValue("salaryMin", requisition.salaryMin);
-      setValue("salaryMax", requisition.salaryMax);
-      setValue("description", requisition.description);
-      setValue("requirements", requisition.requirements);
-      setValue("publishOption", requisition.status === "Open" ? "publish" : "draft");
-    }
-  }, [requisition, setValue]);
+  if (requisition) {
+    // EDIT MODE
+    reset({
+      jobTitle: requisition.role || "",
+      department: requisition.department || "",
+      employmentType: requisition.type || "",
+      location: requisition.location || "",
+      openings: requisition.openings || 1,
+      experienceLevel: requisition.experienceLevel || "",
+      deadline: requisition.deadline
+        ? requisition.deadline.split("T")[0]
+        : "",
+      salaryMin: requisition.salaryMin || "",
+      salaryMax: requisition.salaryMax || "",
+      description: requisition.description || "",
+      requirements: requisition.requirements || "",
+      publishOption:
+        requisition.status === "Open" ? "publish" : "draft",
+    });
+  } else {
+    // CREATE MODE
+    reset({
+      jobTitle: "",
+      department: "",
+      employmentType: "",
+      location: "",
+      openings: 0,
+      experienceLevel: "",
+      deadline: "",
+      salaryMin: "",
+      salaryMax: "",
+      description: "",
+      requirements: "",
+      publishOption: "",
+    });
+  }
+}, [requisition, reset]);
 
   const onSubmit = async (data) => {
     const finaldata = {
@@ -214,12 +243,13 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition }) => {
               Application Deadline
             </label>
             <FormInput
-              type="date"
-              placeholder="mm/dd/yyyy"
-              name="deadline"
-              register={register}
-              errors={errors}
-            />
+  type="date"
+  placeholder="mm/dd/yyyy"
+  name="deadline"
+  register={register}
+  errors={errors}
+  min={getTomorrowDate()}
+/>
           </div>
         </div>
 
