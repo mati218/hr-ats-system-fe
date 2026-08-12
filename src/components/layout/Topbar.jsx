@@ -1,4 +1,5 @@
 import { FaBars, FaMagnifyingGlass } from "react-icons/fa6";
+import { Link } from "react-router-dom";
 
 function Topbar({ toggle }) {
   return (
@@ -30,6 +31,25 @@ function Topbar({ toggle }) {
         </div>
 
         <div className="flex items-center gap-4">
+
+          {/* CAREER PORTAL */}
+          <Link
+            to="/career-portal"
+            className="
+              hidden sm:block
+              rounded-xl
+              border border-slate-200
+              bg-white
+              px-4 py-2
+              text-sm
+              font-semibold
+              text-[#111827]
+              hover:bg-slate-50
+              transition
+            "
+          >
+            Career Portal (public)
+          </Link>
 
           <div className="hidden sm:block rounded-xl bg-violet-100 px-4 py-2">
             <p className="text-sm font-semibold text-violet-700">
