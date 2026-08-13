@@ -1,9 +1,9 @@
 import { useState } from "react";
-import CandidateCard from "./CandidateCard";
+import CandidateCard from "../../components/ui/CandidateCard";
 import OfferLetterModal from "./OfferLetter";
-import ScoreCircle from "./ScoreCircle";
+import ScoreCircle from "../../components/ui/ScoreCircle";
 import Button from "../../components/ui/Button";
-import CandidateProfile from "./CandidateProfile";
+import CandidateProfile from "../../components/ui/CandidateProfile";
 
 
 const candidates = [

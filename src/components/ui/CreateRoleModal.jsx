@@ -1,7 +1,7 @@
 import { Lock } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import Button from "./Button";
+import Button from "../../components/ui/Button";
 import FormInput from "./FormInput";
 import PermissionTable from "./PermissionTable";
 
