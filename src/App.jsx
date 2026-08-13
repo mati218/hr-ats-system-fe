@@ -13,6 +13,7 @@ import RolesPermissions from "./pages/RolesPermissions/RolesPermissions";
 import Departmenttype from "./pages/DepartmentTypes.jsx/Departmenttype";
 import AuditLog from "./pages/Audit Log/AuditLog"; 
 import ATSRanking from "./pages/ATSRanking/ATSRanking";
+import CandidatePipeline from "./pages/CandidatePipeline/CandidatePipeline";
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
           <Route path="/audit-log" element={<AuditLog />} />
           <Route path="/ats-ranking" element={<ATSRanking />} />
           <Route path="/job-requisitions" element={<JobRequisition />} />
+          <Route path="/candidate-pipeline" element={<CandidatePipeline />} />
 
         </Route>
 
