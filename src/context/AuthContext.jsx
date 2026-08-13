@@ -2,11 +2,24 @@ import { createContext, useContext, useState } from "react";
 
 const AuthContext = createContext();
 
+const safeReadStoredUser = () => {
+  try {
+    const savedUser = localStorage.getItem("user");
+    if (!savedUser || savedUser === "undefined" || savedUser === "null") {
+      return null;
+    }
+
+    return JSON.parse(savedUser);
+  } catch (error) {
+    console.warn("Invalid stored user data, clearing it.", error);
+    localStorage.removeItem("user");
+    return null;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
 
-  const [user, setUser] = useState(
-    JSON.parse(localStorage.getItem("user")) || null
-  );
+  const [user, setUser] = useState(() => safeReadStoredUser());
 
   const [token, setToken] = useState(
     localStorage.getItem("token") || null

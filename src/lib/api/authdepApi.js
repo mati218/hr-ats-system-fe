@@ -1,7 +1,7 @@
 import api from "./axios";
 
 export const getDepartments = () => {
-  return api.get("/departments");
+    return api.get("/departments");
 };
 
 export const getDepartment = (id) => {
@@ -9,11 +9,11 @@ export const getDepartment = (id) => {
 };
 
 export const createDepartment = (data) => {
-  return api.post("/departments", data);
+    return api.post("/departments", data);
 };
 
 export const updateDepartment = (id, data) => {
-  return api.put(`/departments/${id}`, data);
+    return api.put(`/departments/${id}`, data);
 };
 
 export const deleteDepartment = (id) => {
