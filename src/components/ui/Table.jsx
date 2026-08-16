@@ -76,7 +76,7 @@
           {columns.map((column,index)=>(
             <th
               key={index}
-              className="px-4 py-4 text-left text-sm font-semibold uppercase text-gray-500"
+              className="px-4 py-2 text-left text-xs font-semibold uppercase text-gray-500"
             >
               {column}
             </th>
@@ -106,7 +106,7 @@
               className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
             >
 
-              <td className="px-4 py-4 text-left">
+              <td className="px-4 py-2 text-left">
 
                 <div className="flex items-center gap-3">
 
@@ -132,13 +132,13 @@
               </td>
 
 
-              <td className="px-4 py-4 text-left text-gray-700">
+              <td className="px-4 py2 text-left text-gray-700">
                 {user.email}
               </td>
 
 
 
-              <td className="px-4 py-4 text-left">
+              <td className="px-4 py-2 text-left">
 
                 <div
                   className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
@@ -160,7 +160,7 @@
 
 
 
-              <td className="px-4 py-4 text-left text-gray-700">
+              <td className="px-4 py-2 text-left text-gray-700">
                 {departmentLabel}
               </td>
 
@@ -178,7 +178,7 @@
 
 
 
-              <td className="px-4 py-4 text-left text-gray-700">
+              <td className="px-4 py-2 text-left text-gray-700">
 
                 {
  user.lastLogin

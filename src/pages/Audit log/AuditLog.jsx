@@ -43,68 +43,68 @@ const auditLogs = [
 
 function AuditLog() {
   return (
-      <div className="min-h-screen  p-8">
-      <div className="mb-6 flex items-start justify-between  text-left">
+    <div className="w-full min-h-screen bg-slate-50 px-4 sm:px-8 py-6">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">
+          <h1 className="text-[28x] font-bold leading-8 text-slate-700 ">
             Audit Log
           </h1>
-          <p className="mt-2 text-lg text-slate-500">
+          <p className="mt-1 text-xs text-slate-500">
             System-wide activity, for compliance and traceability
           </p>
         </div>
-        <button className="rounded-xl border border-slate-200 bg-white px-6 py-3 font-semibold text-black hover:bg-slate-50">
+        <button className="rounded-xl border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-900 shadow-sm transition hover:bg-slate-50">
           Export CSV
         </button>
       </div>
-      <div className="overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm">
-        <table className="w-full ">
 
+      <div className="w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+        <table className="w-full border-collapse">
           <thead>
-            <tr>
-              <th className="px-6 py-4 text-left text-sm font-bold text-black">
+            <tr className="border-b border-slate-200">
+              <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 User
               </th>
-              <th className="px-6 py-4 text-left text-sm font-bold text-black">
+              <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Action
               </th>
-              <th className="px-6 py-4 text-left text-sm font-bold text-black">
+              <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Module
               </th>
-              <th className="px-6 py-4 text-left text-sm font-bold text-black">
+              <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Timestamp
               </th>
-              <th className="px-6 py-4 text-left text-sm font-bold text-black">
+              <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 IP Address
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 text-left">
+          <tbody>
             {auditLogs.map((log) => (
-              <tr key={log.id} >
-                <td className="px-6 py-5 font-medium text-black">
+              <tr
+                key={log.id}
+                className="border-b border-slate-200 last:border-b-0"
+              >
+                <td className="px-3 py-3 text-sm font-medium text-slate-900 whitespace-nowrap">
                   {log.user}
                 </td>
-                <td className="px-6 py-5 text-black">
+                <td className="px-3 py-3 text-sm text-slate-900">
                   {log.action}
                 </td>
-                <td className="px-6 py-5 text-black">
+                <td className="px-3 py-3 text-sm text-slate-900 whitespace-nowrap">
                   {log.module}
                 </td>
-                <td className="px-6 py-5 text-black">
+                <td className="px-3 py-3 text-sm font-mono font-medium text-slate-900 whitespace-nowrap">
                   {log.timestamp}
                 </td>
-                <td className="px-6 py-5 text-black">
+                <td className="px-3 py-3 text-sm font-mono font-medium text-slate-900 whitespace-nowrap">
                   {log.ip}
                 </td>
-
               </tr>
             ))}
           </tbody>
-
         </table>
       </div>
-
     </div>
   );
 }

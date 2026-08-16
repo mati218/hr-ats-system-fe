@@ -83,29 +83,17 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
 
   }, [isOpen, user, setValue, reset]);
 
-
-  const handleCreate = async (data) => {
-    try {
-      const response = await createUser(data);
-
-      console.log(
-        "Create Response:",
-        response.data
-      );
-
-      alert("User created successfully");
-
-      if (onCreated) {
-        await onCreated();
-      }
-
-      onClose();
-
-    } catch (error) {
-      console.log(error.response?.data);
-      alert("Failed to create user");
-    }
-  };
+const handleCreate = async (data) => {
+  try {
+    const response = await createUser(data);
+    alert("User created successfully");
+    if (onCreated) await onCreated();
+    onClose();
+  } catch (error) {
+    console.log(error.response?.data);
+    alert(error.response?.data?.message || "Failed to create user");
+  }
+};
 
 
   const handleUpdate = async (data) => {
@@ -129,10 +117,9 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
       onClose();
 
     } catch (error) {
-      console.log(error.response?.data);
-      alert("Failed to update user");
-    }
-  };
+  console.log(error.response?.data);
+  alert(error.response?.data?.message || "Failed to update user");
+} };
 
 
   return (
@@ -190,13 +177,22 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
             Phone
           </label>
 
-          <FormInput
-            type="text"
-            placeholder="+92 3xx xxxxxxx"
-            name="phoneNumber"
-            register={register}
-            errors={errors}
-          />
+       <FormInput
+  type="text"
+  placeholder="+92 3xx xxxxxxx"
+  name="phoneNumber"
+  register={register}
+  errors={errors}
+  rules={{
+    required: "Phone number is required",
+  }}
+/>
+
+{errors.phoneNumber && (
+  <p className="text-red-500 text-sm mt-1">
+    {errors.phoneNumber.message}
+  </p>
+)}
         </div>
 
 
