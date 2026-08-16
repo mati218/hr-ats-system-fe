@@ -1,5 +1,6 @@
 import ScoreCircle from "./ScoreCircle";
 
+
 const PIPELINE_STAGES = [
   "Applied",
   "Screening",
@@ -50,10 +51,7 @@ function CandidateProfile({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3">
-      {/* MODAL */}
-      <div className="max-h-[88vh] w-full max-w-xl overflow-y-auto rounded-xl bg-white shadow-xl">
-
-        {/* HEADER */}
+      <div className="max-h-[90vh] w-full max-w-[700px] overflow-y-auto rounded-xl bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <h2 className="text-sm font-bold text-slate-900">
             Candidate Profile
@@ -68,12 +66,9 @@ function CandidateProfile({
           </button>
         </div>
 
-        {/* NAME + SCORE */}
-        <div className="flex items-center justify-between px-5 py-3">
+        <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-
-            {/* Avatar */}
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-600 text-sm font-bold text-white">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-purple-600 text-sm font-bold text-white">
               {initials}
             </div>
 
@@ -97,8 +92,6 @@ function CandidateProfile({
             />
           </div>
         </div>
-
-        {/* PIPELINE */}
         <div className="px-5">
           <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
             Pipeline Stage
@@ -110,11 +103,7 @@ function CandidateProfile({
             </div>
           ) : (
             <div className="relative flex items-start justify-between">
-
-              {/* Background Line */}
               <div className="absolute left-5 right-5 top-3.5 h-0.5 bg-slate-200" />
-
-              {/* Progress Line */}
               <div
                 className="absolute left-5 top-3.5 h-0.5 bg-emerald-500"
                 style={{
@@ -224,8 +213,6 @@ function CandidateProfile({
             )}
           </div>
         </div>
-
-        {/* NOTES */}
         <div className="mt-6 px-5">
           <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
             Recruiter Notes
@@ -255,8 +242,6 @@ function CandidateProfile({
             )}
           </div>
         </div>
-
-        {/* ACTIONS */}
         <div className="mt-6 flex flex-col gap-3 border-t border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
 
           <button
@@ -273,7 +258,7 @@ function CandidateProfile({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-small text-slate-800 hover:bg-slate-50"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-small text-slate-800 hover:bg-slate-50"
             >
               Close
             </button>
@@ -282,7 +267,7 @@ function CandidateProfile({
               type="button"
               onClick={handleScheduleClick}
               disabled={isRejected}
-              className="rounded-lg bg-blue-600 px-2 py-2 text-xs font-small text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-lg bg-blue-700 px-2 py-1 text-xs font-small text-white hover:bg-blue-700 disabled:opacity-50"
             >
               Schedule Interview
             </button>

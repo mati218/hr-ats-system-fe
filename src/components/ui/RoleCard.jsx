@@ -49,7 +49,7 @@ function RoleCard({ role, selectedRole, setSelectedRole, onDelete }) {
   return (
     <div
       onClick={() => setSelectedRole(role)}
-      className={`relative cursor-pointer rounded-2xl border bg-white text-left p-6 shadow-sm transition-all duration-150 hover:shadow-md ${
+      className={`relative cursor-pointer rounded-2xl border bg-white text-left p-4 shadow-sm transition-all duration-150 hover:shadow-md ${
         active ? `${ringColor} shadow` : `border-slate-200 ${hoverBorder}`
       }`}
     >
@@ -58,29 +58,29 @@ function RoleCard({ role, selectedRole, setSelectedRole, onDelete }) {
           type="button"
           onClick={handleDeleteClick}
           title="Delete role"
-          className="absolute right-4 top-4 rounded-full p-1.5 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-500"
+          className="absolute right-4 top-4 rounded-full p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-500"
         >
-          <Trash2 className="h-4.5 w-4.5" />
+          <Trash2 className="h-3 w-3" />
         </button>
       )}
 
-      <div className="flex items-center justify-between pr-6">
-        <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${badgeClass}`}>
+      <div className="flex items-center justify-between pr-3">
+        <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${badgeClass}`}>
           {role.roleName}
         </span>
         {isLocked && (
           <span className="text-amber-500" title="System role — protected">
-            <Lock className="h-4.5 w-4.5" />
+            <Lock className="h-3 w-3" />
           </span>
         )}
       </div>
 
-      <p className="mt-4 text-base text-slate-600">
+      <p className="mt-1  text-slate-600">
         {role.description || "Custom role"}
         {role.userCount ? ` · ${role.userCount} user${role.userCount > 1 ? "s" : ""}` : ""}
       </p>
 
-      <p className="mt-3 text-xs font-medium text-slate-400">
+      <p className="mt-1 text-xs font-small text-slate-400">
         {(role.permissions?.length || 0)} module{role.permissions?.length === 1 ? "" : "s"} configured
       </p>
     </div>

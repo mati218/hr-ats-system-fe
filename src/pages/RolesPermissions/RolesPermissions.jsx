@@ -40,13 +40,12 @@ function RolesPermissions() {
     setOpenModal(true);
   };
 
-  // Card click par local array pe bharosa nahi — seedha DB se fresh data lo
   const handleCardClick = async (roleStub) => {
     if (!roleStub?._id) return;
     setSaveError("");
     setLoadingRole(true);
     setOpenModal(true);
-    setEditingRole(null); // purana data flash na ho, jab tak fresh na aaye
+    setEditingRole(null); 
 
     try {
       const res = await getRole(roleStub._id);
@@ -98,13 +97,13 @@ function RolesPermissions() {
   return (
     <div className="min-h-screen bg-slate-50 p-6">
 
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-5 flex  items-center justify-between font-semibold">
         <div>
-          <h1 className="text-3xl font-bold float-left gap-2">Roles & Permissions</h1>
-          <p className="text-gray-500 mt-12 flex ">
+          <h1 className="text-2xl  float-left gap-1">Roles & Permissions</h1>
+          <p className="text-gray-400 mt-9 flex text-sm">
             Control what each role can view, create, edit and delete.
           </p>
-        </div>
+        </div> 
         <Button text="+ New Role" onClick={handleNewRoleClick} />
       </div>
 

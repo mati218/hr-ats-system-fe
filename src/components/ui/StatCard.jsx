@@ -2,29 +2,31 @@ function StatCard({
   title,
   value,
   subtitle,
-  subtitleColor = "text-green-600",
+  subtitleColor = "text-emerald-600",
   showProgress = false,
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-4">
-      <p className="text-sm font-bold  text-slate-500">
+    <div className="min-h-[90px] rounded-2xl  border-slate-200 bg-white px-5 py-3 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
         {title}
       </p>
 
       <div className="mt-2 flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900">
+          <h2 className="text-[30px] font-bold leading-none text-slate-900">
             {value}
           </h2>
 
-          <p className={`mt-4 font-semibold ${subtitleColor}`}>
+          <p
+            className={`mt-3 text-xs font-semibold ${subtitleColor}`}
+          >
             {subtitle}
           </p>
         </div>
 
         {showProgress && (
-          <div className="relative flex h-16 w-16 items-center justify-center rounded-full border-[6px] border-emerald-600">
-            <span className="text-lg font-bold text-slate-900">
+          <div className="relative flex h-[52px] w-[52px] items-center justify-center rounded-full border-[6px] border-emerald-600">
+            <span className="text-xs font-bold text-slate-900">
               78%
             </span>
           </div>
