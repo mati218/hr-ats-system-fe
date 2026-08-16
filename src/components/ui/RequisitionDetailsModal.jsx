@@ -28,10 +28,6 @@ const RequisitionDetailsModal = ({
     requisition.salaryMax || 0
   ).toLocaleString();
 
-  // Supports both:
-  // skills: "React, JavaScript, Git"
-  // OR
-  // skills: ["React", "JavaScript", "Git"]
   const skills = Array.isArray(requisition.skills)
     ? requisition.skills
     : requisition.skills
@@ -44,28 +40,28 @@ const RequisitionDetailsModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
 
-      <div className="relative w-full max-w-4xl max-h-[95vh] overflow-y-auto rounded-2xl border border-gray-700 bg-[#171717] text-white">
+      <div className="relative w-full max-w-4xl max-h-[95vh] overflow-y-auto rounded-2xl border border-gray-200 bg-white text-slate-900">
 
         {/* ================= HEADER ================= */}
 
-        <div className="border-b border-gray-700 px-7 py-6">
+        <div className="border-b border-gray-200 px-7 py-6">
 
           <button
             onClick={onClose}
-            className="absolute right-6 top-6 text-gray-400 hover:text-white"
+            className="absolute right-6 top-6 text-gray-500 hover:text-gray-900"
           >
             <X size={26} />
           </button>
 
-          <span className="inline-flex rounded-full bg-gray-700 px-3 py-1 text-sm font-medium">
+          <span className="inline-flex rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
             {status}
           </span>
 
-          <h2 className="mt-3 text-3xl font-semibold">
+          <h2 className="mt-3 text-3xl font-semibold text-slate-900">
             {requisition.role || "Untitled"}
           </h2>
 
-          <p className="mt-2 text-gray-400">
+          <p className="mt-2 text-gray-500">
             {requisition.department || "Not set"}
             {" · "}
             {requisition.location || "Not set"}
@@ -75,7 +71,7 @@ const RequisitionDetailsModal = ({
 
         {/* ================= BASIC DETAILS ================= */}
 
-        <section className="border-b border-gray-700 px-7 py-6">
+        <section className="border-b border-gray-200 px-7 py-6">
 
           <h3 className="mb-5 text-xs font-medium uppercase tracking-wider text-gray-500">
             Basic Details
@@ -127,7 +123,7 @@ const RequisitionDetailsModal = ({
 
         {/* ================= COMPENSATION ================= */}
 
-        <section className="border-b border-gray-700 px-7 py-6">
+        <section className="border-b border-gray-200 px-7 py-6">
 
           <h3 className="mb-5 text-xs font-medium uppercase tracking-wider text-gray-500">
             Compensation
@@ -135,22 +131,22 @@ const RequisitionDetailsModal = ({
 
           <div className="grid grid-cols-2 gap-5">
 
-            <div className="rounded-xl border border-gray-700 bg-[#1c1c1c] px-5 py-4">
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-5 py-4">
               <p className="text-xs text-gray-500">
                 Salary Range — Min (PKR)
               </p>
 
-              <p className="mt-2 text-xl font-semibold">
+              <p className="mt-2 text-xl font-semibold text-slate-900">
                 Rs {salaryMin}
               </p>
             </div>
 
-            <div className="rounded-xl border border-gray-700 bg-[#1c1c1c] px-5 py-4">
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-5 py-4">
               <p className="text-xs text-gray-500">
                 Salary Range — Max (PKR)
               </p>
 
-              <p className="mt-2 text-xl font-semibold">
+              <p className="mt-2 text-xl font-semibold text-slate-900">
                 Rs {salaryMax}
               </p>
             </div>
@@ -161,42 +157,41 @@ const RequisitionDetailsModal = ({
 
         {/* ================= DESCRIPTION ================= */}
 
-        <section className="border-b border-gray-700 px-7 py-6">
+        <section className="border-b border-gray-200 px-7 py-6">
 
           <h3 className="mb-4 text-xs font-medium uppercase tracking-wider text-gray-500">
             Description
           </h3>
 
-          <p className="whitespace-pre-wrap text-base leading-7 text-white">
-  {requisition.description || "Not set"}
-</p>
+          <p className="whitespace-pre-wrap text-base leading-7 text-slate-700">
+            {requisition.description || "Not set"}
+          </p>
 
         </section>
 
         {/* ================= REQUIREMENTS ================= */}
 
-        <section className="border-b border-gray-700 px-7 py-6">
+        <section className="border-b border-gray-200 px-7 py-6">
 
           <h3 className="mb-4 text-xs font-medium uppercase tracking-wider text-gray-500">
             Requirements / Must-have Skills
           </h3>
 
-          
           {skills.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {skills.map((skill, index) => (
                 <span
                   key={index}
-                  className="rounded-lg border border-gray-600 bg-[#242424] px-3 py-1.5 text-sm"
+                  className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-slate-700"
                 >
                   {skill}
                 </span>
               ))}
             </div>
           ) : (
-            <p className="whitespace-pre-wrap text-base leading-7 text-white">
-  {requisition.requirements || "Not set"}
-</p>
+            <p className="whitespace-pre-wrap text-base leading-7 text-slate-700">
+              {requisition.requirements || "Not set"}
+            </p>
           )}
 
         </section>
@@ -207,7 +202,7 @@ const RequisitionDetailsModal = ({
 
           <button
             onClick={onClose}
-            className="rounded-xl border border-gray-600 px-5 py-2 text-sm font-medium hover:bg-gray-800"
+            className="rounded-xl border border-gray-300 px-5 py-2 text-sm font-medium text-slate-700 hover:bg-gray-100"
           >
             Close
           </button>
@@ -229,7 +224,7 @@ const Detail = ({ label, value }) => {
         {label}
       </p>
 
-      <p className="mt-1 text-lg font-semibold text-white">
+      <p className="mt-1 text-lg font-semibold text-slate-900">
         {value !== undefined &&
         value !== null &&
         value !== ""
