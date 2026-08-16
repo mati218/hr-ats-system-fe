@@ -6,7 +6,7 @@ const applications = [
     role: "UX Designer",
     avatar: "bg-blue-600",
     status: "Screening",
-    badge: "bg-blue-100 text-blue-700",
+    badge: "bg-blue-50 text-blue-600",
   },
   {
     id: 2,
@@ -15,7 +15,7 @@ const applications = [
     role: "Backend Engineer",
     avatar: "bg-violet-600",
     status: "Interview",
-    badge: "bg-amber-100 text-amber-700",
+    badge: "bg-amber-50 text-amber-600",
   },
   {
     id: 3,
@@ -24,7 +24,7 @@ const applications = [
     role: "Product Manager",
     avatar: "bg-emerald-600",
     status: "Shortlisted",
-    badge: "bg-emerald-100 text-emerald-700",
+    badge: "bg-emerald-50 text-emerald-600",
   },
   {
     id: 4,
@@ -33,43 +33,45 @@ const applications = [
     role: "QA Engineer",
     avatar: "bg-red-600",
     status: "Rejected",
-    badge: "bg-red-100 text-red-700",
+    badge: "bg-red-50 text-red-600",
   },
 ];
 
 function RecentApplications() {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-      <h2 className="mb-4 text-2xl font-bold text-slate-900">
+    <div className="rounded-2xl border-slate-200 bg-white p-6 shadow-sm">
+      <h2 className="mb-3  font-semibold text-slate-900">
         Recent applications
       </h2>
 
-      <div className="space-y-2">
+      <div>
         {applications.map((item) => (
           <div
             key={item.id}
-            className="flex items-center justify-between border-b border-slate-200 py-3 "
+            className="flex items-center justify-between border-b border-slate-200 py-2 last:border-b-0"
           >
-            <div className="flex items-center gap-2">
+            {/* Left side */}
+            <div className="flex items-center gap-3">
               <div
-                className={`flex h-8 w-12 items-center justify-center rounded-full font-bold text-white ${item.avatar}`}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${item.avatar}`}
               >
                 {item.initials}
               </div>
 
               <div>
-                <h3 className="text-md font-bold text-slate-900">
+                <h3 className="text-sm font-semibold leading-5 text-slate-900">
                   {item.name}
                 </h3>
 
-                <p className="text-base text-slate-500">
+                <p className="text-xs text-slate-500">
                   {item.role}
                 </p>
               </div>
             </div>
 
+            {/* Status */}
             <span
-              className={`rounded-full px-2 py-1 text-sm font-semibold ${item.badge}`}
+              className={`rounded-full mr-23  px-3 py-1 text-xs font-semibold ${item.badge}`}
             >
               {item.status}
             </span>

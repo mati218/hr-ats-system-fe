@@ -1,5 +1,9 @@
 import api from "./axios";
 
+export const applyToJob = async (payload) => {
+  return api.post("/candidates/apply", payload);
+};
+
 export const fetchAllCandidates = async () => {
   return api.get("/candidates");
 };

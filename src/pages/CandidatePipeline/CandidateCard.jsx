@@ -19,14 +19,14 @@ function CandidateCard({ candidate, onClick }) {
       onClick={() => onClick(candidate)}
       className="
         w-full
-        max-w-[900px]
+        mb-3
         cursor-pointer
-        rounded-[9px]
+        rounded-xl
         border
         border-slate-200
         bg-white
-        px-6
-        py-4
+        px-3
+        py-3
         shadow-sm
         transition
         hover:border-slate-300
@@ -34,18 +34,18 @@ function CandidateCard({ candidate, onClick }) {
       "
     >
       {/* NAME + SCORE */}
-      <div className="flex items-center justify-between gap-5">
-        <h3 className="truncate text-[13px] font-bold text-slate-900">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="truncate text-[14px] font-bold text-slate-900">
           {candidate.name}
         </h3>
 
         <span
           className={`
             shrink-0
-            rounded-[5px]
-            px-1.5
-            py-[6px]
-            text-[9px]
+            rounded-full
+            px-2.5
+            py-1
+            text-[12px]
             font-bold
             ${getScoreClass(candidate.score)}
           `}
@@ -54,8 +54,7 @@ function CandidateCard({ candidate, onClick }) {
         </span>
       </div>
 
-      {/* EXPERIENCE / SKILLS */}
-      <p className="mt-[2px] truncate text-[11px] text-slate-500">
+      <p className="mt-1 truncate text-[12.5px] text-slate-500">
         {candidate.experience}
 
         {skills.length > 0 && (
@@ -68,17 +67,17 @@ function CandidateCard({ candidate, onClick }) {
 
       {/* TAGS */}
       {tags.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1">
+        <div className="mt-2 flex flex-wrap gap-2">
           {tags.map((tag, index) => (
             <span
               key={`${tag}-${index}`}
               className="
-                rounded-[4px]
+                rounded-md
                 bg-slate-100
                 px-2
-                py-[3px]
-                text-[8px]
-                font-lg
+                py-1
+                text-[11px]
+                font-medium
                 text-slate-600
               "
             >

@@ -155,9 +155,9 @@ const JobRequisition = () => {
     <div className="p-6">
 
       {/* HEADER */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-2xl text-[#181B25] font-bold font-sans">
+          <h1 className="text-2xl text-[#181B25] font-semibold font-sans">
             Job Requisitions
           </h1>
 
@@ -172,7 +172,7 @@ const JobRequisition = () => {
             setSelectedRequisition(null);
             setShowModal(true);
           }}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow-sm transition"
+          className="bg-blue-700 hover:bg-blue-700 text-white font-semibold px-3 py-1 rounded-xl shadow-sm transition"
         >
           + New Requisition
         </button>

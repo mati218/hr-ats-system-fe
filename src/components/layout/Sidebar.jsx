@@ -70,28 +70,28 @@ const Sidebar = () => {
   ];
 
   return (
-<aside className="w-72 h-full min-h-screen overflow-y-auto bg-[#11131d] text-white flex flex-col">
-      <div className="flex items-center gap-3 p-7">
-        <div className="h-11 w-11 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-lg">
+<aside className="w-63 h-full min-h-screen overflow-y-auto bg-[#11131d] text-white flex flex-col">
+      <div className="flex items-center gap-2 p-6">
+        <div className="h-8 w-8 rounded-xl bg-indigo-600 flex items-center justify-center font-semibold text-md">
           T
         </div>
 
         <div>
-          <h2 className="font-bold text-xl">Talenta</h2>
-          <p className="text-sm text-gray-400">HR / ATS</p>
+          <h2 className="font-bold text-md">Talenta</h2>
+          <p className="text-xs text-gray-400">HR / ATS</p>
         </div>
       </div>
 
       <div className="px-6 flex-1">
 
-        <p className="text-s text-gray-500 uppercase mb-3 flex">
+        <p className="text-[11px] text-gray-500 uppercase mb-2 flex">
           Overview
         </p>
         
         <NavLink
           to="/dashboard"
           className={({ isActive }) =>
-            `flex items-center gap-1 p-2 rounded-xl mb-2 ${
+            `flex items-center gap-3 p-1.5 text-sm font-semibold  rounded-lg mb-2 ${
               isActive
                 ? "bg-blue-600 text-white"
                 : "text-gray-300 hover:bg-gray-800"
@@ -102,7 +102,7 @@ const Sidebar = () => {
           Dashboard
         </NavLink>
 
-        <p className="text-s text-gray-500 uppercase gap-1.5 mt-8 mb-3 flex font-semibold">
+        <p className="text-[11px] text-gray-500 uppercase gap-1 mt-3 mb-3 flex font-semibold">
           Recruitment
         </p>
 
@@ -111,7 +111,7 @@ const Sidebar = () => {
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center gap-1 p-2 rounded-xl mb-2 ${
+              `flex items-center text-gray-400 gap-3 p-1.5 font-semibold text-sm rounded-lg mb-1 ${
                 isActive
                   ? "bg-blue-600 text-white"
                   : "text-gray-300 hover:bg-gray-800"
@@ -123,7 +123,7 @@ const Sidebar = () => {
           </NavLink>
         ))}
 
-        <p className="text-s text-gray-500 uppercase mt-8 mb-3 flex">
+        <p className="text-[11px] text-gray-500 uppercase mt-4 mb-1 flex">
           Administration
         </p>
 
@@ -132,7 +132,7 @@ const Sidebar = () => {
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center gap-1 p-2 rounded-xl mb-2 ${
+              `flex items-center text-gray-400 gap-3 p-1.5 font-semibold text-sm rounded-lg mb-1 ${
                 isActive
                   ? "bg-blue-600 text-white"
                   : "text-gray-300 hover:bg-gray-800"
@@ -147,17 +147,15 @@ const Sidebar = () => {
 
       <div className="border-t border-gray-800 p-6">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-violet-600 flex items-center justify-center font-bold">
+          <div className="h-8 w-8 rounded-full bg-violet-600 flex items-center justify-center font-bold">
             SA
           </div>
-
           <div>
-            <h3 className="font-semibold">Super Admin</h3>
-            <p className="text-sm text-gray-400">Super Admin</p>
+            <h3 className="font-semibold text-sm">Super Admin</h3>
+            <p className="text-xs text-gray-400">Super Admin</p>
           </div>
         </div>
-
-        <button className="mt-4 text-sm text-gray-400 hover:text-white">
+        <button className="mt-1 text-xs text-gray-400 hover:text-white">
           Log out / switch role →
         </button>
       </div>

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getUsersLookup } from "../../lib/api/lookupApi";
 
 function ScheduleInterviewModal({
   isOpen,
@@ -12,10 +13,32 @@ function ScheduleInterviewModal({
     date: "",
     time: "",
     duration: "45 minutes",
-    interviewer: "",
+    interviewerId: "",
     location: "",
     notes: "",
   });
+
+  const [interviewers, setInterviewers] = useState([]);
+  const [loadingInterviewers, setLoadingInterviewers] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const loadInterviewers = async () => {
+      setLoadingInterviewers(true);
+      try {
+        const response = await getUsersLookup("Interviewer");
+        setInterviewers(response?.data?.data || []);
+      } catch (error) {
+        console.error("GET INTERVIEWERS ERROR:", error?.response?.data);
+        setInterviewers([]);
+      } finally {
+        setLoadingInterviewers(false);
+      }
+    };
+
+    loadInterviewers();
+  }, [isOpen]);
 
   if (!isOpen || !candidate) {
     return null;
@@ -39,7 +62,7 @@ function ScheduleInterviewModal({
       return;
     }
 
-    if (!form.interviewer) {
+    if (!form.interviewerId) {
       alert("Please select interviewer.");
       return;
     }
@@ -192,18 +215,22 @@ function ScheduleInterviewModal({
               </label>
 
               <select
-                value={form.interviewer}
+                value={form.interviewerId}
                 onChange={(e) =>
-                  update("interviewer", e.target.value)
+                  update("interviewerId", e.target.value)
                 }
+                disabled={loadingInterviewers}
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
               >
                 <option value="">
-                  Select interviewer
+                  {loadingInterviewers ? "Loading..." : "Select interviewer"}
                 </option>
 
-                <option>Zeeshan Raza</option>
-                <option>Ayesha Khan</option>
+                {interviewers.map((interviewer) => (
+                  <option key={interviewer.id} value={interviewer.id}>
+                    {interviewer.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -261,7 +288,7 @@ function ScheduleInterviewModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs  text-slate-800 hover:bg-slate-50"
+              className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs  text-slate-800 hover:bg-slate-50"
             >
               Close
             </button>
@@ -270,7 +297,7 @@ function ScheduleInterviewModal({
             <button
               type="button"
               onClick={handleSubmit}
-              className="rounded-lg bg-blue-600 px-2 py-2 text-xs  text-white hover:bg-blue-700"
+              className="rounded-lg bg-blue-700 px-2 py-1 text-xs  text-white hover:bg-blue-700"
             >
               Schedule Interview
             </button>
