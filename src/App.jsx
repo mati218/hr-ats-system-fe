@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "sonner";
 import Login from "./pages/auth/LoginPage";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -15,8 +16,11 @@ import AuditLog from "./pages/Audit Log/AuditLog";
 import ATSRanking from "./pages/ATSRanking/ATSRanking";
 import CandidatePipeline from "./pages/CandidatePipeline/CandidatePipeline";
 
+
 function App() {
   return (
+    <>
+      <Toaster position="bottom-right" richColors />
   
     <BrowserRouter>
       <Routes>
@@ -45,6 +49,7 @@ function App() {
 
       </Routes>
     </BrowserRouter>
+    </>
   );
 }
 

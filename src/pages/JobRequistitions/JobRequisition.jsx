@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import RequisitionTable from "../../components/ui/RequisitionTable";
 import NewRequisition from "./NewRequisition";
 
@@ -15,6 +16,7 @@ const tabs = ["All", "Open", "Draft", "Closed", "Archived"];
 
 const JobRequisition = () => {
   const [requisitions, setRequisitions] = useState([]);
+  const [isCreateMode, setIsCreateMode] = useState(false);
 
   const [tabCounts, setTabCounts] = useState({
     All: 0,
@@ -46,103 +48,148 @@ const JobRequisition = () => {
   ];
 
   // =========================
-  // FETCH REQUISITIONS
   // =========================
+// FETCH REQUISITIONS
+// =========================
 
-  const fetchRequisitions = (status) => {
-    setLoading(true);
+const fetchRequisitions = (status) => {
+  setLoading(true);
 
-    getRequisitions(status)
-      .then((res) => {
-        setRequisitions(res.data.data);
-      })
-      .catch((error) => {
-        console.log("Failed to fetch requisitions:", error);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  };
+  getRequisitions(status)
+    .then((res) => {
+      setRequisitions(res.data.data);
+    })
+    .catch((error) => {
+      console.log("Failed to fetch requisitions:", error);
 
-  // =========================
-  // FETCH COUNTS
-  // =========================
+      toast.error(
+        error?.response?.data?.message ||
+        "Failed to fetch requisitions"
+      );
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+};
 
-  const fetchCounts = () => {
-    getRequisitionCounts()
-      .then((res) => {
-        setTabCounts(res.data.data);
-      })
-      .catch((error) => {
-        console.log("Failed to fetch counts:", error);
-      });
-  };
 
-  // =========================
-  // VIEW REQUISITION
-  // =========================
+// =========================
+// FETCH COUNTS
+// =========================
 
-  const handleView = async (id) => {
-    try {
-      const response = await getRequisition(id);
+const fetchCounts = () => {
+  getRequisitionCounts()
+    .then((res) => {
+      setTabCounts(res.data.data);
+    })
+    .catch((error) => {
+      console.log("Failed to fetch counts:", error);
 
-      setSelectedRequisition(response.data.data || response.data);
+      toast.error(
+        error?.response?.data?.message ||
+        "Failed to fetch requisition counts"
+      );
+    });
+};
 
-      setShowDetailsModal(true);
-    } catch (error) {
-      console.log("Failed to fetch requisition details:", error);
-    }
-  };
 
-  // =========================
-  // DELETE REQUISITION
-  // =========================
+// =========================
+// VIEW REQUISITION
+// =========================
 
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this requisition?"
+const handleView = async (id) => {
+  try {
+    const response = await getRequisition(id);
+
+    setSelectedRequisition(
+      response.data.data || response.data
     );
 
-    if (!confirmDelete) {
-      return;
+    setShowDetailsModal(true);
+  } catch (error) {
+    console.log("Failed to fetch requisition details:", error);
+
+    toast.error(
+      error?.response?.data?.message ||
+      "Failed to load requisition details"
+    );
+  }
+};
+
+
+// =========================
+// DELETE REQUISITION
+// =========================
+
+const handleDelete = (id) => {
+  toast.warning(
+    "Are you sure you want to delete this requisition?",
+    {
+      duration: Infinity,
+
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            await deleteRequisition(id);
+
+            // Remove deleted requisition from current table
+            setRequisitions((prev) =>
+              prev.filter((item) => item._id !== id)
+            );
+
+            // Update counts
+            fetchCounts();
+
+            toast.success(
+              "Requisition deleted successfully"
+            );
+          } catch (error) {
+            console.log(
+              "Failed to delete requisition:",
+              error
+            );
+
+            toast.error(
+              error?.response?.data?.message ||
+              "Failed to delete requisition"
+            );
+          }
+        },
+      },
+
+      cancel: {
+        label: "Cancel",
+      },
     }
-
-    try {
-      await deleteRequisition(id);
-
-      // Remove deleted requisition from current table
-      setRequisitions((prev) =>
-        prev.filter((item) => item._id !== id)
-      );
-
-      // Update counts
-      fetchCounts();
-    } catch (error) {
-      console.log("Failed to delete requisition:", error);
-    }
-  };
-
+  );
+};
   // =========================
   // EFFECTS
   // =========================
 
   useEffect(() => {
-    const loadRequisitions = async () => {
-      setLoading(true);
+  const loadRequisitions = async () => {
+    setLoading(true);
 
-      try {
-        const res = await getRequisitions(activeTab);
-        setRequisitions(res.data.data);
-      } catch (error) {
-        console.log("Failed to fetch requisitions:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    try {
+      const res = await getRequisitions(activeTab);
 
-    loadRequisitions();
-  }, [activeTab]);
+      setRequisitions(res.data.data);
+    } catch (error) {
+      console.log("Failed to fetch requisitions:", error);
 
+      toast.error(
+        error?.response?.data?.message ||
+        "Failed to load requisitions"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadRequisitions();
+}, [activeTab]);
   useEffect(() => {
     fetchCounts();
   }, []);
@@ -170,6 +217,7 @@ const JobRequisition = () => {
         <button
           onClick={() => {
             setSelectedRequisition(null);
+            setIsCreateMode(true);
             setShowModal(true);
           }}
           className="bg-blue-700 hover:bg-blue-700 text-white font-semibold px-3 py-1 rounded-xl shadow-sm transition"
@@ -219,6 +267,7 @@ const JobRequisition = () => {
             // EXISTING EDIT
             onEdit={(req) => {
               setSelectedRequisition(req);
+              setIsCreateMode(false);
               setShowModal(true);
             }}
 
@@ -237,8 +286,10 @@ const JobRequisition = () => {
         onClose={() => {
           setShowModal(false);
           setSelectedRequisition(null);
+          setIsCreateMode(false);
         }}
         requisition={selectedRequisition}
+        isCreateMode={isCreateMode}
         onSaved={() => {
           fetchRequisitions(activeTab);
           fetchCounts();

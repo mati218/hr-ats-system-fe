@@ -8,7 +8,7 @@ import Button from "../../components/ui/Button";
 import { createRequisition, updateRequisition } from "../../lib/api/requisitionApi";
 import { getEmploymentTypesLookup } from "../../lib/api/lookupApi";
 
-const NewRequisition = ({ isOpen, onClose, onSaved, requisition }) => {
+const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode }) => {
   const {
     register,
     handleSubmit,
@@ -32,14 +32,31 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition }) => {
   }, []);
 
   const getTomorrowDate = () => {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return tomorrow.toISOString().split("T")[0]; // "YYYY-MM-DD"
-};
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split("T")[0]; // "YYYY-MM-DD"
+  };
 
-  useEffect(() => {
+ useEffect(() => {
+  if (isCreateMode) {
+    reset({
+      jobTitle: "",
+      department: "",
+      employmentType: "",
+      location: "",
+      openings: 0,
+      experienceLevel: "",
+      deadline: "",
+      salaryMin: "",
+      salaryMax: "",
+      description: "",
+      requirements: "",
+      publishOption: "",
+    });
+    return;
+  }
+
   if (requisition) {
-    // EDIT MODE
     reset({
       jobTitle: requisition.role || "",
       department: requisition.department || "",
@@ -57,24 +74,8 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition }) => {
       publishOption:
         requisition.status === "Open" ? "publish" : "draft",
     });
-  } else {
-    // CREATE MODE
-    reset({
-      jobTitle: "",
-      department: "",
-      employmentType: "",
-      location: "",
-      openings: 0,
-      experienceLevel: "",
-      deadline: "",
-      salaryMin: "",
-      salaryMax: "",
-      description: "",
-      requirements: "",
-      publishOption: "",
-    });
   }
-}, [requisition, reset]);
+}, [isCreateMode, requisition, reset]);
 
   const onSubmit = async (data) => {
     const finaldata = {
@@ -166,31 +167,51 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition }) => {
             <label className="text-sm font-semibold text-gray-800 flex">
               Department
             </label>
-            <select
-              className="w-full rounded-lg border border-gray-300 px-4 py-3"
-              {...register("department")}
-            >
-              <option>Engineering</option>
-              <option>Design</option>
-              <option>People Ops</option>
-              <option>Analytics</option>
-            </select>
-          </div>
 
+            <select
+              className={`w-full rounded-lg border px-4 py-3`}
+              {...register("department", {
+                required: "Department required",
+              })}
+            >
+              <option value=""></option>
+              <option value="Engineering">Engineering</option>
+              <option value="Design">Design</option>
+              <option value="People Ops">People Ops</option>
+              <option value="Analytics">Analytics</option>
+            </select>
+
+            {errors.department && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.department.message}
+              </p>
+            )}
+          </div>
           <div>
             <label className="text-sm font-semibold text-gray-800 flex">
               Employment Type
             </label>
+
             <select
-              className="w-full rounded-lg border border-gray-300 px-4 py-3"
-              {...register("employmentType")}
+              className={`w-full rounded-lg border border-black px-4 py-3`}
+              {...register("employmentType", {
+                required: "Employment type  required",
+              })}
             >
+              <option value=""></option>
+
               {employmentTypes.map((type) => (
                 <option key={type.id} value={type.name}>
                   {type.name}
                 </option>
               ))}
             </select>
+
+            {errors.employmentType && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.employmentType.message}
+              </p>
+            )}
           </div>
         </div>
 
@@ -243,13 +264,13 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition }) => {
               Application Deadline
             </label>
             <FormInput
-  type="date"
-  placeholder="mm/dd/yyyy"
-  name="deadline"
-  register={register}
-  errors={errors}
-  min={getTomorrowDate()}
-/>
+              type="date"
+              placeholder="mm/dd/yyyy"
+              name="deadline"
+              register={register}
+              errors={errors}
+              min={getTomorrowDate()}
+            />
           </div>
         </div>
 
@@ -327,11 +348,10 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition }) => {
           <button
             type="button"
             onClick={() => setValue("publishOption", "draft")}
-            className={`flex items-center gap-2 justify-center rounded-lg border px-4 py-3 text-sm font-medium ${
-              publishOption === "draft"
-                ? "border-blue-500 bg-blue-50 text-blue-700"
-                : "border-gray-300 text-gray-600"
-            }`}
+            className={`flex items-center gap-2 justify-center rounded-lg border px-4 py-3 text-sm font-medium ${publishOption === "draft"
+              ? "border-blue-500 bg-blue-50 text-blue-700"
+              : "border-gray-300 text-gray-600"
+              }`}
           >
             📝 Save as Draft
           </button>
@@ -339,11 +359,10 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition }) => {
           <button
             type="button"
             onClick={() => setValue("publishOption", "publish")}
-            className={`flex items-center gap-2 justify-center rounded-lg border px-4 py-3 text-sm font-medium ${
-              publishOption === "publish"
-                ? "border-blue-500 bg-blue-50 text-blue-700"
-                : "border-gray-300 text-gray-600"
-            }`}
+            className={`flex items-center gap-2 justify-center rounded-lg border px-4 py-3 text-sm font-medium ${publishOption === "publish"
+              ? "border-blue-500 bg-blue-50 text-blue-700"
+              : "border-gray-300 text-gray-600"
+              }`}
           >
             🌐 Publish to Career Portal
           </button>

@@ -37,14 +37,9 @@ function RoleCard({ role, selectedRole, setSelectedRole, onDelete }) {
   }
 
   const handleDeleteClick = (e) => {
-    e.stopPropagation();
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${role.roleName}"? This action cannot be undone.`
-    );
-    if (confirmed) {
-      onDelete(role);
-    }
-  };
+  e.stopPropagation();
+  onDelete(role);
+};
 
   return (
     <div
