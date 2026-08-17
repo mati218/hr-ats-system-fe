@@ -19,7 +19,7 @@ function CandidateCard({ candidate, onClick }) {
       onClick={() => onClick(candidate)}
       className="
         w-full
-        mb-3
+        max-w-225
         cursor-pointer
         rounded-xl
         border
@@ -42,10 +42,10 @@ function CandidateCard({ candidate, onClick }) {
         <span
           className={`
             shrink-0
-            rounded-full
-            px-2.5
-            py-1
-            text-[12px]
+            rounded-[5px]
+            px-1.5
+            py-1.5
+            text-[9px]
             font-bold
             ${getScoreClass(candidate.score)}
           `}
@@ -54,7 +54,8 @@ function CandidateCard({ candidate, onClick }) {
         </span>
       </div>
 
-      <p className="mt-1 truncate text-[12.5px] text-slate-500">
+      {/* EXPERIENCE / SKILLS */}
+      <p className="mt-0.5 truncate text-[11px] text-slate-500">
         {candidate.experience}
 
         {skills.length > 0 && (
@@ -72,12 +73,12 @@ function CandidateCard({ candidate, onClick }) {
             <span
               key={`${tag}-${index}`}
               className="
-                rounded-md
+                rounded-sm
                 bg-slate-100
                 px-2
-                py-1
-                text-[11px]
-                font-medium
+                py-0.75
+                text-[8px]
+                font-lg
                 text-slate-600
               "
             >

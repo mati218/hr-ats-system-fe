@@ -84,7 +84,7 @@ const CareerPortal = () => {
                 items-center
                 justify-center
                 rounded-xl
-                bg-gradient-to-br
+                bg-linear-to-br
                 from-[#315FEA]
                 to-[#7351D8]
                 text-[16px]
@@ -102,8 +102,8 @@ const CareerPortal = () => {
             onClick={() => navigate("/login")}
             className="
               absolute
-              right-[145px]
-              top-[76px]
+              right-36.25
+              top-19
               rounded-xl
               border
               border-[#303544]

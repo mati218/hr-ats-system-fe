@@ -48,9 +48,11 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
                 placeholder="Your full name"
                 className="mt-1 w-full rounded-xl border border-[#DDE2EA] px-4 py-2 outline-none focus:border-[#315FEA]"
                 required
+                className="mt-2 w-full rounded-xl border border-[#DDE2EA] px-4 py-3 outline-none focus:border-[#315FEA]"
               />
             </div>
 
+            {/* EMAIL */}
             <div>
               <label className="font-semibold text-[#111827]">Email</label>
               <input
@@ -61,9 +63,11 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
                 placeholder="you@email.com"
                 className="mt-1 w-full rounded-xl border border-[#DDE2EA] px-4 py-2 outline-none focus:border-[#315FEA]"
                 required
+                className="mt-2 w-full rounded-xl border border-[#DDE2EA] px-4 py-3 outline-none focus:border-[#315FEA]"
               />
             </div>
 
+            {/* PHONE */}
             <div>
               <label className="font-semibold text-[#111827]">Phone</label>
               <input
@@ -76,6 +80,7 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
               />
             </div>
 
+            {/* EXPERIENCE */}
             <div>
               <label className="font-semibold text-[#111827]">Years of Experience</label>
               <input
