@@ -48,7 +48,7 @@ function ScheduleInterviewModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-3">
+    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 p-3">
 
       {/* MODAL */}
       <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl bg-white shadow-xl">

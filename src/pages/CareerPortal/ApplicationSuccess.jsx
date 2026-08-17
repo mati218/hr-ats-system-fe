@@ -1,9 +1,9 @@
 const ApplicationSuccess = ({ job,  onClose }) => {
     if (!job) return null;
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4">
+    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 px-4">
 
-      <div className="w-full max-w-[630px] rounded-[22px] bg-white shadow-xl">
+      <div className="w-full max-w-157.5 rounded-[22px] bg-white shadow-xl">
 
         {/* CONTENT */}
         <div className="px-8 py-12 text-center">
@@ -13,8 +13,8 @@ const ApplicationSuccess = ({ job,  onClose }) => {
             className="
               mx-auto
               flex
-              h-[84px]
-              w-[84px]
+              h-21
+              w-21
               items-center
               justify-center
               rounded-full
@@ -32,7 +32,7 @@ const ApplicationSuccess = ({ job,  onClose }) => {
           </h2>
 
           {/* MESSAGE */}
-          <p className="mx-auto mt-3 max-w-[540px] text-[18px] leading-[1.4] text-[#64748B]">
+          <p className="mx-auto mt-3 max-w-135 text-[18px] leading-[1.4] text-[#64748B]">
            Thanks for applying to {job.role}. Our team
 will review your resume and reach out within 5–7 business
 days.

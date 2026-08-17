@@ -1,3 +1,5 @@
+"use no memo";
+
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";

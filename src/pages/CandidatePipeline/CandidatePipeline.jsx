@@ -90,7 +90,7 @@ function CandidatePipeline() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[300px] items-center justify-center">
+      <div className="flex min-h-75 items-center justify-center">
         <p className="font-semibold text-slate-500">
           Loading candidates...
         </p>
@@ -108,7 +108,7 @@ function CandidatePipeline() {
 
         <select
           defaultValue="Senior Frontend Engineer"
-          className="h-10 min-w-[175px] rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-semibold">
+          className="h-10 min-w-43.75 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-semibold">
           <option>Senior Frontend Engineer</option>
           <option>Backend Engineer</option>
           <option>Product Designer</option>
@@ -116,7 +116,7 @@ function CandidatePipeline() {
       </div>
 
       <div className="overflow-x-auto">
-        <div className="flex min-w-[1400px] gap-3">
+        <div className="flex min-w-43.75 gap-3">
           {STAGES.map((stage) => {
             const stageCandidates = candidates.filter(
               (candidate) => candidate.stage === stage  );
@@ -124,7 +124,7 @@ function CandidatePipeline() {
             return (
               <div
                 key={stage}
-                className="w-[190px] shrink-0" >
+                className="w-47.5 shrink-0" >
                 <div className="mb-2 flex justify-between px-1">
                   <h2 className="text-[11px] font-bold uppercase text-slate-500">
                     {stage} </h2>
