@@ -25,33 +25,45 @@ const CareerPortal = () => {
 
     fetchJobs();
   }, []);
+const handleApplySubmit = async (form) => {
+  try {
+    console.log("========== CAREER PORTAL ==========");
+    console.log("FORM:", form);
+    console.log("RESUME:", form.resume);
+    console.log("IS FILE:", form.resume instanceof File);
+    console.log("JOB:", selectedJob);
+    console.log("====================================");
 
-  const handleApplySubmit = async (form) => {
-    try {
-      await applyNow({
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        role: selectedJob.role,
-        requisitionId: selectedJob._id,
-        experience: form.experience,
-        skills: [],
-        tags: [],
-        resumeUrl: "",
-        score: 0,
-      });
+    await applyNow({
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      role: form.role || selectedJob.role,
+      requisitionId:
+        form.requisitionId || selectedJob._id,
+      experience: form.experience,
+      coverNote: form.coverNote,
 
-      setSubmittedJob(selectedJob);
-      setSelectedJob(null);
-      setShowSuccess(true);
-    } catch (error) {
-      console.error("APPLY ERROR:", error?.response?.data);
-      alert(
-        error?.response?.data?.message ||
-          "Failed to submit application. Please try again."
-      );
-    }
-  };
+      // ⭐ MOST IMPORTANT
+      resume: form.resume,
+    });
+
+    setSubmittedJob(selectedJob);
+    setSelectedJob(null);
+    setShowSuccess(true);
+
+  } catch (error) {
+    console.error(
+      "APPLY ERROR:",
+      error?.response?.data || error
+    );
+
+    alert(
+      error?.response?.data?.message ||
+        "Failed to submit application. Please try again."
+    );
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#F5F6FA] font-sans">
