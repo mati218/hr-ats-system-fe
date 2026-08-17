@@ -64,9 +64,9 @@ const CareerPortal = () => {
             rounded-xl
             border border-[#DDE2EA]
             bg-white
-            px-4
-            py-2
-            text-[16px]
+            px-3
+            py-1
+            text-[13px]
             font-semibold
             text-[#111827]
           "
@@ -74,20 +74,20 @@ const CareerPortal = () => {
           Career Portal (public)
         </button>
 
-        <div className="mx-auto max-w-[1140px] px-6 pt-10">
+        <div className="mx-auto max-w-[1140px] px-6 pt-8">
           <div className="flex items-center gap-3">
             <div
               className="
                 flex
-                h-[42px]
-                w-[42px]
+                h-[35px]
+                w-[35px]
                 items-center
                 justify-center
                 rounded-xl
                 bg-gradient-to-br
                 from-[#315FEA]
                 to-[#7351D8]
-                text-[20px]
+                text-[16px]
                 font-bold
               "
             >
@@ -107,9 +107,9 @@ const CareerPortal = () => {
               rounded-xl
               border
               border-[#303544]
-              px-4
-              py-2
-              text-[16px]
+              px-3
+              py-1
+              text-[13px]
               font-semibold
               text-white
               transition
@@ -120,11 +120,11 @@ const CareerPortal = () => {
           </button>
 
           {/* HERO CONTENT */}
-          <div className="pt-[48px] pb-[60px]">
+          <div className="pt-[35px] pb-[60px]">
             <h1
               className="
                 max-w-[720px]
-                text-[42px]
+                text-[35px]
                 leading-[1.25]
                 font-bold
               "
@@ -134,7 +134,8 @@ const CareerPortal = () => {
               hires on purpose.
             </h1>
 
-            <p className="mt-4 text-[18px] text-[#AAB4C8]">
+            <p className="mt-2
+             text-[13px] text-[#AAB4C8]">
               Browse open roles and apply in minutes — no account required.
             </p>
           </div>
@@ -161,17 +162,17 @@ const CareerPortal = () => {
                 items-center
                 justify-between
                 px-8
-                py-7
+                py-4
                 ${index !== jobs.length - 1 ? "border-b border-[#E5E7EB]" : ""}
               `}
             >
               {/* JOB INFORMATION */}
               <div>
-                <h2 className="text-[20px] font-bold text-[#111827]">
+                <h2 className="text-[16px] font-bold text-[#111827]">
                   {job.role}
                 </h2>
 
-                <p className="mt-1 text-[17px] text-[#64748B]">
+                <p className="mt-1 text-[13px] text-[#64748B]">
                   {job.department} · {job.type} · {job.location} · PKR{" "}
                   {job.salaryMin}–{job.salaryMax}
                 </p>
@@ -185,9 +186,9 @@ const CareerPortal = () => {
                   ml-6
                   rounded-xl
                   bg-[#315FEA]
-                  px-5
-                  py-2.5
-                  text-[16px]
+                  px-3
+                  py-1
+                  text-[13px]
                   font-semibold
                   text-white
                   transition

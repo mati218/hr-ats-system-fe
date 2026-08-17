@@ -1,13 +1,17 @@
-import api from "./axios";
+import axiosInstance from "./axiosInstance";
 
 export const getRolesLookup = () => {
-  return api.get("/lookups/roles");
+  return axiosInstance.get("/lookups/roles");
 };
 
 export const getEmploymentTypesLookup = () => {
-  return api.get("/lookups/employment-types");
+  return axiosInstance.get("/lookups/employment-types");
 };
 
 export const getUsersLookup = (role) => {
-  return api.get("/lookups/users", { params: role ? { role } : {} });
+  return axiosInstance.get("/lookups/users", {
+    params: {
+      role,
+    },
+  });
 };
