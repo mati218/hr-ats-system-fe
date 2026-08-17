@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import ApplyModal from "./ApplyModal";
 import ApplicationSuccess from "./ApplicationSuccess";
 import { getRequisitions } from "../../lib/api/requisitionApi";
-import { applyToJob } from "../../lib/api/candidateApi";
+import { applyNow } from "../../lib/api/candidateApi";
 
 const CareerPortal = () => {
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ const CareerPortal = () => {
 
   const handleApplySubmit = async (form) => {
     try {
-      await applyToJob({
+      await applyNow({
         name: form.name,
         email: form.email,
         phone: form.phone,
