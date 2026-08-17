@@ -21,12 +21,12 @@ function CandidateCard({ candidate, onClick }) {
         w-full
         max-w-225
         cursor-pointer
-        rounded-[9px]
+        rounded-xl
         border
         border-slate-200
         bg-white
-        px-6
-        py-4
+        px-3
+        py-3
         shadow-sm
         transition
         hover:border-slate-300
@@ -34,8 +34,8 @@ function CandidateCard({ candidate, onClick }) {
       "
     >
       {/* NAME + SCORE */}
-      <div className="flex items-center justify-between gap-5">
-        <h3 className="truncate text-[13px] font-bold text-slate-900">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="truncate text-[14px] font-bold text-slate-900">
           {candidate.name}
         </h3>
 
@@ -68,7 +68,7 @@ function CandidateCard({ candidate, onClick }) {
 
       {/* TAGS */}
       {tags.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1">
+        <div className="mt-2 flex flex-wrap gap-2">
           {tags.map((tag, index) => (
             <span
               key={`${tag}-${index}`}

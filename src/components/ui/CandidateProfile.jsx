@@ -2,6 +2,7 @@ import { useState } from "react";
 import ScoreCircle from "./ScoreCircle";
 import { rejectCandidate } from "../../lib/api/candidateApi";
 
+
 const PIPELINE_STAGES = [
   "Applied",
   "Screening",

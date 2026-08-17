@@ -68,11 +68,11 @@ const UserManagement = () => {
 
         <div>
 
-          <h2 className="text-3xl ml-7 mt-8 font-bold text-gray-900">
+          <h2 className="text-2xl ml-7 mt-6 font-semibold  text-2xl">
             User Management
           </h2>
 
-          <p className="text-gray-500 float-left ml-7 mt-1">
+          <p className="text-gray-500 float-left ml-7 text-sm ">
             18 internal users • 3 pending invites
           </p>
 
@@ -81,7 +81,7 @@ const UserManagement = () => {
 
         <button
           onClick={() => setShowModal(true)}
-          className="bg-blue-600 mr-6 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow-sm transition"
+          className="bg-blue-700 mr-9 hover:bg-blue-700 text-white font-semibold px-3 py-1 rounded-xl shadow-sm transition"
         >
           + New User
         </button>
@@ -89,7 +89,7 @@ const UserManagement = () => {
       </div>
 
 
-      <div className="mx-6 bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <div className="mx-8 bg-white rounded-2xl border border-gray-200 overflow-hidden">
 
         <Table
           columns={columns}

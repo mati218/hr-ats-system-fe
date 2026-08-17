@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import ApplyModal from "./ApplyModal";
 import ApplicationSuccess from "./ApplicationSuccess";
 import { getRequisitions } from "../../lib/api/requisitionApi";
-import { applyNow } from "../../lib/api/candidateApi";
+import { applyToJob } from "../../lib/api/candidateApi";
 
 const CareerPortal = () => {
   const navigate = useNavigate();
@@ -17,7 +17,6 @@ const CareerPortal = () => {
     const fetchJobs = async () => {
       try {
         const response = await getRequisitions("Open");
-
         setJobs(response.data.data);
       } catch (error) {
         console.error("Failed to fetch open jobs:", error);
@@ -27,37 +26,36 @@ const CareerPortal = () => {
     fetchJobs();
   }, []);
 
-  const handleApplicationSubmit = async (data) => {
+  const handleApplySubmit = async (form) => {
     try {
-      console.log("APPLICATION DATA:", data);
-
-      const response = await applyNow(data);
-
-      console.log("CANDIDATE CREATED:", response.data);
+      await applyToJob({
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        role: selectedJob.role,
+        requisitionId: selectedJob._id,
+        experience: form.experience,
+        skills: [],
+        tags: [],
+        resumeUrl: "",
+        score: 0,
+      });
 
       setSubmittedJob(selectedJob);
       setSelectedJob(null);
       setShowSuccess(true);
     } catch (error) {
-      console.error(
-        "APPLICATION ERROR:",
-        error?.response?.data || error
-      );
-
+      console.error("APPLY ERROR:", error?.response?.data);
       alert(
         error?.response?.data?.message ||
-          "Failed to submit application."
+          "Failed to submit application. Please try again."
       );
     }
   };
 
   return (
     <div className="min-h-screen bg-[#F5F6FA] font-sans">
-
-      {/* DARK HERO */}
       <section className="relative bg-[#101118] text-white">
-
-        {/* CAREER PORTAL PUBLIC BUTTON */}
         <button
           className="
             absolute
@@ -66,9 +64,9 @@ const CareerPortal = () => {
             rounded-xl
             border border-[#DDE2EA]
             bg-white
-            px-4
-            py-2
-            text-[16px]
+            px-3
+            py-1
+            text-[13px]
             font-semibold
             text-[#111827]
           "
@@ -76,31 +74,27 @@ const CareerPortal = () => {
           Career Portal (public)
         </button>
 
-        <div className="mx-auto max-w-285 px-6 pt-10">
-
-          {/* LOGO */}
+        <div className="mx-auto max-w-[1140px] px-6 pt-8">
           <div className="flex items-center gap-3">
             <div
               className="
                 flex
-                h-10.5
-                w-10.5
+                h-[35px]
+                w-[35px]
                 items-center
                 justify-center
                 rounded-xl
                 bg-linear-to-br
                 from-[#315FEA]
                 to-[#7351D8]
-                text-[20px]
+                text-[16px]
                 font-bold
               "
             >
               T
             </div>
 
-            <span className="text-[25px] font-bold">
-              Talenta Careers
-            </span>
+            <span className="text-[25px] font-bold">Talenta Careers</span>
           </div>
 
           {/* BACK TO LOGIN */}
@@ -113,9 +107,9 @@ const CareerPortal = () => {
               rounded-xl
               border
               border-[#303544]
-              px-4
-              py-2
-              text-[16px]
+              px-3
+              py-1
+              text-[13px]
               font-semibold
               text-white
               transition
@@ -126,12 +120,12 @@ const CareerPortal = () => {
           </button>
 
           {/* HERO CONTENT */}
-          <div className="pt-12 pb-15">
+          <div className="pt-[35px] pb-[60px]">
             <h1
               className="
-                max-w-180
-                text-[42px]
-                leading-tight
+                max-w-[720px]
+                text-[35px]
+                leading-[1.25]
                 font-bold
               "
             >
@@ -140,7 +134,8 @@ const CareerPortal = () => {
               hires on purpose.
             </h1>
 
-            <p className="mt-4 text-[18px] text-[#AAB4C8]">
+            <p className="mt-2
+             text-[13px] text-[#AAB4C8]">
               Browse open roles and apply in minutes — no account required.
             </p>
           </div>
@@ -148,8 +143,7 @@ const CareerPortal = () => {
       </section>
 
       {/* JOB LIST */}
-      <main className="max-w-262.5 mx-auto px-6 -mt-9.5 pb-16 relative z-10">
-
+      <main className="max-w-[1050px] mx-auto px-6 -mt-[38px] pb-16 relative z-10">
         <div
           className="
             overflow-hidden
@@ -160,31 +154,25 @@ const CareerPortal = () => {
             shadow-sm
           "
         >
-
           {jobs.map((job, index) => (
             <div
-              key={job._id}
+              key={job.role}
               className={`
                 flex
                 items-center
                 justify-between
                 px-8
-                py-7
-                ${
-                  index !== jobs.length - 1
-                    ? "border-b border-[#E5E7EB]"
-                    : ""
-                }
+                py-4
+                ${index !== jobs.length - 1 ? "border-b border-[#E5E7EB]" : ""}
               `}
             >
-
               {/* JOB INFORMATION */}
               <div>
-                <h2 className="text-[20px] font-bold text-[#111827]">
+                <h2 className="text-[16px] font-bold text-[#111827]">
                   {job.role}
                 </h2>
 
-                <p className="mt-1 text-[17px] text-[#64748B]">
+                <p className="mt-1 text-[13px] text-[#64748B]">
                   {job.department} · {job.type} · {job.location} · PKR{" "}
                   {job.salaryMin}–{job.salaryMax}
                 </p>
@@ -198,9 +186,9 @@ const CareerPortal = () => {
                   ml-6
                   rounded-xl
                   bg-[#315FEA]
-                  px-5
-                  py-2.5
-                  text-[16px]
+                  px-3
+                  py-1
+                  text-[13px]
                   font-semibold
                   text-white
                   transition
@@ -209,17 +197,15 @@ const CareerPortal = () => {
               >
                 Apply Now
               </button>
-
             </div>
           ))}
-
         </div>
 
         {/* APPLY MODAL */}
         <ApplyModal
           job={selectedJob}
           onClose={() => setSelectedJob(null)}
-          onSubmit={handleApplicationSubmit}
+          onSubmit={handleApplySubmit}
         />
 
         {showSuccess && (
@@ -231,9 +217,7 @@ const CareerPortal = () => {
             }}
           />
         )}
-
       </main>
-
     </div>
   );
 };

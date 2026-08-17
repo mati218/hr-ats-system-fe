@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getUsersLookup } from "../../lib/api/lookupApi";
 
 function ScheduleInterviewModal({
   isOpen,
@@ -12,14 +13,50 @@ function ScheduleInterviewModal({
     date: "",
     time: "",
     duration: "45 minutes",
-    interviewer: "",
+    interviewerId: "",
     location: "",
     notes: "",
   });
 
-  if (!isOpen || !candidate) {
-    return null;
-  }
+  const [interviewers, setInterviewers] = useState([]);
+  const [loadingInterviewers, setLoadingInterviewers] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const loadInterviewers = async () => {
+      setLoadingInterviewers(true);
+
+      try {
+        const response = await getUsersLookup("Interviewer");
+
+        const users = response?.data?.data || [];
+
+        const normalizedUsers = users.map((user) => ({
+          ...user,
+          id: user?.id || user?._id,
+          _id: user?._id || user?.id,
+          name: user?.name || "Unknown User",
+        }));
+
+        console.log("INTERVIEWERS RESPONSE:", normalizedUsers);
+
+        setInterviewers(normalizedUsers);
+      } catch (error) {
+        console.error(
+          "GET INTERVIEWERS ERROR:",
+          error?.response?.data || error
+        );
+
+        setInterviewers([]);
+      } finally {
+        setLoadingInterviewers(false);
+      }
+    };
+
+    loadInterviewers();
+  }, [isOpen]);
 
   const update = (field, value) => {
     setForm((prev) => ({
@@ -28,7 +65,7 @@ function ScheduleInterviewModal({
     }));
   };
 
-  async function handleSubmit() {
+  const handleSubmit = async () => {
     if (!form.date) {
       alert("Please select interview date.");
       return;
@@ -39,12 +76,27 @@ function ScheduleInterviewModal({
       return;
     }
 
-    if (!form.interviewer) {
+    if (!form.interviewerId) {
       alert("Please select interviewer.");
       return;
     }
 
-    await onSubmit(candidate, form);
+    try {
+      setSubmitting(true);
+
+      await onSubmit(candidate, form);
+    } catch (error) {
+      console.error(
+        "SCHEDULE ERROR:",
+        error?.response?.data || error
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!isOpen || !candidate) {
+    return null;
   }
 
   return (
@@ -53,7 +105,6 @@ function ScheduleInterviewModal({
       {/* MODAL */}
       <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl bg-white shadow-xl">
 
-        {/* HEADER */}
         <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4">
           <div>
             <h2 className="text-base font-bold text-slate-900">
@@ -68,16 +119,15 @@ function ScheduleInterviewModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-xl leading-none text-slate-400 hover:text-slate-800"
+            disabled={submitting}
+            className="text-xl leading-none text-slate-400 hover:text-slate-800 disabled:opacity-50"
           >
             ×
           </button>
         </div>
 
-        {/* FORM */}
         <div className="space-y-4 px-5 py-4">
 
-          {/* CANDIDATE */}
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">
               Candidate
@@ -85,12 +135,9 @@ function ScheduleInterviewModal({
 
             <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
               {candidate.name}
-              {" — "}
-              {candidate.role}
             </div>
           </div>
 
-          {/* ROUND + MODE */}
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 
             <div>
@@ -103,11 +150,12 @@ function ScheduleInterviewModal({
                 onChange={(e) =>
                   update("round", e.target.value)
                 }
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                disabled={submitting}
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500"
               >
-                <option>Technical</option>
-                <option>Screening</option>
-                <option>Final</option>
+                <option value="Technical">Technical</option>
+                <option value="Screening">Screening</option>
+                <option value="Final">Final</option>
               </select>
             </div>
 
@@ -121,16 +169,17 @@ function ScheduleInterviewModal({
                 onChange={(e) =>
                   update("mode", e.target.value)
                 }
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                disabled={submitting}
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500"
               >
-                <option>Video Call</option>
-                <option>Onsite</option>
-                <option>Phone Call</option>
+                <option value="Video Call">Video Call</option>
+                <option value="Onsite">Onsite</option>
+                <option value="Phone Call">Phone Call</option>
               </select>
             </div>
+
           </div>
 
-          {/* DATE + TIME */}
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 
             <div>
@@ -141,10 +190,12 @@ function ScheduleInterviewModal({
               <input
                 type="date"
                 value={form.date}
+                min={new Date().toISOString().split("T")[0]}
                 onChange={(e) =>
                   update("date", e.target.value)
                 }
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                disabled={submitting}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500"
               />
             </div>
 
@@ -159,12 +210,13 @@ function ScheduleInterviewModal({
                 onChange={(e) =>
                   update("time", e.target.value)
                 }
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                disabled={submitting}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500"
               />
             </div>
+
           </div>
 
-          {/* DURATION + INTERVIEWER */}
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 
             <div>
@@ -177,12 +229,13 @@ function ScheduleInterviewModal({
                 onChange={(e) =>
                   update("duration", e.target.value)
                 }
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                disabled={submitting}
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500"
               >
-                <option>30 minutes</option>
-                <option>45 minutes</option>
-                <option>60 minutes</option>
-                <option>90 minutes</option>
+                <option value="30 minutes">30 minutes</option>
+                <option value="45 minutes">45 minutes</option>
+                <option value="60 minutes">60 minutes</option>
+                <option value="90 minutes">90 minutes</option>
               </select>
             </div>
 
@@ -192,23 +245,46 @@ function ScheduleInterviewModal({
               </label>
 
               <select
-                value={form.interviewer}
+                value={form.interviewerId}
                 onChange={(e) =>
-                  update("interviewer", e.target.value)
+                  update("interviewerId", e.target.value)
                 }
+                disabled={loadingInterviewers || submitting}
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
               >
                 <option value="">
-                  Select interviewer
+                  {loadingInterviewers
+                    ? "Loading interviewers..."
+                    : interviewers.length === 0
+                    ? "No interviewers found"
+                    : "Select interviewer"}
                 </option>
 
-                <option>Zeeshan Raza</option>
-                <option>Ayesha Khan</option>
+                {interviewers.map((interviewer) => {
+                  const interviewerId =
+                    interviewer.id || interviewer._id;
+
+                  return (
+                    <option
+                      key={interviewerId}
+                      value={interviewerId}
+                    >
+                      {interviewer.name}
+                    </option>
+                  );
+                })}
               </select>
+
+              {!loadingInterviewers &&
+                interviewers.length === 0 && (
+                  <p className="mt-1 text-[11px] text-red-500">
+                    No interviewer users found.
+                  </p>
+                )}
             </div>
+
           </div>
 
-          {/* LOCATION */}
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">
               Meeting Link / Location
@@ -220,12 +296,12 @@ function ScheduleInterviewModal({
               onChange={(e) =>
                 update("location", e.target.value)
               }
+              disabled={submitting}
               placeholder="Zoom link or office address"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500"
             />
           </div>
 
-          {/* NOTES */}
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">
               Notes for Interviewer
@@ -236,47 +312,43 @@ function ScheduleInterviewModal({
               onChange={(e) =>
                 update("notes", e.target.value)
               }
+              disabled={submitting}
               placeholder="Focus areas, prior round notes, etc."
               rows={3}
-              className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+              className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500"
             />
           </div>
+
         </div>
 
-        {/* FOOTER */}
-        <div className="flex flex-col gap-2 border-t border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex justify-end gap-2 border-t border-slate-200 px-5 py-4">
 
-          {/* CANCEL */}
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg bg-red-50 px-2 py-2 text-xs  text-red-600 hover:bg-red-100"
+            disabled={submitting}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
-            Cancel Interview
+            Close
           </button>
 
-          <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={
+              submitting ||
+              loadingInterviewers ||
+              interviewers.length === 0
+            }
+            className="rounded-lg bg-blue-700 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {submitting
+              ? "Scheduling..."
+              : "Schedule Interview"}
+          </button>
 
-            {/* CLOSE */}
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs  text-slate-800 hover:bg-slate-50"
-            >
-              Close
-            </button>
-
-            {/* SUBMIT */}
-            <button
-              type="button"
-              onClick={handleSubmit}
-              className="rounded-lg bg-blue-600 px-2 py-2 text-xs  text-white hover:bg-blue-700"
-            >
-              Schedule Interview
-            </button>
-
-          </div>
         </div>
+
       </div>
     </div>
   );
