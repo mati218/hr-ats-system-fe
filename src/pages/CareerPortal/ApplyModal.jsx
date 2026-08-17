@@ -25,18 +25,18 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="w-full max-w-[780px] rounded-[20px] bg-white shadow-xl">
+      <div className="w-full h-full max-w-[600px] max-h-[60vh] rounded-[20px] bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-[#E1E4EB] px-8 py-5">
           <div>
-            <h2 className="text-[22px] font-bold text-[#111827]">Apply — {job.role}</h2>
-            <p className="text-[16px] text-[#64748B]">
+            <h2 className="text-[18px] font-bold text-[#111827]">Apply — {job.role}</h2>
+            <p className="text-[13px] text-[#64748B]">
               {job.department} · {job.type} · {job.location}
             </p>
           </div>
           <button onClick={onClose} className="text-[24px] text-[#64748B] hover:text-[#111827]">×</button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-8 py-6">
+        <form onSubmit={handleSubmit} className="px-8 py-3">
           <div className="grid grid-cols-2 gap-5">
             <div>
               <label className="font-semibold text-[#111827]">Full Name</label>
@@ -46,7 +46,7 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
                 value={form.name}
                 onChange={handleChange}
                 placeholder="Your full name"
-                className="mt-2 w-full rounded-xl border border-[#DDE2EA] px-4 py-3 outline-none focus:border-[#315FEA]"
+                className="mt-1 w-full rounded-xl border border-[#DDE2EA] px-4 py-2 outline-none focus:border-[#315FEA]"
                 required
               />
             </div>
@@ -59,7 +59,7 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
                 value={form.email}
                 onChange={handleChange}
                 placeholder="you@email.com"
-                className="mt-2 w-full rounded-xl border border-[#DDE2EA] px-4 py-3 outline-none focus:border-[#315FEA]"
+                className="mt-1 w-full rounded-xl border border-[#DDE2EA] px-4 py-2 outline-none focus:border-[#315FEA]"
                 required
               />
             </div>
@@ -72,7 +72,7 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
                 value={form.phone}
                 onChange={handleChange}
                 placeholder="+92 3xx xxxxxxx"
-                className="mt-2 w-full rounded-xl border border-[#DDE2EA] px-4 py-3 outline-none focus:border-[#315FEA]"
+                className="mt-1 w-full rounded-xl border border-[#DDE2EA] px-4 py-2 outline-none focus:border-[#315FEA]"
               />
             </div>
 
@@ -84,7 +84,7 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
                 value={form.experience}
                 onChange={handleChange}
                 placeholder="5"
-                className="mt-2 w-full rounded-xl border border-[#DDE2EA] px-4 py-3 outline-none focus:border-[#315FEA]"
+                className="mt-1 w-full rounded-xl border border-[#DDE2EA] px-4 py-2 outline-none focus:border-[#315FEA]"
               />
             </div>
           </div>
@@ -92,23 +92,23 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
           <div className="mt-5">
             <label className="font-semibold text-[#111827]">Cover Note (optional)</label>
             <textarea
-              rows="4"
+              rows="3"
               name="coverNote"
               value={form.coverNote}
               onChange={handleChange}
               placeholder="Why are you a great fit for this role?"
-              className="mt-2 w-full resize-none rounded-xl border border-[#DDE2EA] px-4 py-3 outline-none focus:border-[#315FEA]"
+              className="mt-1 w-full resize-none rounded-xl border border-[#DDE2EA] px-4 py-2 outline-none focus:border-[#315FEA]"
             />
           </div>
 
-          <div className="mt-6 flex justify-end gap-3 border-t border-[#E1E4EB] pt-5">
-            <button type="button" onClick={onClose} className="rounded-xl border border-[#DDE2EA] px-5 py-2.5 font-semibold text-[#111827]">
+          <div className="mt-3 flex justify-end gap-3 border-t border-[#E1E4EB] pt-5">
+            <button type="button" onClick={onClose} className="rounded-xl border border-[#DDE2EA] px-3 py-1 font-semibold text-[#111827]">
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-xl bg-[#315FEA] px-6 py-2.5 font-semibold text-white hover:bg-[#2853D5] disabled:opacity-60"
+              className="rounded-xl bg-blue-700 px-3 py-1 font-semibold text-white hover:bg-[#2853D5] disabled:opacity-60"
             >
               {submitting ? "Submitting..." : "Submit Application"}
             </button>
