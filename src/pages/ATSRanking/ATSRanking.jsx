@@ -8,14 +8,14 @@ import { getATSRanking } from "../../lib/api/atsApi";
 import { getRequisitions } from "../../lib/api/requisitionApi";
 import {
   rejectCandidate,
-  moveCandidateStage,
   scheduleInterview,
 } from "../../lib/api/candidateApi";
 
 function ATSRanking() {
   const [candidates, setCandidates] = useState([]);
   const [requisitions, setRequisitions] = useState([]);
-  const [selectedRequisition, setSelectedRequisition] = useState("");
+  const [selectedRequisition, setSelectedRequisition] =
+    useState("");
 
   const [openModal, setOpenModal] = useState(false);
 
@@ -112,6 +112,9 @@ function ATSRanking() {
     fetchRanking();
   }, [selectedRequisition]);
 
+  // ==========================
+  // REJECT CANDIDATE
+  // ==========================
   const handleRejectCandidate = async (candidate) => {
     try {
       const candidateId =
@@ -160,71 +163,89 @@ function ATSRanking() {
     }
   };
 
- 
   // ==========================
-// SCHEDULE INTERVIEW
-// ==========================
-const handleScheduleInterview = async (candidate) => {
-  try {
-    const candidateId =
-      candidate.candidateId ||
-      candidate._id;
+  // SCHEDULE INTERVIEW
+  // ==========================
+  const handleScheduleInterview = async (
+    candidate,
+    interviewData
+  ) => {
+    try {
+      const candidateId =
+        candidate.candidateId ||
+        candidate._id;
 
-    if (!candidateId) {
-      alert("Candidate ID not found.");
-      return;
+      if (!candidateId) {
+        alert("Candidate ID not found.");
+        return;
+      }
+
+      if (!interviewData) {
+        alert("Interview details not found.");
+        return;
+      }
+
+      console.log(
+        "SCHEDULING INTERVIEW FOR:",
+        candidateId
+      );
+
+      console.log(
+        "INTERVIEW DATA:",
+        interviewData
+      );
+
+      // ==========================
+      // SEND COMPLETE INTERVIEW DATA
+      // ==========================
+      await scheduleInterview({
+        candidateId,
+        round: interviewData.round,
+        mode: interviewData.mode,
+        date: interviewData.date,
+        time: interviewData.time,
+        duration: interviewData.duration,
+        interviewer: interviewData.interviewer,
+      });
+
+      // ==========================
+      // UPDATE ATS RANKING LOCALLY
+      // ==========================
+      setCandidates((prev) =>
+        prev.map((item) => {
+          const itemId =
+            item.candidateId ||
+            item._id;
+
+          if (itemId === candidateId) {
+            return {
+              ...item,
+              stage: "Interview",
+            };
+          }
+
+          return item;
+        })
+      );
+
+      // Close candidate profile
+      setSelectedCandidate(null);
+
+      alert(
+        "Interview scheduled successfully."
+      );
+    } catch (error) {
+      console.error(
+        "SCHEDULE INTERVIEW ERROR:",
+        error?.response?.data || error
+      );
+
+      alert(
+        error?.response?.data?.message ||
+          "Failed to schedule interview."
+      );
     }
-
-    console.log(
-      "SCHEDULING INTERVIEW FOR:",
-      candidateId
-    );
-
-    await scheduleInterview({
-      candidateId,
-    });
-
-    // Move candidate to Interview stage
-    await moveCandidateStage(
-      candidateId,
-      "Interview"
-    );
-
-    // Update ATS ranking pipeline immediately
-    setCandidates((prev) =>
-      prev.map((item) => {
-        const itemId =
-          item.candidateId ||
-          item._id;
-
-        if (itemId === candidateId) {
-          return {
-            ...item,
-            stage: "Interview",
-          };
-        }
-
-        return item;
-      })
-    );
-
-    setSelectedCandidate(null);
-
-    alert(
-      "Interview scheduled successfully."
-    );
-  } catch (error) {
-    console.error(
-      "SCHEDULE INTERVIEW ERROR:",
-      error?.response?.data || error
-    );
-
-    alert(
-      error?.response?.data?.message ||
-        "Failed to schedule interview."
-    );
-  }
-};
+  };
 
   // ==========================
   // OPEN OFFER MODAL
@@ -259,10 +280,30 @@ const handleScheduleInterview = async (candidate) => {
         candidateId
       );
 
-      await moveCandidateStage(
-        candidateId,
-        "Offer"
+      const response = await fetch(
+        `http://localhost:5000/api/candidates/${candidateId}/stage`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem(
+              "token"
+            )}`,
+          },
+          body: JSON.stringify({
+            stage: "Offer",
+          }),
+        }
       );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            "Failed to move candidate to Offer stage."
+        );
+      }
 
       setCandidates((prev) =>
         prev.map((item) => {
@@ -295,6 +336,7 @@ const handleScheduleInterview = async (candidate) => {
 
       alert(
         error?.response?.data?.message ||
+          error?.message ||
           "Failed to move candidate to Offer stage."
       );
     }
@@ -303,6 +345,9 @@ const handleScheduleInterview = async (candidate) => {
   return (
     <div className="min-h-screen bg-[#f5f6fa] px-6 py-7 sm:px-8">
 
+      {/* ==========================
+          PAGE HEADER
+      ========================== */}
       <div className="mb-5 flex items-start justify-between gap-5 text-left">
 
         <div>
@@ -315,6 +360,7 @@ const handleScheduleInterview = async (candidate) => {
           </p>
         </div>
 
+        {/* JOB SELECT */}
         <select
           value={selectedRequisition}
           onChange={(e) => {
@@ -425,6 +471,9 @@ const handleScheduleInterview = async (candidate) => {
                   candidate.stage,
               }}
 
+              // ==========================
+              // VIEW PROFILE / RESUME
+              // ==========================
               onViewResume={() => {
                 setOfferCandidate(null);
                 setOpenModal(false);
@@ -434,12 +483,18 @@ const handleScheduleInterview = async (candidate) => {
                 );
               }}
 
+              // ==========================
+              // MOVE TO OFFER
+              // ==========================
               onMoveOffer={() => {
                 handleOpenOffer(
                   candidate
                 );
               }}
 
+              // ==========================
+              // REJECT
+              // ==========================
               onReject={() => {
                 handleRejectCandidate(
                   candidate

@@ -86,6 +86,8 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
 const handleCreate = async (data) => {
   try {
     const response = await createUser(data);
+    console.log("created: ", response.data);
+    
     alert("User created successfully");
     if (onCreated) await onCreated();
     onClose();
@@ -149,6 +151,10 @@ const handleCreate = async (data) => {
             errors={errors}
             rules={{
               required: "Name is required",
+              pattern: {
+                 value: /^[A-Za-z\s]+$/,
+                 message: "Name can contain letters and spaces only",
+              }
             }}
           />
         </div>
@@ -167,6 +173,10 @@ const handleCreate = async (data) => {
             errors={errors}
             rules={{
               required: "Email is required",
+              pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Please enter a valid email address",
+    },
             }}
           />
         </div>
@@ -177,6 +187,7 @@ const handleCreate = async (data) => {
             Phone
           </label>
 
+       
        <FormInput
   type="text"
   placeholder="+92 3xx xxxxxxx"
@@ -184,15 +195,14 @@ const handleCreate = async (data) => {
   register={register}
   errors={errors}
   rules={{
-    required: "Phone number is required",
+    pattern: {
+      value: /^\d{11}$/,
+      message: "Phone number must contain 11 digits only",
+    },
   }}
 />
 
-{errors.phoneNumber && (
-  <p className="text-red-500 text-sm mt-1">
-    {errors.phoneNumber.message}
-  </p>
-)}
+
         </div>
 
 
