@@ -9,6 +9,7 @@ import { getRequisitions } from "../../lib/api/requisitionApi";
 import {
   rejectCandidate,
   moveCandidateStage,
+  scheduleInterview,
 } from "../../lib/api/candidateApi";
 
 function ATSRanking() {
@@ -111,9 +112,6 @@ function ATSRanking() {
     fetchRanking();
   }, [selectedRequisition]);
 
-  // ==========================
-  // REJECT CANDIDATE
-  // ==========================
   const handleRejectCandidate = async (candidate) => {
     try {
       const candidateId =
@@ -161,6 +159,72 @@ function ATSRanking() {
       );
     }
   };
+
+ 
+  // ==========================
+// SCHEDULE INTERVIEW
+// ==========================
+const handleScheduleInterview = async (candidate) => {
+  try {
+    const candidateId =
+      candidate.candidateId ||
+      candidate._id;
+
+    if (!candidateId) {
+      alert("Candidate ID not found.");
+      return;
+    }
+
+    console.log(
+      "SCHEDULING INTERVIEW FOR:",
+      candidateId
+    );
+
+    await scheduleInterview({
+      candidateId,
+    });
+
+    // Move candidate to Interview stage
+    await moveCandidateStage(
+      candidateId,
+      "Interview"
+    );
+
+    // Update ATS ranking pipeline immediately
+    setCandidates((prev) =>
+      prev.map((item) => {
+        const itemId =
+          item.candidateId ||
+          item._id;
+
+        if (itemId === candidateId) {
+          return {
+            ...item,
+            stage: "Interview",
+          };
+        }
+
+        return item;
+      })
+    );
+
+    setSelectedCandidate(null);
+
+    alert(
+      "Interview scheduled successfully."
+    );
+  } catch (error) {
+    console.error(
+      "SCHEDULE INTERVIEW ERROR:",
+      error?.response?.data || error
+    );
+
+    alert(
+      error?.response?.data?.message ||
+        "Failed to schedule interview."
+    );
+  }
+};
 
   // ==========================
   // OPEN OFFER MODAL
@@ -420,6 +484,10 @@ function ATSRanking() {
 
         candidate={
           selectedCandidate
+        }
+
+        onScheduleInterview={
+          handleScheduleInterview
         }
       />
 
