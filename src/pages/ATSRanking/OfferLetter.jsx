@@ -1,8 +1,10 @@
 import { X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import FormInput from "../../components/ui/FormInput";
 import Button from "../../components/ui/Button";
+import { getCandidateOffer } from "../../lib/api/candidateApi";
 
 function OfferLetter({
   isOpen,
@@ -16,44 +18,88 @@ function OfferLetter({
     formState: { errors },
   } = useForm();
 
-  if (!isOpen) return null;
+  const [offerStatus, setOfferStatus] = useState(null);
+  const [checkingOffer, setCheckingOffer] = useState(false);
 
-  // ==========================
-  // CHECK IF CANDIDATE REJECTED
-  // ==========================
+  useEffect(() => {
+    const checkOffer = async () => {
+      if (!isOpen || !candidate) {
+        return;
+      }
+
+      const candidateId =
+        candidate.candidateId ||
+        candidate._id;
+
+      if (!candidateId) {
+        return;
+      }
+
+      try {
+        setCheckingOffer(true);
+        setOfferStatus(null);
+
+        const response =
+          await getCandidateOffer(candidateId);
+
+        setOfferStatus(
+          response.data?.data?.status || null
+        );
+      } catch (error) {
+        if (error?.response?.status === 404) {
+          setOfferStatus(null);
+        } else {
+          console.error(
+            "CHECK OFFER ERROR:",
+            error?.response?.data || error
+          );
+
+          setOfferStatus(null);
+        }
+      } finally {
+        setCheckingOffer(false);
+      }
+    };
+
+    checkOffer();
+  }, [isOpen, candidate]);
+
+  if (!isOpen) {
+    return null;
+  }
 
   const isRejected =
     candidate?.stage === "Rejected";
 
-  // ==========================
-  // SEND OFFER
-  // ==========================
+  const isOfferSent =
+    offerStatus === "Sent";
 
   const onSubmit = async (data) => {
     try {
-      console.log("OFFER DATA:", data);
-      console.log("OFFER CANDIDATE:", candidate);
-
       if (!candidate) {
         return;
       }
 
-      // Rejected candidate ko offer nahi bhejni
       if (isRejected) {
         return;
       }
 
-      if (onSendOffer) {
-        await onSendOffer(candidate, data);
+      if (isOfferSent) {
+        return;
       }
+
+      await onSendOffer(candidate, data);
+
+      onClose();
     } catch (error) {
-      console.error("SEND OFFER ERROR:", error);
+      console.error(
+        "SEND OFFER ERROR:",
+        error?.response?.data ||
+          error?.message ||
+          error
+      );
     }
   };
-
-  // ==========================
-  // CANDIDATE DATA
-  // ==========================
 
   const candidateName =
     candidate?.name || "Candidate";
@@ -64,14 +110,8 @@ function OfferLetter({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
 
-      {/* ==========================
-          MODAL
-      ========================== */}
       <div className="w-full max-w-140 overflow-hidden rounded-2xl bg-white shadow-2xl">
 
-        {/* ==========================
-            HEADER
-        ========================== */}
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
 
           <h2 className="text-base font-bold text-slate-800">
@@ -88,179 +128,201 @@ function OfferLetter({
 
         </div>
 
-        {/* ==========================
-            REJECTED MESSAGE
-        ========================== */}
         {isRejected && (
           <div className="mx-6 mt-4 rounded-lg bg-red-50 px-3 py-2.5 text-xs font-semibold text-red-600">
             This candidate has been rejected.
           </div>
         )}
 
-        {/* ==========================
-            FORM
-        ========================== */}
-        <form onSubmit={handleSubmit(onSubmit)}>
-
-          <div className="space-y-4 px-6 py-5 text-left">
-
-            {/* ==========================
-                CANDIDATE
-            ========================== */}
-            <div>
-
-              <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                Candidate
-              </label>
-
-              <div className="flex h-10 w-full items-center rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800">
-                <span>
-                  {candidateName} — {candidateRole}
-                </span>
-              </div>
-
-              <input
-                type="hidden"
-                {...register("candidateId")}
-                value={
-                  candidate?.candidateId ||
-                  candidate?._id ||
-                  ""
-                }
-                readOnly
-              />
-
-            </div>
-
-            {/* ==========================
-                TEMPLATE + JOINING DATE
-            ========================== */}
-            <div className="grid grid-cols-2 gap-3">
-
-              {/* OFFER TEMPLATE */}
-              <div>
-
-                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                  Offer Template
-                </label>
-
-                <select
-                  {...register("template")}
-                  disabled={isRejected}
-                  className="h-10 w-full appearance-auto rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-                >
-                  <option>Contract</option>
-                  <option>Standard Full-Time</option>
-                  <option>Internship</option>
-                </select>
-
-              </div>
-
-              {/* JOINING DATE */}
-              <div>
-
-                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                  Joining Date
-                </label>
-
-                <FormInput
-                  type="date"
-                  name="joiningDate"
-                  register={register}
-                  errors={errors}
-                  disabled={isRejected}
-                />
-
-              </div>
-
-            </div>
-
-            {/* ==========================
-                SALARY + PROBATION
-            ========================== */}
-            <div className="grid grid-cols-2 gap-3">
-
-              {/* SALARY */}
-              <div>
-
-                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                  Offered Salary (PKR)
-                </label>
-
-                <FormInput
-                  type="number"
-                  placeholder="385000"
-                  name="salary"
-                  register={register}
-                  errors={errors}
-                  disabled={isRejected}
-                />
-
-              </div>
-
-              {/* PROBATION */}
-              <div>
-
-                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                  Probation Period
-                </label>
-
-                <select
-                  {...register("probation")}
-                  disabled={isRejected}
-                  className="h-10 w-full appearance-auto rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-                >
-                  <option>3 months</option>
-                  <option>6 months</option>
-                  <option>None</option>
-                </select>
-
-              </div>
-
-            </div>
-
-            {/* ==========================
-                PERSONAL NOTE
-            ========================== */}
-            <div>
-
-              <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                Personal Note (optional)
-              </label>
-
-              <textarea
-                rows={3}
-                {...register("note")}
-                disabled={isRejected}
-                placeholder="A short welcome note included in the offer email..."
-                className="min-h-19 w-full resize-y rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-              />
-
-            </div>
-
+        {checkingOffer ? (
+          <div className="flex min-h-75 items-center justify-center text-sm text-slate-500">
+            Checking offer status...
           </div>
+        ) : isOfferSent ? (
+          <div className="flex min-h-75 flex-col items-center justify-center px-6 text-center">
 
-          {/* ==========================
-              FOOTER / BUTTONS
-          ========================== */}
-          <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-6 py-4">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl font-bold text-green-600">
+              ✓
+            </div>
 
-            <Button
-              text="Save Draft"
-              variant="secondary"
+            <h3 className="text-lg font-bold text-slate-800">
+              Offer Sent
+            </h3>
+
+            <p className="mt-2 text-sm text-slate-500">
+              An offer has already been sent to{" "}
+              {candidateName}.
+            </p>
+
+            <button
               type="button"
-              disabled={isRejected}
-            />
-
-            <Button
-              text="Send Offer"
-              type="submit"
-              disabled={isRejected}
-            />
+              onClick={onClose}
+              className="mt-6 rounded-lg bg-slate-800 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+            >
+              Close
+            </button>
 
           </div>
+        ) : (
+          <form onSubmit={handleSubmit(onSubmit)}>
 
-        </form>
+            <div className="space-y-4 px-6 py-5 text-left">
+
+              <div>
+
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Candidate
+                </label>
+
+                <div className="flex h-10 w-full items-center rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800">
+                  <span>
+                    {candidateName} — {candidateRole}
+                  </span>
+                </div>
+
+                <input
+                  type="hidden"
+                  {...register("candidateId")}
+                  value={
+                    candidate?.candidateId ||
+                    candidate?._id ||
+                    ""
+                  }
+                  readOnly
+                />
+
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+
+                <div>
+
+                  <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                    Offer Template
+                  </label>
+
+                  <select
+                    {...register("template")}
+                    disabled={isRejected}
+                    className="h-10 w-full appearance-auto rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                  >
+                    <option value="Contract">
+                      Contract
+                    </option>
+
+                    <option value="Standard Full-Time">
+                      Standard Full-Time
+                    </option>
+
+                    <option value="Internship">
+                      Internship
+                    </option>
+                  </select>
+
+                </div>
+
+                <div>
+
+                  <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                    Joining Date
+                  </label>
+
+                  <FormInput
+                    type="date"
+                    name="joiningDate"
+                    register={register}
+                    errors={errors}
+                    disabled={isRejected}
+                  />
+
+                </div>
+
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+
+                <div>
+
+                  <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                    Offered Salary (PKR)
+                  </label>
+
+                  <FormInput
+                    type="number"
+                    placeholder="385000"
+                    name="salary"
+                    register={register}
+                    errors={errors}
+                    disabled={isRejected}
+                  />
+
+                </div>
+
+                <div>
+
+                  <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                    Probation Period
+                  </label>
+
+                  <select
+                    {...register("probation")}
+                    disabled={isRejected}
+                    className="h-10 w-full appearance-auto rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                  >
+                    <option value="3 months">
+                      3 months
+                    </option>
+
+                    <option value="6 months">
+                      6 months
+                    </option>
+
+                    <option value="None">
+                      None
+                    </option>
+                  </select>
+
+                </div>
+
+              </div>
+
+              <div>
+
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Personal Note (optional)
+                </label>
+
+                <textarea
+                  rows={3}
+                  {...register("note")}
+                  disabled={isRejected}
+                  placeholder="A short welcome note included in the offer email..."
+                  className="min-h-19 w-full resize-y rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                />
+
+              </div>
+
+            </div>
+
+            <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-6 py-4">
+
+              <Button
+                text="Save Draft"
+                variant="secondary"
+                type="button"
+                disabled={isRejected}
+              />
+
+              <Button
+                text="Send Offer"
+                type="submit"
+                disabled={isRejected}
+              />
+
+            </div>
+
+          </form>
+        )}
 
       </div>
 
