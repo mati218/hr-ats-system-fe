@@ -12,7 +12,13 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
 
   const [submitting, setSubmitting] = useState(false);
 
-  if (!job) return null;
+  if (!job) {
+    return null;
+  }
+
+  // ==========================================
+  // HANDLE INPUT CHANGE
+  // ==========================================
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,31 +29,63 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
     }));
   };
 
-  const handleResumeChange = (e) => {
-    const file = e.target.files?.[0];
+  // ==========================================
+  // HANDLE RESUME
+  // ==========================================
 
-    if (!file) return;
+const handleResumeChange = (e) => {
+  const file = e.target.files?.[0];
 
-    console.log("SELECTED RESUME:", file);
-    console.log("IS FILE:", file instanceof File);
+  if (!file) return;
 
-    setForm((prev) => ({
-      ...prev,
-      resume: file,
-    }));
-  };
+  if (file.type !== "application/pdf") {
+    alert("Only PDF resume is allowed.");
+    e.target.value = "";
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert("Resume size must be less than 5MB.");
+    e.target.value = "";
+    return;
+  }
+
+  setForm((prev) => ({
+    ...prev,
+    resume: file,
+  }));
+};
+
+  // ==========================================
+  // SUBMIT APPLICATION
+  // ==========================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("========== APPLY MODAL ==========");
-    console.log("FORM:", form);
-    console.log("RESUME:", form.resume);
-    console.log("IS FILE:", form.resume instanceof File);
-    console.log("=================================");
+    // Name
+    if (!form.name.trim()) {
+      alert("Please enter your name.");
+      return;
+    }
 
-    if (!form.resume) {
-      alert("Please select your resume.");
+    // Email
+    if (!form.email.trim()) {
+      alert("Please enter your email.");
+      return;
+    }
+
+    // Resume
+    if (!(form.resume instanceof File)) {
+      alert("Please select your PDF resume.");
+      return;
+    }
+
+    // Job ID
+    const requisitionId = job._id || job.id;
+
+    if (!requisitionId) {
+      alert("Job ID not found.");
       return;
     }
 
@@ -55,10 +93,33 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
       setSubmitting(true);
 
       await onSubmit({
-        ...form,
+        name: form.name.trim(),
+
+        email: form.email.trim(),
+
+        phone: form.phone.trim(),
+
+        experience: form.experience.trim(),
+
+        coverNote: form.coverNote.trim(),
+
+        resume: form.resume,
+
         role: job.role,
-        requisitionId: job._id || job.id,
+
+        requisitionId,
       });
+
+      // Reset form after successful submit
+      setForm({
+        name: "",
+        email: "",
+        phone: "",
+        experience: "",
+        resume: null,
+        coverNote: "",
+      });
+
     } catch (error) {
       console.error(
         "APPLICATION ERROR:",
@@ -69,19 +130,32 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
     }
   };
 
+  // ==========================================
+  // UI
+  // ==========================================
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="w-full max-w-[610px] max-h-[90vh] overflow-y-auto rounded-[20px] bg-white shadow-xl">
 
-        {/* HEADER */}
+      <div className="max-h-[90vh] w-full max-w-[610px] overflow-y-auto rounded-[20px] bg-white shadow-xl">
+
+        {/* ======================================
+            HEADER
+        ====================================== */}
+
         <div className="flex items-center justify-between border-b border-[#E1E4EB] px-7 py-5">
+
           <div>
             <h2 className="text-[18px] font-bold leading-6 text-[#111827]">
               Apply — {job.role}
             </h2>
 
             <p className="mt-0.5 text-[13px] leading-5 text-[#64748B]">
-              {job.department} · {job.type} · {job.location}
+              {job.department}
+              {" · "}
+              {job.type}
+              {" · "}
+              {job.location}
             </p>
           </div>
 
@@ -89,20 +163,30 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="text-[24px] font-normal leading-none text-[#64748B] hover:text-[#111827]"
+            className="text-[24px] font-normal leading-none text-[#64748B] hover:text-[#111827] disabled:cursor-not-allowed disabled:opacity-50"
           >
             ×
           </button>
+
         </div>
 
-        {/* FORM */}
+        {/* ======================================
+            FORM
+        ====================================== */}
+
         <form
           onSubmit={handleSubmit}
           className="px-7 py-5"
         >
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+
+          {/* ======================================
+              BASIC INFORMATION
+          ====================================== */}
+
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
 
             {/* FULL NAME */}
+
             <div>
               <label className="block text-[13px] font-semibold text-[#111827]">
                 Full Name
@@ -115,11 +199,13 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
                 onChange={handleChange}
                 placeholder="Your full name"
                 required
-                className="mt-1 h-[42px] w-full rounded-[10px] border border-[#DDE2EA] bg-white px-3 text-[14px] text-[#111827] outline-none placeholder:text-[#64748B] focus:border-[#315FEA]"
+                disabled={submitting}
+                className="mt-1 h-[42px] w-full rounded-[10px] border border-[#DDE2EA] bg-white px-3 text-[14px] text-[#111827] outline-none placeholder:text-[#64748B] focus:border-[#315FEA] disabled:bg-slate-50"
               />
             </div>
 
             {/* EMAIL */}
+
             <div>
               <label className="block text-[13px] font-semibold text-[#111827]">
                 Email
@@ -132,11 +218,13 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
                 onChange={handleChange}
                 placeholder="you@email.com"
                 required
-                className="mt-1 h-[42px] w-full rounded-[10px] border border-[#DDE2EA] bg-white px-3 text-[14px] text-[#111827] outline-none placeholder:text-[#64748B] focus:border-[#315FEA]"
+                disabled={submitting}
+                className="mt-1 h-[42px] w-full rounded-[10px] border border-[#DDE2EA] bg-white px-3 text-[14px] text-[#111827] outline-none placeholder:text-[#64748B] focus:border-[#315FEA] disabled:bg-slate-50"
               />
             </div>
 
             {/* PHONE */}
+
             <div>
               <label className="block text-[13px] font-semibold text-[#111827]">
                 Phone
@@ -148,11 +236,13 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
                 value={form.phone}
                 onChange={handleChange}
                 placeholder="+92 3xx xxxxxxx"
-                className="mt-1 h-[42px] w-full rounded-[10px] border border-[#DDE2EA] bg-white px-3 text-[14px] text-[#111827] outline-none placeholder:text-[#64748B] focus:border-[#315FEA]"
+                disabled={submitting}
+                className="mt-1 h-[42px] w-full rounded-[10px] border border-[#DDE2EA] bg-white px-3 text-[14px] text-[#111827] outline-none placeholder:text-[#64748B] focus:border-[#315FEA] disabled:bg-slate-50"
               />
             </div>
 
             {/* EXPERIENCE */}
+
             <div>
               <label className="block text-[13px] font-semibold text-[#111827]">
                 Years of Experience
@@ -164,13 +254,19 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
                 value={form.experience}
                 onChange={handleChange}
                 placeholder="5"
-                className="mt-1 h-[42px] w-full rounded-[10px] border border-[#DDE2EA] bg-white px-3 text-[14px] text-[#111827] outline-none placeholder:text-[#64748B] focus:border-[#315FEA]"
+                disabled={submitting}
+                className="mt-1 h-[42px] w-full rounded-[10px] border border-[#DDE2EA] bg-white px-3 text-[14px] text-[#111827] outline-none placeholder:text-[#64748B] focus:border-[#315FEA] disabled:bg-slate-50"
               />
             </div>
+
           </div>
 
-          {/* RESUME */}
-          <div className="mt-1">
+          {/* ======================================
+              RESUME
+          ====================================== */}
+
+          <div className="mt-4">
+
             <label className="block text-[12px] font-semibold text-[#111827]">
               Resume / CV
             </label>
@@ -178,15 +274,39 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
             <input
               type="file"
               name="resume"
-              accept=".pdf,.doc,.docx"
+              accept="application/pdf,.pdf"
               onChange={handleResumeChange}
               required
-              className="mt-1 h-[44px] w-full cursor-pointer rounded-[7px] border border-[#DDE2EA] bg-white px-4 py-2 text-[9px] text-[#64748B] outline-none file:mr-3 file:rounded-[4px] file:border file:border-[#DDE2EA] file:bg-[#E5E7EB] file:px-2 file:py-1 file:text-[13px] file:text-[#64748B] hover:file:bg-[#D1D5DB]"
+              disabled={submitting}
+              className="mt-1 h-[44px] w-full cursor-pointer rounded-[7px] border border-[#DDE2EA] bg-white px-4 py-2 text-[11px] text-[#64748B] outline-none disabled:cursor-not-allowed disabled:bg-slate-50 file:mr-3 file:rounded-[4px] file:border file:border-[#D1D5DB] file:bg-[#E5E7EB] file:px-2 file:py-1 file:text-[13px] file:text-[#64748B] hover:file:bg-[#D1D5DB]"
             />
+
+            <p className="mt-1 text-[10px] text-slate-400">
+              PDF only · Maximum 5MB
+            </p>
+
+            {form.resume && (
+              <div className="mt-2 flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
+
+                <span>
+                  📄
+                </span>
+
+                <span className="truncate text-[11px] font-semibold text-[#64748B]">
+                  {form.resume.name}
+                </span>
+
+              </div>
+            )}
+
           </div>
 
-          {/* COVER NOTE */}
+          {/* ======================================
+              COVER NOTE
+          ====================================== */}
+
           <div className="mt-4">
+
             <label className="block text-[13px] font-semibold text-[#111827]">
               Cover Note (optional)
             </label>
@@ -197,18 +317,23 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
               value={form.coverNote}
               onChange={handleChange}
               placeholder="Why are you a great fit for this role?"
-              className="mt-1 h-[83px] w-full resize-none rounded-[10px] border border-[#DDE2EA] bg-white px-3.5 py-3 text-[14px] outline-none placeholder:text-[#64748B] focus:border-[#315FEA]"
+              disabled={submitting}
+              className="mt-1 h-[83px] w-full resize-none rounded-[10px] border border-[#DDE2EA] bg-white px-3.5 py-3 text-[14px] outline-none placeholder:text-[#64748B] focus:border-[#315FEA] disabled:bg-slate-50"
             />
+
           </div>
 
-          {/* FOOTER */}
+          {/* ======================================
+              BUTTONS
+          ====================================== */}
+
           <div className="mt-5 flex justify-end gap-2.5 border-t border-[#E1E4EB] pt-4">
 
             <button
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="h-[40px] rounded-[11px] border border-[#DDE2EA] bg-white px-4 text-[14px] font-semibold text-[#111827] hover:bg-[#F8FAFC]"
+              className="h-[40px] rounded-[11px] border border-[#DDE2EA] bg-white px-4 text-[14px] font-semibold text-[#111827] hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>
@@ -218,12 +343,17 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
               disabled={submitting}
               className="h-[40px] rounded-[11px] bg-[#315FEA] px-4 text-[14px] font-semibold text-white hover:bg-[#2853D5] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {submitting ? "Submitting..." : "Submit Application"}
+              {submitting
+                ? "Submitting..."
+                : "Submit Application"}
             </button>
 
           </div>
+
         </form>
+
       </div>
+
     </div>
   );
 };

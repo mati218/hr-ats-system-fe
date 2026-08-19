@@ -1,80 +1,285 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import ApplyModal from "./ApplyModal";
 import ApplicationSuccess from "./ApplicationSuccess";
+
 import { getRequisitions } from "../../lib/api/requisitionApi";
 import { applyNow } from "../../lib/api/candidateApi";
 
 const CareerPortal = () => {
   const navigate = useNavigate();
 
+  // ==========================================
+  // STATES
+  // ==========================================
+
   const [selectedJob, setSelectedJob] = useState(null);
+
   const [showSuccess, setShowSuccess] = useState(false);
+
   const [submittedJob, setSubmittedJob] = useState(null);
+
   const [jobs, setJobs] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+
+  // ==========================================
+  // FETCH OPEN JOBS
+  // ==========================================
 
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await getRequisitions("Open");
-        setJobs(response.data.data);
+        setLoading(true);
+
+        const response =
+          await getRequisitions("Open");
+
+        console.log(
+          "OPEN JOBS:",
+          response?.data
+        );
+
+        setJobs(
+          response?.data?.data || []
+        );
+
       } catch (error) {
-        console.error("Failed to fetch open jobs:", error);
+        console.error(
+          "FAILED TO FETCH OPEN JOBS:",
+          error?.response?.data || error
+        );
+
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchJobs();
   }, []);
-const handleApplySubmit = async (form) => {
-  try {
-    console.log("========== CAREER PORTAL ==========");
-    console.log("FORM:", form);
-    console.log("RESUME:", form.resume);
-    console.log("IS FILE:", form.resume instanceof File);
-    console.log("JOB:", selectedJob);
-    console.log("====================================");
 
-    await applyNow({
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      role: form.role || selectedJob.role,
-      requisitionId:
-        form.requisitionId || selectedJob._id,
-      experience: form.experience,
-      coverNote: form.coverNote,
+  // ==========================================
+  // APPLY SUBMIT
+  // ==========================================
 
-      // ⭐ MOST IMPORTANT
-      resume: form.resume,
-    });
+  const handleApplySubmit = async (form) => {
 
-    setSubmittedJob(selectedJob);
-    setSelectedJob(null);
-    setShowSuccess(true);
+    // ------------------------------------------
+    // CHECK SELECTED JOB
+    // ------------------------------------------
 
-  } catch (error) {
-    console.error(
-      "APPLY ERROR:",
-      error?.response?.data || error
-    );
+    if (!selectedJob) {
+      alert("Please select a job first.");
+      return;
+    }
 
-    alert(
-      error?.response?.data?.message ||
-        "Failed to submit application. Please try again."
-    );
-  }
-};
+    // ------------------------------------------
+    // CHECK RESUME
+    // ------------------------------------------
+
+    if (!(form.resume instanceof File)) {
+      alert("Please select your PDF resume.");
+      return;
+    }
+
+    // ------------------------------------------
+    // JOB ID
+    // ------------------------------------------
+
+    const jobId =
+      selectedJob._id ||
+      selectedJob.id;
+
+    if (!jobId) {
+      alert("Job ID not found.");
+      return;
+    }
+
+    try {
+
+      console.log(
+        "======================================"
+      );
+
+      console.log(
+        "CAREER PORTAL APPLICATION"
+      );
+
+      console.log(
+        "======================================"
+      );
+
+      console.log(
+        "Candidate Name:",
+        form.name
+      );
+
+      console.log(
+        "Candidate Email:",
+        form.email
+      );
+
+      console.log(
+        "Candidate Phone:",
+        form.phone
+      );
+
+      console.log(
+        "Experience:",
+        form.experience
+      );
+
+      console.log(
+        "Resume:",
+        form.resume
+      );
+
+      console.log(
+        "Resume Is File:",
+        form.resume instanceof File
+      );
+
+      console.log(
+        "Role:",
+        selectedJob.role
+      );
+
+      console.log(
+        "Requisition ID:",
+        jobId
+      );
+
+      console.log(
+        "======================================"
+      );
+
+      // ========================================
+      // SEND APPLICATION TO BACKEND
+      // ========================================
+
+      const response = await applyNow({
+
+        name: form.name,
+
+        email: form.email,
+
+        phone: form.phone,
+
+        role: selectedJob.role,
+
+        requisitionId: jobId,
+
+        experience: form.experience,
+
+        coverNote: form.coverNote,
+
+        resume: form.resume,
+
+      });
+
+      console.log(
+        "APPLICATION RESPONSE:",
+        response?.data
+      );
+
+      console.log(
+        "APPLICATION SUBMITTED SUCCESSFULLY"
+      );
+
+      // ========================================
+      // SAVE SUBMITTED JOB
+      // ========================================
+
+      setSubmittedJob(selectedJob);
+
+      // ========================================
+      // IMPORTANT
+      // ========================================
+      // Job ko remove NAHI karna.
+      //
+      // Isliye yahan:
+      //
+      // setJobs(...)
+      //
+      // nahi lagaya.
+      //
+      // Job Career Portal par available rahegi.
+      // ========================================
+
+      // ========================================
+      // CLOSE APPLY MODAL
+      // ========================================
+
+      setSelectedJob(null);
+
+      // ========================================
+      // SHOW SUCCESS MODAL
+      // ========================================
+
+      setShowSuccess(true);
+
+    } catch (error) {
+
+      console.error(
+        "======================================"
+      );
+
+      console.error(
+        "APPLICATION ERROR"
+      );
+
+      console.error(
+        error?.response?.data || error
+      );
+
+      console.error(
+        "======================================"
+      );
+
+      alert(
+        error?.response?.data?.message ||
+          "Failed to submit application. Please try again."
+      );
+    }
+  };
+
+  // ==========================================
+  // CLOSE SUCCESS MODAL
+  // ==========================================
+
+  const handleSuccessClose = () => {
+
+    setShowSuccess(false);
+
+    setSubmittedJob(null);
+
+  };
+
+  // ==========================================
+  // RENDER
+  // ==========================================
 
   return (
     <div className="min-h-screen bg-[#F5F6FA] font-sans">
+
+      {/* ======================================
+          HEADER
+      ====================================== */}
+
       <section className="relative bg-[#101118] text-white">
+
+        {/* CAREER PORTAL LABEL */}
+
         <button
+          type="button"
           className="
             absolute
-            top-6
             right-6
+            top-6
             rounded-xl
-            border border-[#DDE2EA]
+            border
+            border-[#DDE2EA]
             bg-white
             px-3
             py-1
@@ -87,7 +292,11 @@ const handleApplySubmit = async (form) => {
         </button>
 
         <div className="mx-auto max-w-[1140px] px-6 pt-8">
+
+          {/* LOGO */}
+
           <div className="flex items-center gap-3">
+
             <div
               className="
                 flex
@@ -96,7 +305,7 @@ const handleApplySubmit = async (form) => {
                 items-center
                 justify-center
                 rounded-xl
-                bg-linear-to-br
+                bg-gradient-to-br
                 from-[#315FEA]
                 to-[#7351D8]
                 text-[16px]
@@ -106,15 +315,22 @@ const handleApplySubmit = async (form) => {
               T
             </div>
 
-            <span className="text-[25px] font-bold">Talenta Careers</span>
+            <span className="text-[25px] font-bold">
+              Talenta Careers
+            </span>
+
           </div>
 
           {/* BACK TO LOGIN */}
+
           <button
-            onClick={() => navigate("/login")}
+            type="button"
+            onClick={() =>
+              navigate("/login")
+            }
             className="
               absolute
-              right-36.25
+              right-36
               top-19
               rounded-xl
               border
@@ -131,14 +347,16 @@ const handleApplySubmit = async (form) => {
             Back to login
           </button>
 
-          {/* HERO CONTENT */}
-          <div className="pt-[35px] pb-[60px]">
+          {/* HERO */}
+
+          <div className="pb-[60px] pt-[35px]">
+
             <h1
               className="
                 max-w-[720px]
                 text-[35px]
-                leading-[1.25]
                 font-bold
+                leading-[1.25]
               "
             >
               Build what’s next, with a team that
@@ -146,16 +364,39 @@ const handleApplySubmit = async (form) => {
               hires on purpose.
             </h1>
 
-            <p className="mt-2
-             text-[13px] text-[#AAB4C8]">
-              Browse open roles and apply in minutes — no account required.
+            <p
+              className="
+                mt-2
+                text-[13px]
+                text-[#AAB4C8]
+              "
+            >
+              Browse open roles and apply in minutes
+              — no account required.
             </p>
+
           </div>
+
         </div>
+
       </section>
 
-      {/* JOB LIST */}
-      <main className="max-w-[1050px] mx-auto px-6 -mt-[38px] pb-16 relative z-10">
+      {/* ======================================
+          JOB LIST
+      ====================================== */}
+
+      <main
+        className="
+          relative
+          z-10
+          mx-auto
+          -mt-[38px]
+          max-w-[1050px]
+          px-6
+          pb-16
+        "
+      >
+
         <div
           className="
             overflow-hidden
@@ -166,70 +407,165 @@ const handleApplySubmit = async (form) => {
             shadow-sm
           "
         >
-          {jobs.map((job, index) => (
-            <div
-              key={job.role}
-              className={`
-                flex
-                items-center
-                justify-between
-                px-8
-                py-4
-                ${index !== jobs.length - 1 ? "border-b border-[#E5E7EB]" : ""}
-              `}
-            >
-              {/* JOB INFORMATION */}
-              <div>
-                <h2 className="text-[16px] font-bold text-[#111827]">
-                  {job.role}
+
+          {/* ====================================
+              LOADING
+          ==================================== */}
+
+          {loading && (
+            <div className="px-8 py-10 text-center">
+
+              <p className="text-sm text-[#64748B]">
+                Loading available jobs...
+              </p>
+
+            </div>
+          )}
+
+          {/* ====================================
+              NO JOBS
+          ==================================== */}
+
+          {!loading &&
+            jobs.length === 0 && (
+              <div className="px-8 py-12 text-center">
+
+                <h2 className="text-[17px] font-bold text-[#111827]">
+                  No open positions
                 </h2>
 
                 <p className="mt-1 text-[13px] text-[#64748B]">
-                  {job.department} · {job.type} · {job.location} · PKR{" "}
-                  {job.salaryMin}–{job.salaryMax}
+                  There are currently no open jobs available.
                 </p>
+
+              </div>
+            )}
+
+          {/* ====================================
+              JOBS
+          ==================================== */}
+
+          {!loading &&
+            jobs.length > 0 &&
+            jobs.map((job, index) => (
+
+              <div
+                key={
+                  job._id ||
+                  job.id ||
+                  job.role
+                }
+                className={`
+                  flex
+                  items-center
+                  justify-between
+                  px-8
+                  py-4
+                  ${
+                    index !== jobs.length - 1
+                      ? "border-b border-[#E5E7EB]"
+                      : ""
+                  }
+                `}
+              >
+
+                {/* JOB INFORMATION */}
+
+                <div>
+
+                  <h2
+                    className="
+                      text-[16px]
+                      font-bold
+                      text-[#111827]
+                    "
+                  >
+                    {job.role}
+                  </h2>
+
+                  <p
+                    className="
+                      mt-1
+                      text-[13px]
+                      text-[#64748B]
+                    "
+                  >
+                    {job.department}
+
+                    {" · "}
+
+                    {job.type}
+
+                    {" · "}
+
+                    {job.location}
+
+                    {" · PKR "}
+
+                    {job.salaryMin}
+
+                    {"–"}
+
+                    {job.salaryMax}
+                  </p>
+
+                </div>
+
+                {/* APPLY BUTTON */}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedJob(job)
+                  }
+                  className="
+                    ml-6
+                    shrink-0
+                    rounded-xl
+                    bg-[#315FEA]
+                    px-3
+                    py-1
+                    text-[13px]
+                    font-semibold
+                    text-white
+                    transition
+                    hover:bg-[#2853D5]
+                  "
+                >
+                  Apply Now
+                </button>
+
               </div>
 
-              {/* APPLY */}
-              <button
-                onClick={() => setSelectedJob(job)}
-                className="
-                  shrink-0
-                  ml-6
-                  rounded-xl
-                  bg-[#315FEA]
-                  px-3
-                  py-1
-                  text-[13px]
-                  font-semibold
-                  text-white
-                  transition
-                  hover:bg-[#2853D5]
-                "
-              >
-                Apply Now
-              </button>
-            </div>
-          ))}
+            ))}
+
         </div>
 
-        {/* APPLY MODAL */}
+        {/* ======================================
+            APPLY MODAL
+        ====================================== */}
+
         <ApplyModal
           job={selectedJob}
-          onClose={() => setSelectedJob(null)}
+          onClose={() =>
+            setSelectedJob(null)
+          }
           onSubmit={handleApplySubmit}
         />
+
+        {/* ======================================
+            SUCCESS MODAL
+        ====================================== */}
 
         {showSuccess && (
           <ApplicationSuccess
             job={submittedJob}
-            onClose={() => {
-              setShowSuccess(false);
-              setSubmittedJob(null);
-            }}
+            onClose={handleSuccessClose}
           />
         )}
+
       </main>
+
     </div>
   );
 };
