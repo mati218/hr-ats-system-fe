@@ -196,7 +196,7 @@ function CandidateProfile({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-[840px] overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="w-full max-w-210 overflow-hidden rounded-2xl bg-white shadow-2xl">
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
@@ -285,7 +285,7 @@ function CandidateProfile({
                       >
                         <div
                           className={
-                            "flex h-[22px] w-[22px] items-center justify-center rounded-full text-[10px] font-bold " +
+                            "flex h-5.5 w-5.5 items-center justify-center rounded-full text-[10px] font-bold " +
                             (isDone
                               ? "bg-emerald-500 text-white"
                               : isCurrent
