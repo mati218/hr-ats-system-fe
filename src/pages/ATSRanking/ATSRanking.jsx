@@ -3,12 +3,15 @@ import { useEffect, useState } from "react";
 import CandidateCard from "../../components/ui/CandidateCard";
 import OfferLetterModal from "./OfferLetter";
 import CandidateProfile from "../../components/ui/CandidateProfile";
+import ScheduleInterviewModal from "../CandidatePipeline/ScheduleInterviewModal";
 
 import { getATSRanking } from "../../lib/api/atsApi";
 import { getRequisitions } from "../../lib/api/requisitionApi";
+
 import {
   rejectCandidate,
   scheduleInterview,
+  moveCandidateStage,
 } from "../../lib/api/candidateApi";
 
 function ATSRanking() {
@@ -23,6 +26,15 @@ function ATSRanking() {
     useState(null);
 
   const [offerCandidate, setOfferCandidate] =
+    useState(null);
+
+  // ==========================
+  // SCHEDULE INTERVIEW MODAL
+  // ==========================
+  const [scheduleModalOpen, setScheduleModalOpen] =
+    useState(false);
+
+  const [scheduleCandidate, setScheduleCandidate] =
     useState(null);
 
   const [loading, setLoading] = useState(true);
@@ -146,6 +158,8 @@ function ATSRanking() {
       setSelectedCandidate(null);
       setOfferCandidate(null);
       setOpenModal(false);
+      setScheduleModalOpen(false);
+      setScheduleCandidate(null);
 
       alert(
         "Candidate rejected successfully."
@@ -164,16 +178,46 @@ function ATSRanking() {
   };
 
   // ==========================
-  // SCHEDULE INTERVIEW
+  // OPEN SCHEDULE INTERVIEW MODAL
   // ==========================
-  const handleScheduleInterview = async (
+  const handleScheduleInterview = (candidate) => {
+    const candidateId =
+      candidate.candidateId ||
+      candidate._id;
+
+    if (!candidateId) {
+      alert("Candidate ID not found.");
+      return;
+    }
+
+    console.log(
+      "OPENING INTERVIEW MODAL FOR:",
+      candidateId
+    );
+
+    setScheduleCandidate({
+      ...candidate,
+
+      // Make sure both are available
+      _id: candidateId,
+      candidateId: candidateId,
+    });
+
+    setSelectedCandidate(null);
+    setScheduleModalOpen(true);
+  };
+
+  // ==========================
+  // SUBMIT INTERVIEW
+  // ==========================
+  const handleSubmitInterview = async (
     candidate,
     interviewData
   ) => {
     try {
       const candidateId =
-        candidate.candidateId ||
-        candidate._id;
+        candidate?.candidateId ||
+        candidate?._id;
 
       if (!candidateId) {
         alert("Candidate ID not found.");
@@ -182,6 +226,39 @@ function ATSRanking() {
 
       if (!interviewData) {
         alert("Interview details not found.");
+        return;
+      }
+
+      // ==========================
+      // VALIDATE REQUIRED DATA
+      // ==========================
+      if (!interviewData.round) {
+        alert("Interview round is required.");
+        return;
+      }
+
+      if (!interviewData.mode) {
+        alert("Interview mode is required.");
+        return;
+      }
+
+      if (!interviewData.date) {
+        alert("Interview date is required.");
+        return;
+      }
+
+      if (!interviewData.time) {
+        alert("Interview time is required.");
+        return;
+      }
+
+      if (!interviewData.duration) {
+        alert("Interview duration is required.");
+        return;
+      }
+
+      if (!interviewData.interviewerId) {
+        alert("Please select interviewer.");
         return;
       }
 
@@ -196,17 +273,57 @@ function ATSRanking() {
       );
 
       // ==========================
-      // SEND COMPLETE INTERVIEW DATA
+      // SEND INTERVIEW DATA
       // ==========================
-      await scheduleInterview({
-        candidateId,
+      const payload = {
+        candidateId: candidateId,
+
         round: interviewData.round,
+
         mode: interviewData.mode,
+
         date: interviewData.date,
+
         time: interviewData.time,
+
         duration: interviewData.duration,
-        interviewer: interviewData.interviewer,
-      });
+
+        // Backend receives interviewer
+        interviewer:
+          interviewData.interviewerId,
+
+        location:
+          interviewData.location || "",
+
+        notes:
+          interviewData.notes || "",
+      };
+
+      console.log(
+        "INTERVIEW PAYLOAD:",
+        payload
+      );
+
+      await scheduleInterview(payload);
+
+      // ==========================
+      // MOVE CANDIDATE TO INTERVIEW
+      // ==========================
+      try {
+        await moveCandidateStage(
+          candidateId,
+          "Interview"
+        );
+      } catch (stageError) {
+        console.error(
+          "MOVE TO INTERVIEW STAGE ERROR:",
+          stageError?.response?.data ||
+            stageError
+        );
+
+        // Interview was already created,
+        // so don't show scheduling failure.
+      }
 
       // ==========================
       // UPDATE ATS RANKING LOCALLY
@@ -228,7 +345,11 @@ function ATSRanking() {
         })
       );
 
-      // Close candidate profile
+      // ==========================
+      // CLOSE MODALS
+      // ==========================
+      setScheduleModalOpen(false);
+      setScheduleCandidate(null);
       setSelectedCandidate(null);
 
       alert(
@@ -242,8 +363,11 @@ function ATSRanking() {
 
       alert(
         error?.response?.data?.message ||
+          error?.message ||
           "Failed to schedule interview."
       );
+
+      throw error;
     }
   };
 
@@ -280,31 +404,17 @@ function ATSRanking() {
         candidateId
       );
 
-      const response = await fetch(
-        `http://localhost:5000/api/candidates/${candidateId}/stage`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem(
-              "token"
-            )}`,
-          },
-          body: JSON.stringify({
-            stage: "Offer",
-          }),
-        }
+      // ==========================
+      // USE API FUNCTION
+      // ==========================
+      await moveCandidateStage(
+        candidateId,
+        "Offer"
       );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data?.message ||
-            "Failed to move candidate to Offer stage."
-        );
-      }
-
+      // ==========================
+      // UPDATE UI
+      // ==========================
       setCandidates((prev) =>
         prev.map((item) => {
           const itemId =
@@ -371,6 +481,8 @@ function ATSRanking() {
             setSelectedCandidate(null);
             setOfferCandidate(null);
             setOpenModal(false);
+            setScheduleModalOpen(false);
+            setScheduleCandidate(null);
           }}
           className="h-9 min-w-42.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         >
@@ -543,6 +655,28 @@ function ATSRanking() {
 
         onScheduleInterview={
           handleScheduleInterview
+        }
+      />
+
+      {/* ==========================
+          SCHEDULE INTERVIEW MODAL
+      ========================== */}
+      <ScheduleInterviewModal
+        isOpen={
+          scheduleModalOpen
+        }
+
+        candidate={
+          scheduleCandidate
+        }
+
+        onClose={() => {
+          setScheduleModalOpen(false);
+          setScheduleCandidate(null);
+        }}
+
+        onSubmit={
+          handleSubmitInterview
         }
       />
 

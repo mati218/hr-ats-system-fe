@@ -205,7 +205,7 @@ const Departmenttype = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4 backdrop-blur-[1px]">
 
-          <div className="w-full max-w-[520px] overflow-hidden rounded-2xl bg-white shadow-2xl">
+          <div className="w-full max-w-130 overflow-hidden rounded-2xl bg-white shadow-2xl">
 
             {/* HEADER */}
             <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">

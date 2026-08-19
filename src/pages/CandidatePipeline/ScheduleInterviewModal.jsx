@@ -1,5 +1,31 @@
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { getUsersLookup } from "../../lib/api/lookupApi";
+
+const INITIAL_FORM = {
+  round: "Technical",
+  mode: "Video Call",
+  date: "",
+  time: "",
+  duration: "45 minutes",
+  interviewerId: "",
+  location: "",
+  notes: "",
+};
+
+function formReducer(form, action) {
+  if (action.type === "reset") {
+    return INITIAL_FORM;
+  }
+
+  if (action.type === "update") {
+    return {
+      ...form,
+      [action.field]: action.value,
+    };
+  }
+
+  return form;
+}
 
 function ScheduleInterviewModal({
   isOpen,
@@ -7,25 +33,15 @@ function ScheduleInterviewModal({
   onClose,
   onSubmit,
 }) {
-  const [form, setForm] = useState({
-    round: "Technical",
-    mode: "Video Call",
-    date: "",
-    time: "",
-    duration: "45 minutes",
-    interviewerId: "",
-    location: "",
-    notes: "",
-  });
+  const [form, dispatchForm] = useReducer(
+    formReducer,
+    INITIAL_FORM
+  );
 
-  const [interviewers, setInterviewers] =
-    useState([]);
-
+  const [interviewers, setInterviewers] = useState([]);
   const [loadingInterviewers, setLoadingInterviewers] =
     useState(false);
-
-  const [submitting, setSubmitting] =
-    useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // =====================================================
   // LOAD INTERVIEWERS
@@ -40,16 +56,15 @@ function ScheduleInterviewModal({
       try {
         setLoadingInterviewers(true);
 
-        const response =
-          await getUsersLookup(
-            "Interviewer"
-          );
+        const response = await getUsersLookup(
+          "Interviewer"
+        );
 
         const users =
           response?.data?.data || [];
 
-        const normalizedUsers =
-          users.map((user) => ({
+        const normalizedUsers = users.map(
+          (user) => ({
             ...user,
 
             id:
@@ -63,16 +78,15 @@ function ScheduleInterviewModal({
             name:
               user?.name ||
               "Unknown User",
-          }));
+          })
+        );
 
         console.log(
           "INTERVIEWERS:",
           normalizedUsers
         );
 
-        setInterviewers(
-          normalizedUsers
-        );
+        setInterviewers(normalizedUsers);
       } catch (error) {
         console.error(
           "GET INTERVIEWERS ERROR:",
@@ -98,30 +112,19 @@ function ScheduleInterviewModal({
       return;
     }
 
-    setForm({
-      round: "Technical",
-      mode: "Video Call",
-      date: "",
-      time: "",
-      duration: "45 minutes",
-      interviewerId: "",
-      location: "",
-      notes: "",
-    });
-  }, [isOpen, candidate?._id]);
+    dispatchForm({ type: "reset" });
+  }, [isOpen, candidate]);
 
   // =====================================================
   // UPDATE FORM
   // =====================================================
 
-  const update = (
-    field,
-    value
-  ) => {
-    setForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  const update = (field, value) => {
+    dispatchForm({
+      type: "update",
+      field,
+      value,
+    });
   };
 
   // =====================================================
@@ -129,41 +132,47 @@ function ScheduleInterviewModal({
   // =====================================================
 
   const handleSubmit = async () => {
-    if (!candidate?._id) {
-      alert(
-        "Candidate ID not found."
-      );
+    const candidateId =
+      candidate?.candidateId ||
+      candidate?._id;
+
+    if (!candidateId) {
+      alert("Candidate ID not found.");
       return;
     }
 
     if (!form.date) {
-      alert(
-        "Please select interview date."
-      );
+      alert("Please select interview date.");
       return;
     }
 
     if (!form.time) {
-      alert(
-        "Please select interview time."
-      );
+      alert("Please select interview time.");
       return;
     }
 
     if (!form.interviewerId) {
-      alert(
-        "Please select interviewer."
-      );
+      alert("Please select interviewer.");
       return;
     }
 
     try {
       setSubmitting(true);
 
-      await onSubmit(
-        candidate,
+      console.log(
+        "INTERVIEW FORM:",
         form
       );
+
+      await onSubmit(
+        {
+          ...candidate,
+          _id: candidateId,
+          candidateId: candidateId,
+        },
+        form
+      );
+
     } catch (error) {
       console.error(
         "SCHEDULE ERROR:",
@@ -179,10 +188,7 @@ function ScheduleInterviewModal({
   // DON'T SHOW
   // =====================================================
 
-  if (
-    !isOpen ||
-    !candidate
-  ) {
+  if (!isOpen || !candidate) {
     return null;
   }
 
@@ -191,7 +197,7 @@ function ScheduleInterviewModal({
   // =====================================================
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-3">
+    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 p-3">
 
       <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl bg-white shadow-xl">
 
@@ -414,18 +420,17 @@ function ScheduleInterviewModal({
                 }
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500"
               >
-
                 <option value="">
                   {loadingInterviewers
                     ? "Loading interviewers..."
-                    : interviewers.length === 0
+                    : interviewers.length ===
+                      0
                     ? "No interviewers found"
                     : "Select interviewer"}
                 </option>
 
                 {interviewers.map(
                   (interviewer) => {
-
                     const id =
                       interviewer.id ||
                       interviewer._id;
@@ -442,16 +447,15 @@ function ScheduleInterviewModal({
                     );
                   }
                 )}
-
               </select>
 
               {!loadingInterviewers &&
-                interviewers.length === 0 && (
+                interviewers.length ===
+                  0 && (
                   <p className="mt-1 text-[11px] text-red-500">
                     No interviewer users found.
                   </p>
                 )}
-
             </div>
 
           </div>
@@ -459,7 +463,6 @@ function ScheduleInterviewModal({
           {/* LOCATION */}
 
           <div>
-
             <label className="mb-1 block text-xs font-semibold text-slate-700">
               Meeting Link / Location
             </label>
@@ -477,13 +480,11 @@ function ScheduleInterviewModal({
               placeholder="Zoom link or office address"
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500"
             />
-
           </div>
 
           {/* NOTES */}
 
           <div>
-
             <label className="mb-1 block text-xs font-semibold text-slate-700">
               Notes for Interviewer
             </label>
@@ -501,7 +502,6 @@ function ScheduleInterviewModal({
               rows={3}
               className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500"
             />
-
           </div>
 
         </div>
@@ -537,7 +537,6 @@ function ScheduleInterviewModal({
         </div>
 
       </div>
-
     </div>
   );
 }
