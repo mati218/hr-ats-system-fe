@@ -15,7 +15,8 @@ const STAGES = [
   "Screening",
   "Shortlisted",
   "Interview",
-  "Offer",
+  "Offer Draft",
+  "Offer Sent",
   "Hired",
   "Rejected",
 ];
@@ -174,7 +175,8 @@ function CandidatePipeline() {
     // has already happened/scheduled.
     if (
       currentStage === "Interview" ||
-      currentStage === "Offer" ||
+      currentStage === "Offer Draft" ||
+      currentStage === "Offer Sent" ||
       currentStage === "Hired"
     ) {
       alert(
@@ -211,7 +213,8 @@ function CandidatePipeline() {
     if (
       candidate.stage === "Rejected" ||
       candidate.stage === "Interview" ||
-      candidate.stage === "Offer" ||
+      candidate.stage === "Offer Draft" ||
+      candidate.stage === "Offer Sent" ||
       candidate.stage === "Hired"
     ) {
       alert(
