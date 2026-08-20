@@ -1,4 +1,3 @@
-"use no memo";
 
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
@@ -20,6 +19,17 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
     formState: { errors },
   } = useForm({
     defaultValues: {
+      jobTitle: "",
+      department: "",
+      employmentType: "",
+      location: "",
+      openings: 0,
+      experienceLevel: "",
+      deadline: "",
+      salaryMin: "",
+      salaryMax: "",
+      description: "",
+      requirements: "",
       publishOption: "draft",
     },
   });
@@ -39,45 +49,45 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
     return tomorrow.toISOString().split("T")[0]; // "YYYY-MM-DD"
   };
 
- useEffect(() => {
-  if (isCreateMode) {
-    reset({
-      jobTitle: "",
-      department: "",
-      employmentType: "",
-      location: "",
-      openings: 0,
-      experienceLevel: "",
-      deadline: "",
-      salaryMin: "",
-      salaryMax: "",
-      description: "",
-      requirements: "",
-      publishOption: "",
-    });
-    return;
-  }
+  useEffect(() => {
+    if (isCreateMode) {
+      reset({
+        jobTitle: "",
+        department: "",
+        employmentType: "",
+        location: "",
+        openings: 0,
+        experienceLevel: "",
+        deadline: "",
+        salaryMin: "",
+        salaryMax: "",
+        description: "",
+        requirements: "",
+        publishOption: "draft",
+      });
+      return;
+    }
 
-  if (requisition) {
-    reset({
-      jobTitle: requisition.role || "",
-      department: requisition.department || "",
-      employmentType: requisition.type || "",
-      location: requisition.location || "",
-      openings: requisition.openings || 1,
-      experienceLevel: requisition.experienceLevel || "",
-      deadline: requisition.deadline
-        ? requisition.deadline.split("T")[0]
-        : "",
-      salaryMin: requisition.salaryMin || "",
-      salaryMax: requisition.salaryMax || "",
-      description: requisition.description || "",
-      requirements: requisition.requirements || "",
-      publishOption:
-        requisition.status === "Open" ? "publish" : "draft",
-    });
-  }
-}, [isCreateMode, requisition, reset]);
+    if (requisition) {
+      reset({
+        jobTitle: requisition.role || "",
+        department: requisition.department || "",
+        employmentType: requisition.type || "",
+        location: requisition.location || "",
+        openings: requisition.openings || 1,
+        experienceLevel: requisition.experienceLevel || "",
+        deadline: requisition.deadline
+          ? requisition.deadline.split("T")[0]
+          : "",
+        salaryMin: requisition.salaryMin || "",
+        salaryMax: requisition.salaryMax || "",
+        description: requisition.description || "",
+        requirements: requisition.requirements || "",
+        publishOption:
+          requisition.status === "Open" ? "publish" : "draft",
+      });
+    }
+  }, [isCreateMode, requisition, reset]);
 
   const onSubmit = async (data) => {
     const finaldata = {
@@ -113,16 +123,18 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
       onClose();
       toast.success("Job requisition saved successfully", {
         style: {
-          background: "#111827",
-          color: "#ffffff",
+          background: "#ffffff",
+          color: "#181B25",
           padding: "16px 20px",
           borderRadius: "12px",
           fontSize: "15px",
           fontWeight: "500",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.12)",
+          border: "1px solid #E5E7EB",
         },
         iconTheme: {
           primary: "#22c55e",
-          secondary: "#111827",
+          secondary: "#ffffff",
         },
       });
 
@@ -171,12 +183,15 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
             </label>
 
             <select
-              className={`w-full rounded-lg border px-4 py-3`}
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900"
               {...register("department", {
-                required: "Department required",
+                required: "Department is required",
               })}
             >
-              <option value=""></option>
+              <option value="" disabled className="text-gray-400">
+                Select Department
+              </option>
+
               <option value="Engineering">Engineering</option>
               <option value="Design">Design</option>
               <option value="People Ops">People Ops</option>
@@ -195,12 +210,14 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
             </label>
 
             <select
-              className={`w-full rounded-lg border border-black px-4 py-3`}
+              className={`w-full rounded-lg border border-gray-300 px-4 py-3`}
               {...register("employmentType", {
                 required: "Employment type  required",
               })}
             >
-              <option value=""></option>
+              <option value="" disabled>
+                Select Employment Type
+              </option>
 
               {employmentTypes.map((type) => (
                 <option key={type.id} value={type.name}>
@@ -228,6 +245,9 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
               name="location"
               register={register}
               errors={errors}
+              rules={{
+                required: "Location is required",
+              }}
             />
           </div>
 
@@ -250,15 +270,27 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
             <label className="text-sm font-semibold text-gray-800 flex">
               Experience Level
             </label>
+
             <select
               className="w-full rounded-lg border border-gray-300 px-4 py-3"
-              {...register("experienceLevel")}
+              {...register("experienceLevel", {
+                required: "Experience level is required",
+              })}
             >
-              <option>Entry</option>
-              <option>Mid</option>
-              <option>Senior</option>
-              <option>Lead</option>
+              <option value="" disabled>
+                Select Experience Level
+              </option>
+              <option value="Entry">Entry</option>
+              <option value="Mid">Mid</option>
+              <option value="Senior">Senior</option>
+              <option value="Lead">Lead</option>
             </select>
+
+            {errors.experienceLevel && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.experienceLevel.message}
+              </p>
+            )}
           </div>
 
           <div>
@@ -272,6 +304,9 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
               register={register}
               errors={errors}
               min={getTomorrowDate()}
+              rules={{
+                required: "Application deadline is required",
+              }}
             />
           </div>
         </div>
@@ -318,24 +353,43 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
           <label className="text-sm font-semibold text-gray-800 flex">
             Job Description
           </label>
+
           <textarea
             placeholder="Summarize responsibilities and impact of this role..."
             rows={3}
             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm"
-            {...register("description")}
+            {...register("description", {
+              required: "Job description is required",
+            })}
           />
+
+          {errors.description && (
+            <p className="mt-1 text-xs text-red-500">
+              {errors.description.message}
+            </p>
+          )}
         </div>
 
         <div>
           <label className="text-sm font-semibold text-gray-800 flex">
             Requirements / Must-have Skills
           </label>
+
           <textarea
             placeholder="React, TypeScript, 5+ years experience, System Design..."
             rows={3}
             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm"
-            {...register("requirements")}
+            {...register("requirements", {
+              required: "Requirements / Must-have Skills are required",
+            })}
           />
+
+          {errors.requirements && (
+            <p className="mt-1 text-xs text-red-500">
+              {errors.requirements.message}
+            </p>
+          )}
+
           <p className="text-xs text-gray-400 mt-1">
             Comma-separated — used by ATS Ranking for auto-scoring.
           </p>

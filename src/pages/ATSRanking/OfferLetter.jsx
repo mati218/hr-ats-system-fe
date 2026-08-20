@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import FormInput from "../../components/ui/FormInput";
 import Button from "../../components/ui/Button";
@@ -77,26 +78,31 @@ function OfferLetter({
   const onSubmit = async (data) => {
     try {
       if (!candidate) {
+        toast.error("Candidate not found.");
         return;
       }
 
       if (isRejected) {
+        toast.error("Rejected candidates cannot receive an offer.");
         return;
       }
 
-      if (isOfferSent) {
-        return;
+      if (onSendOffer) {
+        await onSendOffer(candidate, data);
+
+        toast.success("Offer sent successfully.");
+        onClose();
       }
 
       await onSendOffer(candidate, data);
 
       onClose();
     } catch (error) {
-      console.error(
-        "SEND OFFER ERROR:",
-        error?.response?.data ||
-          error?.message ||
-          error
+      console.error("SEND OFFER ERROR:", error);
+
+      toast.error(
+        error?.response?.data?.message ||
+        "Failed to send offer. Please try again."
       );
     }
   };
@@ -174,22 +180,24 @@ function OfferLetter({
                   Candidate
                 </label>
 
-                <div className="flex h-10 w-full items-center rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800">
-                  <span>
-                    {candidateName} — {candidateRole}
-                  </span>
-                </div>
+                <select
+                  {...register("template", {
+                    required: "Offer template is required",
+                  })}
+                  disabled={isRejected}
+                  className="h-10 w-full appearance-auto rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                >
+                  <option value="">Select template</option>
+                  <option value="Contract">Contract</option>
+                  <option value="Standard Full-Time">Standard Full-Time</option>
+                  <option value="Internship">Internship</option>
+                </select>
 
-                <input
-                  type="hidden"
-                  {...register("candidateId")}
-                  value={
-                    candidate?.candidateId ||
-                    candidate?._id ||
-                    ""
-                  }
-                  readOnly
-                />
+                {errors.template && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.template.message}
+                  </p>
+                )}
 
               </div>
 
@@ -197,45 +205,16 @@ function OfferLetter({
 
                 <div>
 
-                  <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                    Offer Template
-                  </label>
-
-                  <select
-                    {...register("template")}
-                    disabled={isRejected}
-                    className="h-10 w-full appearance-auto rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-                  >
-                    <option value="Contract">
-                      Contract
-                    </option>
-
-                    <option value="Standard Full-Time">
-                      Standard Full-Time
-                    </option>
-
-                    <option value="Internship">
-                      Internship
-                    </option>
-                  </select>
-
-                </div>
-
-                <div>
-
-                  <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                    Joining Date
-                  </label>
-
-                  <FormInput
-                    type="date"
-                    name="joiningDate"
-                    register={register}
-                    errors={errors}
-                    disabled={isRejected}
-                  />
-
-                </div>
+                <FormInput
+                  type="date"
+                  name="joiningDate"
+                  register={register}
+                  errors={errors}
+                  disabled={isRejected}
+                  rules={{
+                    required: "Joining date is required",
+                  }}
+                />
 
               </div>
 
@@ -256,33 +235,17 @@ function OfferLetter({
                     disabled={isRejected}
                   />
 
-                </div>
-
-                <div>
-
-                  <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                    Probation Period
-                  </label>
-
-                  <select
-                    {...register("probation")}
-                    disabled={isRejected}
-                    className="h-10 w-full appearance-auto rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-                  >
-                    <option value="3 months">
-                      3 months
-                    </option>
-
-                    <option value="6 months">
-                      6 months
-                    </option>
-
-                    <option value="None">
-                      None
-                    </option>
-                  </select>
-
-                </div>
+                <FormInput
+                  type="number"
+                  placeholder="385000"
+                  name="salary"
+                  register={register}
+                  errors={errors}
+                  disabled={isRejected}
+                  rules={{
+                    required: "Offered salary is required",
+                  }}
+                />
 
               </div>
 
@@ -292,13 +255,24 @@ function OfferLetter({
                   Personal Note (optional)
                 </label>
 
-                <textarea
-                  rows={3}
-                  {...register("note")}
+                <select
+                  {...register("probation", {
+                    required: "Probation period is required",
+                  })}
                   disabled={isRejected}
-                  placeholder="A short welcome note included in the offer email..."
-                  className="min-h-19 w-full resize-y rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-                />
+                  className="h-10 w-full appearance-auto rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                >
+                  <option value="">Select probation period</option>
+                  <option value="3 months">3 months</option>
+                  <option value="6 months">6 months</option>
+                  <option value="None">None</option>
+                </select>
+
+                {errors.probation && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.probation.message}
+                  </p>
+                )}
 
               </div>
 

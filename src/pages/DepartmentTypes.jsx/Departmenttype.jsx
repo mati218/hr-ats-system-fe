@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { X } from "lucide-react";
+import toast from "react-hot-toast";
 
 import DeptTable from "./DeptTable";
 
@@ -129,7 +130,7 @@ const Departmenttype = () => {
           employees: departmentHead,
         });
 
-        alert("Department updated successfully");
+        toast.success("Department updated successfully");
       }
 
       // ================= CREATE =================
@@ -150,7 +151,7 @@ const Departmenttype = () => {
           employees: departmentHead,
         });
 
-        alert("Department added successfully");
+        toast.success("Department added successfully");
       }
 
       // Refresh table

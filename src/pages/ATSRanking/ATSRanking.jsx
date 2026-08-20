@@ -430,9 +430,6 @@ function ATSRanking() {
       setOpenModal(false);
       setOfferCandidate(null);
 
-      toast.success(
-        "Offer sent successfully!"
-      );
     } catch (error) {
       console.error(
         "SEND OFFER ERROR:",
@@ -453,13 +450,6 @@ function ATSRanking() {
 
   return (
     <div className="min-h-screen bg-[#f5f6fa] px-6 py-7 sm:px-8">
-
-      <Toaster
-        position="bottom-right"
-        toastOptions={{
-          duration: 3000,
-        }}
-      />
 
       <div className="mb-5 flex items-start justify-between gap-5 text-left">
         <div>

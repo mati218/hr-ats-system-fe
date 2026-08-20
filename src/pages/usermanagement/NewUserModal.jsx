@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 
 import Modal from "../../components/ui/Modal";
 import FormInput from "../../components/ui/FormInput";
@@ -83,20 +84,26 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
 
   }, [isOpen, user, setValue, reset]);
 
-const handleCreate = async (data) => {
-  try {
-    const response = await createUser(data);
-    console.log("created: ", response.data);
-    
-    alert("User created successfully");
-    if (onCreated) await onCreated();
-    onClose();
-  } catch (error) {
-    console.log(error.response?.data);
-    alert(error.response?.data?.message || "Failed to create user");
-  }
-};
+  const handleCreate = async (data) => {
+    try {
+      await createUser(data);
 
+      toast.success("User created successfully");
+
+      if (onCreated) {
+        await onCreated();
+      }
+
+      onClose();
+    } catch (error) {
+      console.log(error.response?.data);
+
+      toast.error(
+        error.response?.data?.message ||
+        "Failed to create user"
+      );
+    }
+  };
 
   const handleUpdate = async (data) => {
     try {
@@ -110,18 +117,22 @@ const handleCreate = async (data) => {
         response.data
       );
 
-      alert("User updated successfully");
+      toast.success("User updated successfully");
 
       if (onCreated) {
         await onCreated();
       }
 
       onClose();
-
     } catch (error) {
-  console.log(error.response?.data);
-  alert(error.response?.data?.message || "Failed to update user");
-} };
+      console.log(error.response?.data);
+
+      toast.error(
+        error.response?.data?.message ||
+        "Failed to update user"
+      );
+    }
+  };
 
 
   return (
@@ -187,22 +198,16 @@ const handleCreate = async (data) => {
             Phone
           </label>
 
-       
-       <FormInput
-  type="text"
-  placeholder="+92 3xx xxxxxxx"
-  name="phoneNumber"
-  register={register}
-  errors={errors}
-  rules={{
-    pattern: {
-      value: /^\d{11}$/,
-      message: "Phone number must contain 11 digits only",
-    },
-  }}
-/>
-
-
+          <FormInput
+            type="text"
+            placeholder="+92 3xx xxxxxxx"
+            name="phoneNumber"
+            register={register}
+            errors={errors}
+            rules={{
+              required: "Phone number is required",
+            }}
+          />
         </div>
 
 
