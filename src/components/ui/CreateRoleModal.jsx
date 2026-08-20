@@ -70,11 +70,28 @@ function CreateRoleModal({
   errorMessage,
   role,
   loading,
+  currentUser,
 }) {
   const isEditing = Boolean(role?._id);
 
-  const isLocked =
-    isEditing && role?.isSystemRole === true;
+  // =====================================
+  // CURRENT LOGGED-IN USER ROLE
+  // =====================================
+  const currentUserRole =
+  typeof currentUser?.role === "string"
+    ? currentUser.role
+    : currentUser?.role?.roleName ||
+      currentUser?.roleName ||
+      "";
+
+const normalizedCurrentUserRole =
+  String(currentUserRole).toLowerCase().trim();
+
+const isCurrentUserSuperAdmin =
+  normalizedCurrentUserRole === "superadmin" ||
+  normalizedCurrentUserRole === "super admin";
+
+const canEditPermissions = isCurrentUserSuperAdmin;
 
   const {
     register,
@@ -92,6 +109,9 @@ function CreateRoleModal({
     },
   });
 
+  // =====================================
+  // LOAD ROLE DATA
+  // =====================================
   useEffect(() => {
     if (!isOpen || loading) return;
 
@@ -104,6 +124,9 @@ function CreateRoleModal({
 
   if (!isOpen) return null;
 
+  // =====================================
+  // SUBMIT
+  // =====================================
   const submitHandler = async (data) => {
     const permissions = modules.map((module) => ({
       module: module.key,
@@ -132,9 +155,12 @@ function CreateRoleModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center  px-4 py-4 ">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-4">
+
       <div className="flex max-h-[calc(90vh-30px)] w-full max-w-[800px] flex-col overflow-hidden rounded-[18px] bg-white shadow-2xl">
-        <div className="flex items-start justify-between border-b border-slate-200 px-7 py-2">
+
+        {/* ================= HEADER ================= */}
+        <div className="flex items-start justify-between border-b border-slate-200 px-7 py-3">
 
           <div>
             <h2 className="text-[18px] font-bold leading-6 text-slate-900">
@@ -144,8 +170,6 @@ function CreateRoleModal({
             <p className="mt-0.5 text-[12px] text-slate-500">
               {loading
                 ? "Loading role data..."
-                : isLocked
-                ? "This is a protected system role. Name and description are fixed, but permissions can still be updated."
                 : isEditing
                 ? "Update the description and module-level permissions"
                 : "Define a name and module-level permissions"}
@@ -155,12 +179,14 @@ function CreateRoleModal({
           <button
             type="button"
             onClick={onClose}
-            className="mt-0.5 flex h-4 w-4 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
           >
             <X className="h-3 w-3" />
           </button>
+
         </div>
 
+        {/* ================= LOADING ================= */}
         {loading ? (
           <div className="px-7 py-8 text-center text-sm text-slate-400">
             Loading...
@@ -170,28 +196,32 @@ function CreateRoleModal({
             onSubmit={handleSubmit(submitHandler)}
             className="flex min-h-0 flex-1 flex-col"
           >
+
             <div className="min-h-0 flex-1 overflow-y-auto px-7 py-5">
 
-              {/* ERROR */}
+              {/* ================= ERROR ================= */}
               {errorMessage && (
                 <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-600">
                   {errorMessage}
                 </div>
               )}
-              {isLocked && (
+
+              {/* ================= PERMISSION INFO ================= */}
+              {!canEditPermissions && (
                 <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                  <Lock className="h-2 w-2 shrink-0" />
+
+                  <Lock className="h-3 w-3 shrink-0" />
 
                   <span>
-                    {role.roleName} is a protected system role —
-                    name and description are fixed, but you can
-                    still update its permissions.
+                    Only Super Admin can change role permissions.
                   </span>
+
                 </div>
               )}
 
               {/* ================= ROLE NAME ================= */}
               <div className="mb-4">
+
                 <label className="mb-1.5 block text-[12px] font-semibold text-slate-800">
                   Role Name
                 </label>
@@ -213,8 +243,12 @@ function CreateRoleModal({
                     Role name cannot be changed after creation.
                   </p>
                 )}
+
               </div>
+
+              {/* ================= DESCRIPTION ================= */}
               <div className="mb-5">
+
                 <label className="mb-1.5 block text-[13px] font-semibold text-slate-800">
                   Description
                 </label>
@@ -225,28 +259,33 @@ function CreateRoleModal({
                   placeholder="e.g. Reviews shortlisted candidates for their team's roles"
                   register={register}
                   errors={errors}
-                  disabled={isLocked}
+                  disabled={false}
                   rules={{
                     required: "Description is required",
                   }}
                 />
+
               </div>
 
+              {/* ================= PERMISSIONS ================= */}
               <div>
+
                 <h3 className="mb-3 text-[12px] font-bold uppercase tracking-wide text-slate-500">
                   Permissions
                 </h3>
 
-                <div className="overflow-hidden">
-                  <PermissionTable
-                    modules={modules}
-                    register={register}
-                    errors={errors}
-                    disabled={false}
-                  />
-                </div>
+                <PermissionTable
+  modules={modules}
+  register={register}
+  errors={errors}
+  disabled={!canEditPermissions}
+/>
+
               </div>
+
             </div>
+
+            {/* ================= FOOTER ================= */}
             <div className="flex shrink-0 justify-end gap-2 border-t border-slate-200 bg-white px-7 py-4">
 
               <Button
@@ -265,10 +304,14 @@ function CreateRoleModal({
                     ? "Save Changes"
                     : "Save Role"
                 }
+                disabled={isSubmitting}
               />
+
             </div>
+
           </form>
         )}
+
       </div>
     </div>
   );

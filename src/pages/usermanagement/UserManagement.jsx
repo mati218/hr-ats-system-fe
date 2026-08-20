@@ -49,13 +49,6 @@ const UserManagement = () => {
       setPendingInvites(
         response.data?.pendingInvites ?? 0
       );
-      const usersData = Array.isArray(
-        fetchedUsers
-      )
-        ? fetchedUsers
-        : [];
-
-      setUsers(usersData);
     } catch (error) {
       console.log(
         error.response?.data
@@ -107,7 +100,6 @@ const UserManagement = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl ml-7 mt-6 font-semibold text-gray-900">
-          <h2 className="text-2xl ml-7 mt-6 font-semibold">
             User Management
           </h2>
 
@@ -117,22 +109,8 @@ const UserManagement = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            setSelectedUser(null);
-            setShowModal(true);
-          }}
-          className="bg-blue-700 mr-9 hover:bg-blue-800 text-white font-semibold px-3 py-1 rounded-xl shadow-sm transition"
-        >
-          + New User
-        </button>
-            18 internal users • 3 pending invites
-          </p>
-        </div>
-
         {canCreate && (
           <button
-            type="button"
             onClick={() => {
               setSelectedUser(null);
               setShowModal(true);
@@ -172,17 +150,6 @@ const UserManagement = () => {
         onCreated={loadUsers}
         user={selectedUser}
       />
-      {canCreate || canEdit ? (
-        <NewUserModal
-          isOpen={showModal}
-          onClose={() => {
-            setShowModal(false);
-            setSelectedUser(null);
-          }}
-          onCreated={loadUsers}
-          user={selectedUser}
-        />
-      ) : null}
     </>
   );
 };

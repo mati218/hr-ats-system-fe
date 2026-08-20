@@ -19,25 +19,37 @@ const Sidebar = () => {
 
   const userName = user?.name || "User";
   const roleName = user?.role?.roleName || "No Role";
+
   const permissions = user?.role?.permissions || [];
 
+  // =====================================
+  // CHECK NORMAL MODULE PERMISSION
+  // =====================================
   const canView = (module) => {
-    if (module === "roles" || module === "auditLogs") {
-      return true;
-    }
-
-    const moduleAliases = {
-      roles: ["roles", "rolePermissions", "rolesPermissions"],
-      auditLogs: ["auditLogs", "auditLog", "audit"],
-    };
-    const supportedModules = moduleAliases[module] || [module];
-    const permission = permissions.find((item) =>
-      supportedModules.includes(item.module)
+    const permission = permissions.find(
+      (item) => item.module === module
     );
 
     return permission?.view === true;
   };
 
+  // =====================================
+  // ROLE NAME NORMALIZE
+  // =====================================
+  const normalizedRole = roleName
+    .toLowerCase()
+    .trim();
+
+  // =====================================
+  // ROLES & AUDIT LOGS
+  // Everyone EXCEPT Interviewer
+  // =====================================
+  const canViewAdministrationSpecial =
+    normalizedRole !== "interviewer";
+
+  // =====================================
+  // RECRUITMENT
+  // =====================================
   const recruitment = [
     {
       name: "Job Requisitions",
@@ -77,6 +89,9 @@ const Sidebar = () => {
     },
   ];
 
+  // =====================================
+  // ADMINISTRATION
+  // =====================================
   const administration = [
     {
       name: "User Management",
@@ -89,6 +104,7 @@ const Sidebar = () => {
       icon: <FaShield />,
       path: "/roles-permissions",
       module: "roles",
+      special: true,
     },
     {
       name: "Departments & Types",
@@ -101,46 +117,75 @@ const Sidebar = () => {
       icon: <FaClock />,
       path: "/audit-log",
       module: "auditLogs",
+      special: true,
     },
   ];
 
+  // =====================================
+  // RECRUITMENT FILTER
+  // Permission based
+  // =====================================
   const visibleRecruitment = recruitment.filter((item) =>
     canView(item.module)
   );
 
-  const visibleAdministration = administration.filter((item) =>
-    canView(item.module)
-  );
+  // =====================================
+  // ADMINISTRATION FILTER
+  // Special items:
+  // roles + auditLogs = everyone except interviewer
+  //
+  // Other items:
+  // permission based
+  // =====================================
+  const visibleAdministration = administration.filter((item) => {
+    if (item.special) {
+      return canViewAdministrationSpecial;
+    }
 
+    return canView(item.module);
+  });
+
+  // =====================================
+  // LOGOUT
+  // =====================================
   const handleLogout = () => {
     logout();
     window.location.href = "/login";
   };
 
   return (
-    <aside className="w-63 h-full min-h-screen overflow-y-auto bg-[#11131d] text-white flex flex-col">
+    <aside className="flex h-full min-h-screen w-63 flex-col overflow-y-auto bg-[#11131d] text-white">
 
+      {/* LOGO */}
       <div className="flex items-center gap-2 p-6">
-        <div className="h-8 w-8 rounded-xl bg-indigo-600 flex items-center justify-center font-semibold text-md">
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-md font-semibold">
           T
         </div>
 
         <div>
-          <h2 className="font-bold text-md">Talenta</h2>
-          <p className="text-xs text-gray-400">HR / ATS</p>
+          <h2 className="text-md font-bold">
+            Talenta
+          </h2>
+
+          <p className="text-xs text-gray-400">
+            HR / ATS
+          </p>
         </div>
       </div>
 
-      <div className="px-6 flex-1">
+      {/* MENU */}
+      <div className="flex-1 px-6">
 
-        <p className="text-[11px] text-gray-500 uppercase mb-2 flex">
+        {/* OVERVIEW */}
+        <p className="mb-2 flex text-[11px] uppercase text-gray-500">
           Overview
         </p>
 
+        {/* DASHBOARD */}
         <NavLink
           to="/dashboard"
           className={({ isActive }) =>
-            `flex items-center gap-3 p-1.5 text-sm font-semibold rounded-lg mb-2 ${
+            `mb-2 flex items-center gap-3 rounded-lg p-1.5 text-sm font-semibold ${
               isActive
                 ? "bg-blue-600 text-white"
                 : "text-gray-300 hover:bg-gray-800"
@@ -151,9 +196,10 @@ const Sidebar = () => {
           Dashboard
         </NavLink>
 
+        {/* RECRUITMENT */}
         {visibleRecruitment.length > 0 && (
           <>
-            <p className="text-[11px] text-gray-500 uppercase mt-3 mb-3 flex font-semibold">
+            <p className="mb-3 mt-3 flex text-[11px] font-semibold uppercase text-gray-500">
               Recruitment
             </p>
 
@@ -162,7 +208,7 @@ const Sidebar = () => {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center text-gray-400 gap-3 p-1.5 font-semibold text-sm rounded-lg mb-1 ${
+                  `mb-1 flex items-center gap-3 rounded-lg p-1.5 text-sm font-semibold ${
                     isActive
                       ? "bg-blue-600 text-white"
                       : "text-gray-300 hover:bg-gray-800"
@@ -176,9 +222,10 @@ const Sidebar = () => {
           </>
         )}
 
+        {/* ADMINISTRATION */}
         {visibleAdministration.length > 0 && (
           <>
-            <p className="text-[11px] text-gray-500 uppercase mt-4 mb-1 flex font-semibold">
+            <p className="mb-1 mt-4 flex text-[11px] font-semibold uppercase text-gray-500">
               Administration
             </p>
 
@@ -187,7 +234,7 @@ const Sidebar = () => {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center text-gray-400 gap-3 p-1.5 font-semibold text-sm rounded-lg mb-1 ${
+                  `mb-1 flex items-center gap-3 rounded-lg p-1.5 text-sm font-semibold ${
                     isActive
                       ? "bg-blue-600 text-white"
                       : "text-gray-300 hover:bg-gray-800"
@@ -202,15 +249,16 @@ const Sidebar = () => {
         )}
       </div>
 
+      {/* USER INFO */}
       <div className="border-t border-gray-800 p-6">
         <div className="flex items-center gap-3">
 
-          <div className="h-8 w-8 rounded-full bg-violet-600 flex items-center justify-center font-bold">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-600 font-bold">
             {userName.charAt(0).toUpperCase()}
           </div>
 
           <div>
-            <h3 className="font-semibold text-sm">
+            <h3 className="text-sm font-semibold">
               {userName}
             </h3>
 

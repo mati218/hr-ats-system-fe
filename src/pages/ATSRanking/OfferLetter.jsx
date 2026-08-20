@@ -33,6 +33,9 @@ function OfferLetter({
   const isRejected =
     candidate?.stage === "Rejected";
 
+  const checkingOffer = false;
+  const isOfferSent = false;
+
   // ==========================
   // SEND OFFER
   // ==========================
@@ -124,13 +127,14 @@ function OfferLetter({
         {/* ==========================
             FORM
         ========================== */}
-        <form onSubmit={handleSubmit(onSubmit)}>
         {/* Checking Offer */}
-        {checkingOffer ? (
+        {checkingOffer && (
           <div className="flex min-h-[280px] items-center justify-center text-sm text-slate-500">
             Checking offer status...
           </div>
-        ) : isOfferSent ? (
+        )}
+
+        {!checkingOffer && isOfferSent && (
 
           /* Offer Already Sent */
           <div className="flex min-h-[280px] flex-col items-center justify-center px-5 text-center">
@@ -173,7 +177,13 @@ function OfferLetter({
               {/* OFFER TEMPLATE */}
           </div>
 
-        ) : (
+          </div>
+
+          </div>
+
+        )}
+
+        {!checkingOffer && !isOfferSent ? (
 
           /* Offer Form */
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -397,7 +407,11 @@ function OfferLetter({
 
         </form>
 
+          ) : null}
+
       </div>
+    </div>
+    </div>
     </div>
   );
 }
