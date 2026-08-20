@@ -4,6 +4,7 @@ import {
   fetchAllCandidates,
   getCandidate,
   scheduleInterview,
+  updateOfferStatus,
 } from "../../lib/api/candidateApi";
 
 import CandidateCard from "./CandidateCard";
@@ -15,7 +16,6 @@ const STAGES = [
   "Screening",
   "Shortlisted",
   "Interview",
-  "Offer Draft",
   "Offer Sent",
   "Hired",
   "Rejected",
@@ -24,16 +24,13 @@ const STAGES = [
 function CandidatePipeline() {
   const [candidates, setCandidates] = useState([]);
 
-  const [viewingCandidate, setViewingCandidate] =
-    useState(null);
+  const [viewingCandidate, setViewingCandidate] = useState(null);
 
-  const [schedulingCandidate, setSchedulingCandidate] =
-    useState(null);
+  const [schedulingCandidate, setSchedulingCandidate] = useState(null);
 
   const [loading, setLoading] = useState(true);
 
-  const [profileLoading, setProfileLoading] =
-    useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   // =====================================================
   // LOAD ALL CANDIDATES
@@ -45,8 +42,7 @@ function CandidatePipeline() {
 
       const response = await fetchAllCandidates();
 
-      const candidateData =
-        response?.data?.data || [];
+      const candidateData = response?.data?.data || [];
 
       setCandidates(candidateData);
     } catch (error) {
@@ -73,9 +69,7 @@ function CandidatePipeline() {
 
   const handleCandidateClick = async (candidate) => {
     const candidateId =
-      candidate?._id ||
-      candidate?.id ||
-      candidate?.candidateId;
+      candidate?._id || candidate?.id || candidate?.candidateId;
 
     if (!candidateId) {
       alert("Candidate ID not found.");
@@ -85,8 +79,7 @@ function CandidatePipeline() {
     try {
       setProfileLoading(true);
 
-      const response =
-        await getCandidate(candidateId);
+      const response = await getCandidate(candidateId);
 
       const fullCandidate =
         response?.data?.data ||
@@ -94,20 +87,11 @@ function CandidatePipeline() {
         response?.data;
 
       if (!fullCandidate) {
-        throw new Error(
-          "Candidate data not found."
-        );
+        throw new Error("Candidate data not found.");
       }
 
-      console.log(
-        "FULL CANDIDATE:",
-        fullCandidate
-      );
-
-      console.log(
-        "RESUME URL:",
-        fullCandidate.resumeUrl
-      );
+      console.log("FULL CANDIDATE:", fullCandidate);
+      console.log("RESUME URL:", fullCandidate.resumeUrl);
 
       setViewingCandidate(fullCandidate);
     } catch (error) {
@@ -129,9 +113,7 @@ function CandidatePipeline() {
   // REJECT CANDIDATE
   // =====================================================
 
-  const handleProfileReject = (
-    updatedCandidate
-  ) => {
+  const handleProfileReject = (updatedCandidate) => {
     if (!updatedCandidate?._id) {
       return;
     }
@@ -152,6 +134,59 @@ function CandidatePipeline() {
   };
 
   // =====================================================
+  // ACCEPT OFFER HANDLER
+  // =====================================================
+
+  const handleAcceptOffer = async (candidate) => {
+    const candidateId =
+      candidate?._id || candidate?.id || candidate?.candidateId;
+
+    if (!candidateId) {
+      alert("Candidate ID not found.");
+      return;
+    }
+
+    try {
+      setProfileLoading(true);
+
+      // Call API to update status to "Accepted"
+      await updateOfferStatus(candidateId, "Accepted");
+
+      // Update local state: Shift candidate to "Hired" stage
+      setCandidates((prev) =>
+        prev.map((item) =>
+          item._id === candidateId
+            ? {
+                ...item,
+                stage: "Hired",
+                offer: {
+                  ...item.offer,
+                  status: "Accepted",
+                },
+              }
+            : item
+        )
+      );
+
+      setViewingCandidate(null);
+
+      alert("Offer accepted! Candidate has been moved to Hired stage.");
+    } catch (error) {
+      console.error(
+        "ACCEPT OFFER ERROR:",
+        error?.response?.data || error
+      );
+
+      alert(
+        error?.response?.data?.message ||
+          "Failed to accept offer. Please try again."
+      );
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // =====================================================
   // OPEN SCHEDULE INTERVIEW
   // =====================================================
 
@@ -160,8 +195,7 @@ function CandidatePipeline() {
       return;
     }
 
-    const currentStage =
-      candidate.stage;
+    const currentStage = candidate.stage;
 
     // Rejected candidate cannot be interviewed
     if (currentStage === "Rejected") {
@@ -171,11 +205,9 @@ function CandidatePipeline() {
       return;
     }
 
-    // These stages already mean interview process
-    // has already happened/scheduled.
+    // These stages already mean interview process has happened/scheduled.
     if (
       currentStage === "Interview" ||
-      currentStage === "Offer Draft" ||
       currentStage === "Offer Sent" ||
       currentStage === "Hired"
     ) {
@@ -185,13 +217,7 @@ function CandidatePipeline() {
       return;
     }
 
-    // Allowed:
-    // Applied
-    // Screening
-    // Shortlisted
-
     setViewingCandidate(null);
-
     setSchedulingCandidate(candidate);
   };
 
@@ -199,21 +225,15 @@ function CandidatePipeline() {
   // SCHEDULE INTERVIEW
   // =====================================================
 
-  const handleScheduleSubmit = async (
-    candidate,
-    form
-  ) => {
+  const handleScheduleSubmit = async (candidate, form) => {
     if (!candidate?._id) {
       alert("Candidate ID not found.");
       return;
     }
 
-    // Only prevent stages where interview
-    // is already scheduled.
     if (
       candidate.stage === "Rejected" ||
       candidate.stage === "Interview" ||
-      candidate.stage === "Offer Draft" ||
       candidate.stage === "Offer Sent" ||
       candidate.stage === "Hired"
     ) {
@@ -224,110 +244,42 @@ function CandidatePipeline() {
     }
 
     try {
-      console.log(
-        "================================="
-      );
-
-      console.log(
-        "SCHEDULING INTERVIEW"
-      );
-
-      console.log(
-        "Candidate:",
-        candidate._id
-      );
-
-      console.log(
-        "Current Stage:",
-        candidate.stage
-      );
-
-      console.log(
-        "Form:",
-        form
-      );
-
-      console.log(
-        "================================="
-      );
-
-      const response =
-        await scheduleInterview({
-          candidateId: candidate._id,
-
-          round: form.round,
-
-          mode: form.mode,
-
-          date: form.date,
-
-          time: form.time,
-
-          duration: form.duration,
-
-          interviewerId:
-            form.interviewerId,
-
-          location:
-            form.location,
-
-          notes: form.notes,
-        });
-
-      console.log(
-        "SCHEDULE RESPONSE:",
-        response?.data
-      );
-
-      // =================================================
-      // GET UPDATED CANDIDATE
-      // =================================================
+      const response = await scheduleInterview({
+        candidateId: candidate._id,
+        round: form.round,
+        mode: form.mode,
+        date: form.date,
+        time: form.time,
+        duration: form.duration,
+        interviewerId: form.interviewerId,
+        location: form.location,
+        notes: form.notes,
+      });
 
       const updatedCandidate =
         response?.data?.data?.candidate ||
         response?.data?.candidate ||
         null;
 
-      // =================================================
-      // UPDATE LOCAL STATE
-      // =================================================
-
       setCandidates((prev) =>
         prev.map((item) => {
-          if (
-            item._id !== candidate._id
-          ) {
+          if (item._id !== candidate._id) {
             return item;
           }
 
           return {
             ...item,
-
             ...(updatedCandidate || {}),
-
-            // IMPORTANT:
-            // After interview scheduling,
-            // candidate moves to Interview.
             stage: "Interview",
           };
         })
       );
 
-      // =================================================
-      // CLOSE MODAL
-      // =================================================
-
       setSchedulingCandidate(null);
-
-      // =================================================
-      // REFRESH DATABASE DATA
-      // =================================================
 
       await loadCandidates();
 
-      alert(
-        "Interview scheduled successfully."
-      );
+      alert("Interview scheduled successfully.");
     } catch (error) {
       console.error(
         "SCHEDULE INTERVIEW ERROR:",
@@ -367,7 +319,6 @@ function CandidatePipeline() {
       {/* HEADER */}
 
       <div className="mb-5 flex items-start justify-between">
-
         <div>
           <h1 className="text-[23px] font-semibold text-slate-700">
             Candidate Pipeline
@@ -382,45 +333,28 @@ function CandidatePipeline() {
           defaultValue="Senior Frontend Engineer"
           className="h-10 min-w-43.75 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-semibold"
         >
-          <option>
-            Senior Frontend Engineer
-          </option>
+          <option>Senior Frontend Engineer</option>
 
-          <option>
-            Backend Engineer
-          </option>
+          <option>Backend Engineer</option>
 
-          <option>
-            Product Designer
-          </option>
+          <option>Product Designer</option>
         </select>
-
       </div>
 
       {/* PIPELINE */}
 
       <div className="overflow-x-auto">
-
         <div className="flex min-w-43.75 gap-3">
-
           {STAGES.map((stage) => {
-
-            const stageCandidates =
-              candidates.filter(
-                (candidate) =>
-                  candidate.stage === stage
-              );
+            const stageCandidates = candidates.filter(
+              (candidate) => candidate.stage === stage
+            );
 
             return (
-              <div
-                key={stage}
-                className="w-47.5 shrink-0"
-              >
-
+              <div key={stage} className="w-47.5 shrink-0">
                 {/* STAGE HEADER */}
 
                 <div className="mb-2 flex justify-between px-1">
-
                   <h2 className="text-[11px] font-bold uppercase text-slate-500">
                     {stage}
                   </h2>
@@ -428,50 +362,36 @@ function CandidatePipeline() {
                   <span className="text-[11px] font-bold text-slate-500">
                     {stageCandidates.length}
                   </span>
-
                 </div>
 
                 {/* CANDIDATES */}
 
                 <div className="flex flex-col gap-2">
-
-                  {stageCandidates.map(
-                    (candidate) => (
-                      <CandidateCard
-                        key={candidate._id}
-                        candidate={candidate}
-                        onClick={() =>
-                          handleCandidateClick(
-                            candidate
-                          )
-                        }
-                      />
-                    )
-                  )}
-
+                  {stageCandidates.map((candidate) => (
+                    <CandidateCard
+                      key={candidate._id}
+                      candidate={candidate}
+                      onClick={() =>
+                        handleCandidateClick(candidate)
+                      }
+                    />
+                  ))}
                 </div>
-
               </div>
             );
           })}
-
         </div>
-
       </div>
 
       {/* PROFILE LOADING */}
 
       {profileLoading && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40">
-
           <div className="rounded-xl bg-white px-6 py-4 shadow-xl">
-
             <p className="text-sm font-semibold text-slate-600">
               Loading candidate profile...
             </p>
-
           </div>
-
         </div>
       )}
 
@@ -480,13 +400,10 @@ function CandidatePipeline() {
       <CandidateProfile
         isOpen={!!viewingCandidate}
         candidate={viewingCandidate}
-        onClose={() =>
-          setViewingCandidate(null)
-        }
+        onClose={() => setViewingCandidate(null)}
         onReject={handleProfileReject}
-        onScheduleInterview={
-          handleOpenSchedule
-        }
+        onScheduleInterview={handleOpenSchedule}
+        onAcceptOffer={handleAcceptOffer}
       />
 
       {/* SCHEDULE INTERVIEW */}
@@ -494,12 +411,9 @@ function CandidatePipeline() {
       <ScheduleInterviewModal
         isOpen={!!schedulingCandidate}
         candidate={schedulingCandidate}
-        onClose={() =>
-          setSchedulingCandidate(null)
-        }
+        onClose={() => setSchedulingCandidate(null)}
         onSubmit={handleScheduleSubmit}
       />
-
     </div>
   );
 }

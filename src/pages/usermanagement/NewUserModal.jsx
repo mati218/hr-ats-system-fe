@@ -6,15 +6,25 @@ import Modal from "../../components/ui/Modal";
 import FormInput from "../../components/ui/FormInput";
 import Button from "../../components/ui/Button";
 
-import { createUser, updateUser } from "../../lib/api/authApi";
+import {
+  createUser,
+  updateUser,
+} from "../../lib/api/authApi";
+
 import {
   getDepartmentLookup,
   getRolesLookup,
 } from "../../lib/api/authdepApi";
 
-const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
+const NewUserModal = ({
+  isOpen,
+  onClose,
+  onCreated,
+  user,
+}) => {
   const [roles, setRoles] = useState([]);
-  const [departments, setDepartments] = useState([]);
+  const [departments, setDepartments] =
+    useState([]);
 
   const {
     register,
@@ -29,15 +39,21 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
 
     const loadLookups = async () => {
       try {
-        const [roleResponse, departmentResponse] =
-          await Promise.all([
-            getRolesLookup(),
-            getDepartmentLookup(),
-          ]);
+        const [
+          roleResponse,
+          departmentResponse,
+        ] = await Promise.all([
+          getRolesLookup(),
+          getDepartmentLookup(),
+        ]);
 
-        setRoles(roleResponse.data.data ?? []);
-        setDepartments(departmentResponse.data.data ?? []);
+        setRoles(
+          roleResponse.data?.data ?? []
+        );
 
+        setDepartments(
+          departmentResponse.data?.data ?? []
+        );
       } catch (error) {
         console.log(
           "Lookup Error:",
@@ -49,8 +65,16 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
     loadLookups();
 
     if (user) {
-      setValue("name", user.name ?? "");
-      setValue("email", user.email ?? "");
+      setValue(
+        "name",
+        user.name ?? ""
+      );
+
+      setValue(
+        "email",
+        user.email ?? ""
+      );
+
       setValue(
         "phoneNumber",
         user.phoneNumber ?? ""
@@ -59,19 +83,18 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
       setValue(
         "role",
         user.role?._id ??
-        user.role?.id ??
-        user.role ??
-        ""
+          user.role?.id ??
+          user.role ??
+          ""
       );
 
       setValue(
         "department",
         user.department?._id ??
-        user.department?.id ??
-        user.department ??
-        ""
+          user.department?.id ??
+          user.department ??
+          ""
       );
-
     } else {
       reset({
         name: "",
@@ -81,14 +104,20 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
         department: "",
       });
     }
-
-  }, [isOpen, user, setValue, reset]);
+  }, [
+    isOpen,
+    user,
+    setValue,
+    reset,
+  ]);
 
   const handleCreate = async (data) => {
     try {
       await createUser(data);
 
-      toast.success("User created successfully");
+      toast.success(
+        "User created and invitation sent"
+      );
 
       if (onCreated) {
         await onCreated();
@@ -96,28 +125,27 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
 
       onClose();
     } catch (error) {
-      console.log(error.response?.data);
+      console.log(
+        error.response?.data
+      );
 
       toast.error(
         error.response?.data?.message ||
-        "Failed to create user"
+          "Failed to create user"
       );
     }
   };
 
   const handleUpdate = async (data) => {
     try {
-      const response = await updateUser(
+      await updateUser(
         user._id,
         data
       );
 
-      console.log(
-        "Update Response:",
-        response.data
+      toast.success(
+        "User updated successfully"
       );
-
-      toast.success("User updated successfully");
 
       if (onCreated) {
         await onCreated();
@@ -125,29 +153,37 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
 
       onClose();
     } catch (error) {
-      console.log(error.response?.data);
+      console.log(
+        error.response?.data
+      );
 
       toast.error(
         error.response?.data?.message ||
-        "Failed to update user"
+          "Failed to update user"
       );
     }
   };
-
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={user ? "Update User" : "New User"}
+      title={
+        user
+          ? "Update User"
+          : "New User"
+      }
       subtitle="Grant system access and assign a role"
     >
       <form
         onSubmit={handleSubmit(
-          user ? handleUpdate : handleCreate
+          user
+            ? handleUpdate
+            : handleCreate
         )}
         className="space-y-4"
       >
+        {/* FULL NAME */}
 
         <div>
           <label className="text-sm font-semibold text-gray-800 flex">
@@ -161,15 +197,21 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
             register={register}
             errors={errors}
             rules={{
-              required: "Name is required",
+              required:
+                "Name is required",
+
               pattern: {
-                 value: /^[A-Za-z\s]+$/,
-                 message: "Name can contain letters and spaces only",
-              }
+                value:
+                  /^[A-Za-z\s]+$/,
+
+                message:
+                  "Name can contain letters and spaces only",
+              },
             }}
           />
         </div>
 
+        {/* EMAIL */}
 
         <div>
           <label className="text-sm font-semibold text-gray-800 flex">
@@ -183,15 +225,21 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
             register={register}
             errors={errors}
             rules={{
-              required: "Email is required",
+              required:
+                "Email is required",
+
               pattern: {
-                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: "Please enter a valid email address",
-    },
+                value:
+                  /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+
+                message:
+                  "Please enter a valid email address",
+              },
             }}
           />
         </div>
 
+        {/* PHONE */}
 
         <div>
           <label className="text-sm font-semibold text-gray-800 flex">
@@ -205,11 +253,21 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
             register={register}
             errors={errors}
             rules={{
-              required: "Phone number is required",
+              required:
+                "Phone number is required",
+
+              pattern: {
+                value:
+                  /^\+92\s3\d{2}\s\d{7}$/,
+
+                message:
+                  "Use format +92 3xx xxxxxxx",
+              },
             }}
           />
         </div>
 
+        {/* ROLE */}
 
         <div>
           <label className="text-sm font-semibold text-gray-800 flex">
@@ -219,7 +277,8 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
           <select
             className="w-full rounded-lg border border-gray-300 px-4 py-3"
             {...register("role", {
-              required: "Role is required",
+              required:
+                "Role is required",
             })}
           >
             <option value="">
@@ -228,15 +287,19 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
 
             {roles.map((role) => (
               <option
-                key={role._id ?? role.id}
-                value={role._id ?? role.id}
+                key={
+                  role._id ??
+                  role.id
+                }
+                value={
+                  role._id ??
+                  role.id
+                }
               >
-                {
-                  role.name ??
+                {role.name ??
                   role.roleName ??
                   role.label ??
-                  role.title
-                }
+                  role.title}
               </option>
             ))}
           </select>
@@ -248,6 +311,7 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
           )}
         </div>
 
+        {/* DEPARTMENT */}
 
         <div>
           <label className="text-sm font-semibold text-gray-800 flex">
@@ -256,45 +320,56 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
 
           <select
             className="w-full rounded-lg border border-gray-300 px-4 py-3"
-            {...register("department", {
-              required: "Department is required",
-            })}
+            {...register(
+              "department",
+              {
+                required:
+                  "Department is required",
+              }
+            )}
           >
             <option value="">
               Select Department
             </option>
 
-            {departments.map((department) => (
-              <option
-                key={
-                  department._id ?? department.id
-                }
-                value={
-                  department._id ?? department.id
-                }
-              >
-                {
-                  department.name ??
-                  department.label ??
-                  department.title
-                }
-              </option>
-            ))}
+            {departments.map(
+              (department) => (
+                <option
+                  key={
+                    department._id ??
+                    department.id
+                  }
+                  value={
+                    department._id ??
+                    department.id
+                  }
+                >
+                  {department.name ??
+                    department.label ??
+                    department.title}
+                </option>
+              )
+            )}
           </select>
 
           {errors.department && (
             <p className="text-red-500 text-sm mt-1">
-              {errors.department.message}
+              {
+                errors.department
+                  .message
+              }
             </p>
           )}
         </div>
 
+        {/* BUTTONS */}
 
         <div className="flex justify-end gap-3 pt-4">
           <Button
             type="button"
             text="Cancel"
-            onClick={onClose} variant="secondary"
+            onClick={onClose}
+            variant="secondary"
           />
 
           <Button
@@ -306,7 +381,6 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
             }
           />
         </div>
-
       </form>
     </Modal>
   );

@@ -27,18 +27,9 @@ export const applyNow = async (data) => {
   formData.append("email", data.email || "");
   formData.append("phone", data.phone || "");
   formData.append("role", data.role || "");
-  formData.append(
-    "requisitionId",
-    data.requisitionId || ""
-  );
-  formData.append(
-    "experience",
-    data.experience || ""
-  );
-  formData.append(
-    "coverNote",
-    data.coverNote || ""
-  );
+  formData.append("requisitionId", data.requisitionId || "");
+  formData.append("experience", data.experience || "");
+  formData.append("coverNote", data.coverNote || "");
 
   if (data.resume instanceof File) {
     formData.append("resume", data.resume);
@@ -46,10 +37,24 @@ export const applyNow = async (data) => {
     throw new Error("Resume file is missing.");
   }
 
-  return api.post(
-    "/candidates/apply",
-    formData
-  );
+  return api.post("/candidates/apply", formData);
+};
+
+// ==========================================
+// COMPLETE SCREENING
+// ==========================================
+
+export const completeScreening = async (
+  id,
+  status,
+  score = 0,
+  notes = ""
+) => {
+  return api.patch(`/candidates/${id}/screening`, {
+    status,
+    score,
+    notes,
+  });
 };
 
 // ==========================================
@@ -57,38 +62,25 @@ export const applyNow = async (data) => {
 // ==========================================
 
 export const rejectCandidate = async (id) => {
-  return api.patch(
-    `/candidates/${id}/reject`
-  );
+  return api.patch(`/candidates/${id}/reject`);
 };
 
 // ==========================================
 // MOVE CANDIDATE STAGE
 // ==========================================
 
-export const moveCandidateStage = async (
-  id,
-  stage
-) => {
-  return api.patch(
-    `/candidates/${id}/stage`,
-    {
-      stage,
-    }
-  );
+export const moveCandidateStage = async (id, stage) => {
+  return api.patch(`/candidates/${id}/stage`, {
+    stage,
+  });
 };
 
 // ==========================================
 // SCHEDULE INTERVIEW
 // ==========================================
 
-export const scheduleInterview = async (
-  payload
-) => {
-  return api.post(
-    "/interviews",
-    payload
-  );
+export const scheduleInterview = async (payload) => {
+  return api.post("/interviews", payload);
 };
 
 // ==========================================
@@ -100,25 +92,26 @@ export const submitInterviewResult = async (
   result,
   notes = ""
 ) => {
-  return api.patch(
-    `/interviews/${interviewId}/result`,
-    {
-      result,
-      notes,
-    }
-  );
+  return api.patch(`/interviews/${interviewId}/result`, {
+    result,
+    notes,
+  });
+};
+
+// ==========================================
+// UPDATE INTERVIEW STATUS
+// ==========================================
+
+export const updateInterviewStatus = async (candidateId, data) => {
+  return api.patch(`/candidates/${candidateId}/interview-status`, data);
 };
 
 // ==========================================
 // GET CANDIDATE INTERVIEWS
 // ==========================================
 
-export const getCandidateInterviews = async (
-  candidateId
-) => {
-  return api.get(
-    `/interviews/candidate/${candidateId}`
-  );
+export const getCandidateInterviews = async (candidateId) => {
+  return api.get(`/interviews/candidate/${candidateId}`);
 };
 
 // ==========================================
@@ -126,75 +119,44 @@ export const getCandidateInterviews = async (
 // ==========================================
 
 export const createOffer = async (data) => {
-  return api.post(
-    "/offers",
-    data
-  );
+  return api.post("/offers", data);
 };
 
 // ==========================================
 // GET CANDIDATE OFFER
 // ==========================================
 
-export const getCandidateOffer = async (
-  candidateId
-) => {
-  return api.get(
-    `/offers/candidate/${candidateId}`
-  );
+export const getCandidateOffer = async (candidateId) => {
+  return api.get(`/offers/candidate/${candidateId}`);
 };
 
 // ==========================================
 // SEND OFFER
 // ==========================================
 
-export const sendOffer = async (
-  offerId
-) => {
-  return api.patch(
-    `/offers/${offerId}/send`
-  );
+export const sendOffer = async (offerId) => {
+  return api.patch(`/offers/${offerId}/send`);
 };
 
 // ==========================================
 // OFFER RESULT
 // ==========================================
 
-export const updateOfferStatus = async (
-  candidateId,
-  status
-) => {
-  return api.patch(
-    `/offers/candidate/${candidateId}/status`,
-    {
-      status,
-    }
-  );
+export const updateOfferStatus = async (candidateId, statusOrData) => {
+  const data =
+    typeof statusOrData === "string"
+      ? { status: statusOrData }
+      : statusOrData;
+
+  return api.patch(`/candidates/${candidateId}/offer-status`, data);
 };
 
 // ==========================================
 // MOVE TO HIRED
 // ==========================================
 
-export const hireCandidate = async (
-  candidateId
-) => {
-  return api.patch(
-    `/candidates/${candidateId}/stage`,
-    {
-      stage: "Hired",
-    }
-  );
-};
-
-export const completeScreening = async (
-  id,
-  status,
-  score = 0,
-  notes = ""
-) => {
-  return api.patch(
-    `/candidates/${id}/screening`,
-    { status, score, notes }
-  );
+export const hireCandidate = async (candidateId) => {
+  return api.patch(`/candidates/${candidateId}/stage`, {
+    stage: "Hired",
+  });
 };
