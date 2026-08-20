@@ -44,10 +44,7 @@ const Departmenttype = () => {
 
       const sortedDepartments = [...departmentsData].sort((a, b) => {
         if (a?.createdAt && b?.createdAt) {
-          return (
-            new Date(b.createdAt) -
-            new Date(a.createdAt)
-          );
+          return new Date(b.createdAt) - new Date(a.createdAt);
         }
 
         return (b?._id ?? "")
@@ -64,11 +61,11 @@ const Departmenttype = () => {
 
   // ================= INITIAL LOAD =================
   useEffect(() => {
-    const initailzers = async() => {
-    await fetchDepartments();
-  }
-  initailzers();
+    const initailzers = async () => {
+      await fetchDepartments();
+    };
 
+    initailzers();
   }, []);
 
   // ================= ADD MODAL =================
@@ -83,7 +80,11 @@ const Departmenttype = () => {
     setEditDepartment(department);
 
     setValue("departmentName", department.name);
-    setValue("departmentHead", department.employees || "");
+
+    // FIX:
+    // Department Head comes from headName,
+    // NOT employees.
+    setValue("departmentHead", department.headName || "");
 
     setShowModal(true);
   };
@@ -125,9 +126,12 @@ const Departmenttype = () => {
           return;
         }
 
+        // FIX:
+        // Save Department Head in headName,
+        // NOT employees.
         await updateDepartment(editDepartment._id, {
           name: departmentName,
-          employees: departmentHead,
+          headName: departmentHead,
         });
 
         toast.success("Department updated successfully");
@@ -146,9 +150,12 @@ const Departmenttype = () => {
           return;
         }
 
+        // FIX:
+        // Save Department Head in headName,
+        // NOT employees.
         await createDepartment({
           name: departmentName,
-          employees: departmentHead,
+          headName: departmentHead,
         });
 
         toast.success("Department added successfully");
@@ -252,10 +259,11 @@ const Departmenttype = () => {
                     {...register("departmentName", {
                       required:
                         "Department name is required",
-                        pattern: {
+                      pattern: {
                         value: /^[A-Za-z\s]+$/,
-                        message: "Name can contain letters and spaces only"
-                        }
+                        message:
+                          "Name can contain letters and spaces only",
+                      },
                     })}
                     className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
@@ -279,10 +287,11 @@ const Departmenttype = () => {
                     {...register("departmentHead", {
                       required:
                         "Department head is required",
-                        pattern: {
-                          value: /^[A-Za-z\s]+$/,
-                          message: "Name can contain letters and spaces only"
-                        }
+                      pattern: {
+                        value: /^[A-Za-z\s]+$/,
+                        message:
+                          "Name can contain letters and spaces only",
+                      },
                     })}
                     className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />

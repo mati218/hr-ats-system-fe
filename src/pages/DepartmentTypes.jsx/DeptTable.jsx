@@ -1,39 +1,52 @@
+import { useEffect, useState } from "react";
 import Table from "./TypeTable";
+import { getEmploymentTypesLookup } from "../../lib/api/authdepApi";
 
 const DeptTable = ({ departments, handleEdit }) => {
-  const employmentTypes = [
-    {
-      type: "Full-time",
-      jobs: 10,
-    },
-    {
-      type: "Contract",
-      jobs: 2,
-    },
-    {
-      type: "Part-time",
-      jobs: 1,
-    },
-    {
-      type: "Internship",
-      jobs: 1,
-    },
-  ];
+  const [employmentTypes, setEmploymentTypes] = useState([]);
+
+  // ================= FETCH EMPLOYMENT TYPES =================
+  useEffect(() => {
+    const fetchEmploymentTypes = async () => {
+      try {
+        const response = await getEmploymentTypesLookup();
+
+        const fetchedTypes = response.data?.data;
+
+        setEmploymentTypes(
+          Array.isArray(fetchedTypes) ? fetchedTypes : []
+        );
+      } catch (error) {
+        console.error(
+          "Error fetching employment types:",
+          error
+        );
+
+        setEmploymentTypes([]);
+      }
+    };
+
+    fetchEmploymentTypes();
+  }, []);
 
   return (
-    <div className="grid w-full grid-cols-1 gap-3 xl:grid-cols-[1.6fr_1fr] mt-1 ">
+    <div className="grid w-full grid-cols-1 gap-3 xl:grid-cols-[1.6fr_1fr] mt-1">
+      
+      {/* ================= DEPARTMENTS ================= */}
       <Table
         title="Departments"
         tableType="department"
         data={departments}
         handleEdit={handleEdit}
       />
+
+      {/* ================= EMPLOYMENT TYPES ================= */}
       <Table
         title="Employment Types"
         tableType="employment"
         data={employmentTypes}
-        handleEdit={handleEdit}
       />
+
     </div>
   );
 };

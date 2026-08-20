@@ -24,7 +24,10 @@ export const loginUser = async (data) => {
 };
 
 export const ForgotPasswordApi = (data) => {
-  return api.post("/auth/forgot-password", data);
+  return api.post(
+    "/auth/forgot-password",
+    data
+  );
 };
 
 export const ResetPasswordApi = ({
@@ -32,6 +35,13 @@ export const ResetPasswordApi = ({
   password,
   confirmPassword,
 }) => {
+  return api.post(
+    `/auth/reset-password/${token}`,
+    {
+      password,
+      confirmPassword,
+    }
+  );
   return api.post(`/auth/reset-password/${token}`, {
     password,
     confirmPassword,
@@ -42,8 +52,14 @@ export const createUser = (data) => {
   return api.post("/user", data);
 };
 
-export const updateUser = (id, data) => {
-  return api.put(`/user/${id}`, data);
+export const updateUser = (
+  id,
+  data
+) => {
+  return api.put(
+    `/user/${id}`,
+    data
+  );
 };
 
 export const getUsers = () => {

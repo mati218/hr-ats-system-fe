@@ -1,7 +1,9 @@
 const TypeTable = ({ title, tableType, data, handleEdit }) => {
+  const isDepartment = tableType === "department";
+
   return (
     <div className="w-full h-full rounded-2xl border border-slate-200 bg-white p-4">
-      <h2 className="mb-2 font-bold text-slate-900 ">
+      <h2 className="mb-2 font-bold text-slate-900">
         {title}
       </h2>
 
@@ -9,7 +11,7 @@ const TypeTable = ({ title, tableType, data, handleEdit }) => {
         <thead>
           <tr className="border-b border-slate-200">
 
-            {tableType === "department" ? (
+            {isDepartment ? (
               <>
                 <th className="px-2 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Name
@@ -18,61 +20,57 @@ const TypeTable = ({ title, tableType, data, handleEdit }) => {
                 <th className="px-2 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Employees
                 </th>
+
+                <th className="w-[100px] px-2 py-2.5"></th>
               </>
             ) : (
               <>
                 <th className="px-2 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Type
                 </th>
-
-                <th className="px-2 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Active Jobs
-                </th>
               </>
             )}
 
-            <th className="w-[100px] px-2 py-2.5"></th>
           </tr>
         </thead>
 
         <tbody>
-          {(Array.isArray(data) ? data : []).map((item, index) => (
-            <tr
-              key={item?._id || index}
-              className="border-b border-slate-200 last:border-b-0"
-            >
-              {tableType === "department" ? (
-                <>
-                  <td className="px-2 py-3.5 text-sm font-medium text-slate-700">
-                    {item.name}
-                  </td>
+          {(Array.isArray(data) ? data : []).map(
+            (item, index) => (
+              <tr
+                key={item?._id || item?.value || item?.name || index}
+                className="border-b border-slate-200 last:border-b-0"
+              >
 
-                  <td className="px-2 py-3.5 text-sm font-medium text-slate-600">
-                    {item.employees}
-                  </td>
-                </>
-              ) : (
-                <>
-                  <td className="px-2 py-3.5 text-sm font-medium text-slate-700">
-                    {item.type}
-                  </td>
+                {isDepartment ? (
+                  <>
+                    <td className="px-2 py-3.5 text-sm font-medium text-slate-700">
+                      {item.name}
+                    </td>
 
-                  <td className="px-2 py-3.5 text-sm font-medium text-slate-700">
-                    {item.jobs}
-                  </td>
-                </>
-              )}
+                    <td className="px-2 py-3.5 text-sm font-medium text-slate-600">
+                      {item.employees}
+                    </td>
 
-              <td className="px-2 py-3.5 text-right">
-                <button
-                  className="text-sm font-semibold text-blue-600 transition hover:text-blue-700 hover:underline"
-                  onClick={() => handleEdit(item)}
-                >
-                  Edit
-                </button>
-              </td>
-            </tr>
-          ))}
+                    <td className="px-2 py-3.5 text-right">
+                      <button
+                        type="button"
+                        className="text-sm font-semibold text-blue-600 transition hover:text-blue-700 hover:underline"
+                        onClick={() => handleEdit(item)}
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </>
+                ) : (
+                  <td className="px-2 py-3.5 text-sm font-medium text-slate-700">
+                    {item.type || item.name || item.label || item.value}
+                  </td>
+                )}
+
+              </tr>
+            )
+          )}
         </tbody>
       </table>
     </div>
