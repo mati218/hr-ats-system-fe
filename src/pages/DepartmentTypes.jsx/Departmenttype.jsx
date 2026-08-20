@@ -64,7 +64,11 @@ const Departmenttype = () => {
 
   // ================= INITIAL LOAD =================
   useEffect(() => {
-    fetchDepartments();
+    const initailzers = async() => {
+    await fetchDepartments();
+  }
+  initailzers();
+
   }, []);
 
   // ================= ADD MODAL =================
@@ -202,7 +206,7 @@ const Departmenttype = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4 backdrop-blur-[1px]">
 
-          <div className="w-full max-w-[520px] overflow-hidden rounded-2xl bg-white shadow-2xl">
+          <div className="w-full max-w-130 overflow-hidden rounded-2xl bg-white shadow-2xl">
 
             {/* HEADER */}
             <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
@@ -248,6 +252,10 @@ const Departmenttype = () => {
                     {...register("departmentName", {
                       required:
                         "Department name is required",
+                        pattern: {
+                        value: /^[A-Za-z\s]+$/,
+                        message: "Name can contain letters and spaces only"
+                        }
                     })}
                     className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
@@ -271,6 +279,10 @@ const Departmenttype = () => {
                     {...register("departmentHead", {
                       required:
                         "Department head is required",
+                        pattern: {
+                          value: /^[A-Za-z\s]+$/,
+                          message: "Name can contain letters and spaces only"
+                        }
                     })}
                     className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />

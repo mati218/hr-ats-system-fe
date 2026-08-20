@@ -2,34 +2,6 @@ import StatCard from "../../components/ui/StatCard";
 import HiringFunnel from "../../components/ui/HiringFunnel";
 import RecentApplications from "../../components/ui/RecentApplications";
 
-const stats = [
-  {
-    title: "OPEN ROLES",
-    value: "14",
-    sub: "▲ 3 this month",
-    color: "text-green-600",
-  },
-  {
-    title: "ACTIVE CANDIDATES",
-    value: "238",
-    sub: "▲ 41 this week",
-    color: "text-green-600",
-  },
-  {
-    title: "OFFER ACCEPTANCE",
-    value: "78%",
-    sub: "▲ 5 pts vs Q2",
-    color: "text-green-600",
-    progress: true,
-  },
-  {
-    title: "AVG. TIME TO HIRE",
-    value: "18d",
-    sub: "▼ 2d faster",
-    color: "text-red-500",
-  },
-];
-
 function Dashboard() {
   return (
    <div className="min-h-screen bg-slate-50 p-8">

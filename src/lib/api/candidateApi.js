@@ -1,16 +1,25 @@
 import api from "./axios";
 
-// Get all candidates
+// ==========================================
+// GET ALL CANDIDATES
+// ==========================================
+
 export const fetchAllCandidates = async () => {
   return api.get("/candidates");
 };
 
-// Get single candidate
+// ==========================================
+// GET SINGLE CANDIDATE
+// ==========================================
+
 export const getCandidate = async (id) => {
   return api.get(`/candidates/${id}`);
 };
 
-// Apply for a requisition
+// ==========================================
+// APPLY
+// ==========================================
+
 export const applyNow = async (data) => {
   const formData = new FormData();
 
@@ -18,29 +27,24 @@ export const applyNow = async (data) => {
   formData.append("email", data.email || "");
   formData.append("phone", data.phone || "");
   formData.append("role", data.role || "");
-  formData.append("requisitionId", data.requisitionId || "");
-  formData.append("experience", data.experience || "");
-  formData.append("coverNote", data.coverNote || "");
+  formData.append(
+    "requisitionId",
+    data.requisitionId || ""
+  );
+  formData.append(
+    "experience",
+    data.experience || ""
+  );
+  formData.append(
+    "coverNote",
+    data.coverNote || ""
+  );
 
   if (data.resume instanceof File) {
     formData.append("resume", data.resume);
+  } else {
+    throw new Error("Resume file is missing.");
   }
-
-  console.log("========== APPLY API ==========");
-  console.log("name:", data.name);
-  console.log("email:", data.email);
-  console.log("role:", data.role);
-  console.log("requisitionId:", data.requisitionId);
-  console.log("resume:", data.resume);
-  console.log(
-    "is File:",
-    data.resume instanceof File
-  );
-  console.log(
-    "FormData resume:",
-    formData.get("resume")
-  );
-  console.log("===============================");
 
   return api.post(
     "/candidates/apply",
@@ -48,24 +52,149 @@ export const applyNow = async (data) => {
   );
 };
 
-// Reject candidate
+// ==========================================
+// REJECT CANDIDATE
+// ==========================================
+
 export const rejectCandidate = async (id) => {
-  return api.patch(`/candidates/${id}/reject`);
+  return api.patch(
+    `/candidates/${id}/reject`
+  );
 };
 
-// Move candidate stage
+// ==========================================
+// MOVE CANDIDATE STAGE
+// ==========================================
+
 export const moveCandidateStage = async (
   id,
   stage
 ) => {
-  return api.patch(`/candidates/${id}/stage`, {
-    stage,
-  });
+  return api.patch(
+    `/candidates/${id}/stage`,
+    {
+      stage,
+    }
+  );
 };
 
-// Schedule interview
+// ==========================================
+// SCHEDULE INTERVIEW
+// ==========================================
+
 export const scheduleInterview = async (
   payload
 ) => {
-  return api.post("/interviews", payload);
+  return api.post(
+    "/interviews",
+    payload
+  );
+};
+
+// ==========================================
+// INTERVIEW RESULT
+// ==========================================
+
+export const submitInterviewResult = async (
+  interviewId,
+  result,
+  notes = ""
+) => {
+  return api.patch(
+    `/interviews/${interviewId}/result`,
+    {
+      result,
+      notes,
+    }
+  );
+};
+
+// ==========================================
+// GET CANDIDATE INTERVIEWS
+// ==========================================
+
+export const getCandidateInterviews = async (
+  candidateId
+) => {
+  return api.get(
+    `/interviews/candidate/${candidateId}`
+  );
+};
+
+// ==========================================
+// CREATE OFFER
+// ==========================================
+
+export const createOffer = async (data) => {
+  return api.post(
+    "/offers",
+    data
+  );
+};
+
+// ==========================================
+// GET CANDIDATE OFFER
+// ==========================================
+
+export const getCandidateOffer = async (
+  candidateId
+) => {
+  return api.get(
+    `/offers/candidate/${candidateId}`
+  );
+};
+
+// ==========================================
+// SEND OFFER
+// ==========================================
+
+export const sendOffer = async (
+  offerId
+) => {
+  return api.patch(
+    `/offers/${offerId}/send`
+  );
+};
+
+// ==========================================
+// OFFER RESULT
+// ==========================================
+
+export const updateOfferStatus = async (
+  candidateId,
+  status
+) => {
+  return api.patch(
+    `/offers/candidate/${candidateId}/status`,
+    {
+      status,
+    }
+  );
+};
+
+// ==========================================
+// MOVE TO HIRED
+// ==========================================
+
+export const hireCandidate = async (
+  candidateId
+) => {
+  return api.patch(
+    `/candidates/${candidateId}/stage`,
+    {
+      stage: "Hired",
+    }
+  );
+};
+
+export const completeScreening = async (
+  id,
+  status,
+  score = 0,
+  notes = ""
+) => {
+  return api.patch(
+    `/candidates/${id}/screening`,
+    { status, score, notes }
+  );
 };

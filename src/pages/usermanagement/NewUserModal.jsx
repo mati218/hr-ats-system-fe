@@ -162,6 +162,10 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
             errors={errors}
             rules={{
               required: "Name is required",
+              pattern: {
+                 value: /^[A-Za-z\s]+$/,
+                 message: "Name can contain letters and spaces only",
+              }
             }}
           />
         </div>
@@ -180,6 +184,10 @@ const NewUserModal = ({ isOpen, onClose, onCreated, user }) => {
             errors={errors}
             rules={{
               required: "Email is required",
+              pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Please enter a valid email address",
+    },
             }}
           />
         </div>

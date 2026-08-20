@@ -1,35 +1,43 @@
 import { useEffect, useState } from "react";
+import { toast, Toaster } from "react-hot-toast";
 
 import CandidateCard from "../../components/ui/CandidateCard";
 import OfferLetterModal from "./OfferLetter";
 import CandidateProfile from "../../components/ui/CandidateProfile";
+import ScheduleInterviewModal from "../CandidatePipeline/ScheduleInterviewModal";
 
 import { getATSRanking } from "../../lib/api/atsApi";
 import { getRequisitions } from "../../lib/api/requisitionApi";
+
 import {
   rejectCandidate,
+  getCandidate,
+  scheduleInterview,
   moveCandidateStage,
+  createOffer,
+  sendOffer,
 } from "../../lib/api/candidateApi";
 
 function ATSRanking() {
   const [candidates, setCandidates] = useState([]);
   const [requisitions, setRequisitions] = useState([]);
-  const [selectedRequisition, setSelectedRequisition] = useState("");
+  const [selectedRequisition, setSelectedRequisition] =
+    useState("");
 
   const [openModal, setOpenModal] = useState(false);
-
   const [selectedCandidate, setSelectedCandidate] =
     useState(null);
-
   const [offerCandidate, setOfferCandidate] =
+    useState(null);
+
+  const [scheduleModalOpen, setScheduleModalOpen] =
+    useState(false);
+  const [scheduleCandidate, setScheduleCandidate] =
     useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // ==========================
-  // GET OPEN REQUISITIONS
-  // ==========================
   useEffect(() => {
     const fetchRequisitions = async () => {
       try {
@@ -51,16 +59,16 @@ function ATSRanking() {
         );
 
         setError("Failed to load job requisitions");
-        setLoading(false);
+
+        toast.error(
+          "Failed to load job requisitions."
+        );
       }
     };
 
     fetchRequisitions();
   }, []);
 
-  // ==========================
-  // GET ATS RANKING
-  // ==========================
   useEffect(() => {
     if (!selectedRequisition) {
       return;
@@ -76,20 +84,17 @@ function ATSRanking() {
           selectedRequisition
         );
 
-        console.log(
-          "ATS RANKING RESPONSE:",
-          response
-        );
-
         if (response.success) {
           setCandidates(response.data || []);
         } else {
           setCandidates([]);
 
-          setError(
+          const message =
             response.message ||
-              "Failed to load ATS ranking"
-          );
+            "Failed to load ATS ranking";
+
+          setError(message);
+          toast.error(message);
         }
       } catch (error) {
         console.error(
@@ -99,10 +104,12 @@ function ATSRanking() {
 
         setCandidates([]);
 
-        setError(
+        const message =
           error?.response?.data?.message ||
-            "Failed to load ATS ranking"
-        );
+          "Failed to load ATS ranking";
+
+        setError(message);
+        toast.error(message);
       } finally {
         setLoading(false);
       }
@@ -111,9 +118,37 @@ function ATSRanking() {
     fetchRanking();
   }, [selectedRequisition]);
 
-  // ==========================
-  // REJECT CANDIDATE
-  // ==========================
+  const handleViewCandidate = async (candidate) => {
+    const candidateId =
+      candidate?.candidateId || candidate?._id;
+
+    if (!candidateId) {
+      toast.error("Candidate ID not found.");
+      return;
+    }
+
+    try {
+      const response = await getCandidate(candidateId);
+      const fullCandidate = response?.data?.data;
+
+      if (!fullCandidate) {
+        throw new Error("Candidate data not found.");
+      }
+
+      setSelectedCandidate(fullCandidate);
+    } catch (error) {
+      console.error(
+        "GET CANDIDATE ERROR:",
+        error?.response?.data || error
+      );
+
+      toast.error(
+        error?.response?.data?.message ||
+        "Failed to load candidate profile."
+      );
+    }
+  };
+
   const handleRejectCandidate = async (candidate) => {
     try {
       const candidateId =
@@ -121,14 +156,9 @@ function ATSRanking() {
         candidate._id;
 
       if (!candidateId) {
-        alert("Candidate ID not found.");
+        toast.error("Candidate ID not found.");
         return;
       }
-
-      console.log(
-        "REJECTING CANDIDATE:",
-        candidateId
-      );
 
       await rejectCandidate(candidateId);
 
@@ -138,15 +168,20 @@ function ATSRanking() {
             item.candidateId ||
             item._id;
 
-          return itemId !== candidateId;
+          return (
+            String(itemId) !==
+            String(candidateId)
+          );
         })
       );
 
       setSelectedCandidate(null);
       setOfferCandidate(null);
       setOpenModal(false);
+      setScheduleModalOpen(false);
+      setScheduleCandidate(null);
 
-      alert(
+      toast.success(
         "Candidate rejected successfully."
       );
     } catch (error) {
@@ -155,50 +190,125 @@ function ATSRanking() {
         error?.response?.data || error
       );
 
-      alert(
+      toast.error(
         error?.response?.data?.message ||
-          "Failed to reject candidate."
+        "Failed to reject candidate."
       );
     }
   };
 
-  // ==========================
-  // OPEN OFFER MODAL
-  // ==========================
-  const handleOpenOffer = (candidate) => {
+  const handleScheduleInterview = (candidate) => {
+    const candidateId =
+      candidate.candidateId ||
+      candidate._id;
+
+    if (!candidateId) {
+      toast.error("Candidate ID not found.");
+      return;
+    }
+
+    setScheduleCandidate({
+      ...candidate,
+      _id: candidateId,
+      candidateId,
+    });
+
     setSelectedCandidate(null);
-    setOfferCandidate(candidate);
-    setOpenModal(true);
+    setScheduleModalOpen(true);
   };
 
-  // ==========================
-  // SEND OFFER
-  // ==========================
-  const handleSendOffer = async (candidate) => {
+  const handleSubmitInterview = async (
+    candidate,
+    interviewData
+  ) => {
     try {
-      if (!candidate) {
-        alert("Candidate not selected.");
-        return;
-      }
-
       const candidateId =
-        candidate.candidateId ||
-        candidate._id;
+        candidate?.candidateId ||
+        candidate?._id;
 
       if (!candidateId) {
-        alert("Candidate ID not found.");
+        toast.error("Candidate ID not found.");
         return;
       }
 
-      console.log(
-        "MOVING CANDIDATE TO OFFER:",
-        candidateId
-      );
+      if (!interviewData) {
+        toast.error(
+          "Interview details not found."
+        );
+        return;
+      }
 
-      await moveCandidateStage(
+      if (!interviewData.round) {
+        toast.error(
+          "Interview round is required."
+        );
+        return;
+      }
+
+      if (!interviewData.mode) {
+        toast.error(
+          "Interview mode is required."
+        );
+        return;
+      }
+
+      if (!interviewData.date) {
+        toast.error(
+          "Interview date is required."
+        );
+        return;
+      }
+
+      if (!interviewData.time) {
+        toast.error(
+          "Interview time is required."
+        );
+        return;
+      }
+
+      if (!interviewData.duration) {
+        toast.error(
+          "Interview duration is required."
+        );
+        return;
+      }
+
+      if (!interviewData.interviewerId) {
+        toast.error(
+          "Please select interviewer."
+        );
+        return;
+      }
+
+      const payload = {
         candidateId,
-        "Offer"
-      );
+        round: interviewData.round,
+        mode: interviewData.mode,
+        date: interviewData.date,
+        time: interviewData.time,
+        duration: interviewData.duration,
+        interviewer:
+          interviewData.interviewerId,
+        location:
+          interviewData.location || "",
+        notes:
+          interviewData.notes || "",
+      };
+
+      await scheduleInterview(payload);
+
+      try {
+        await moveCandidateStage(
+          candidateId,
+          "Interview"
+        );
+      } catch (stageError) {
+        console.error(
+          "MOVE TO INTERVIEW STAGE ERROR:",
+          stageError?.response?.data ||
+          stageError
+        );
+      }
 
       setCandidates((prev) =>
         prev.map((item) => {
@@ -206,10 +316,110 @@ function ATSRanking() {
             item.candidateId ||
             item._id;
 
-          if (itemId === candidateId) {
+          if (
+            String(itemId) ===
+            String(candidateId)
+          ) {
             return {
               ...item,
-              stage: "Offer",
+              stage: "Interview",
+            };
+          }
+
+          return item;
+        })
+      );
+
+      setScheduleModalOpen(false);
+      setScheduleCandidate(null);
+      setSelectedCandidate(null);
+
+      toast.success(
+        "Interview scheduled successfully."
+      );
+    } catch (error) {
+      console.error(
+        "SCHEDULE INTERVIEW ERROR:",
+        error?.response?.data || error
+      );
+
+      toast.error(
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to schedule interview."
+      );
+
+      throw error;
+    }
+  };
+
+  const handleOpenOffer = (candidate) => {
+    setSelectedCandidate(null);
+    setOfferCandidate(candidate);
+    setOpenModal(true);
+  };
+
+  const handleSendOffer = async (
+    candidate,
+    offerData
+  ) => {
+    try {
+      if (!candidate) {
+        throw new Error(
+          "Candidate not selected."
+        );
+      }
+
+      const candidateId =
+        candidate.candidateId ||
+        candidate._id;
+
+      if (!candidateId) {
+        throw new Error(
+          "Candidate ID not found."
+        );
+      }
+
+      console.log(
+        "OFFER DATA:",
+        offerData
+      );
+
+      const createResponse =
+        await createOffer({
+          ...offerData,
+          candidateId,
+        });
+
+      console.log(
+        "OFFER CREATED:",
+        createResponse.data
+      );
+
+      const offerId =
+        createResponse.data?.data?._id;
+
+      if (!offerId) {
+        throw new Error(
+          "Offer ID not found."
+        );
+      }
+
+      await sendOffer(offerId);
+
+      setCandidates((prev) =>
+        prev.map((item) => {
+          const itemId =
+            item.candidateId ||
+            item._id;
+
+          if (
+            String(itemId) ===
+            String(candidateId)
+          ) {
+            return {
+              ...item,
+              stage: "Offer Sent",
             };
           }
 
@@ -223,13 +433,18 @@ function ATSRanking() {
     } catch (error) {
       console.error(
         "SEND OFFER ERROR:",
-        error?.response?.data || error
+        error?.response?.data ||
+        error?.message ||
+        error
       );
 
-      alert(
+      toast.error(
         error?.response?.data?.message ||
-          "Failed to move candidate to Offer stage."
+        error?.message ||
+        "Failed to send offer."
       );
+
+      throw error;
     }
   };
 
@@ -257,6 +472,8 @@ function ATSRanking() {
             setSelectedCandidate(null);
             setOfferCandidate(null);
             setOpenModal(false);
+            setScheduleModalOpen(false);
+            setScheduleCandidate(null);
           }}
           className="h-9 min-w-42.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         >
@@ -264,38 +481,34 @@ function ATSRanking() {
             Select Job
           </option>
 
-          {requisitions.map((requisition) => (
-            <option
-              key={requisition._id}
-              value={requisition._id}
-            >
-              {requisition.role}
-            </option>
-          ))}
+          {requisitions.map(
+            (requisition) => (
+              <option
+                key={requisition._id}
+                value={requisition._id}
+              >
+                {requisition.role}
+              </option>
+            )
+          )}
         </select>
-
       </div>
 
-      {/* ==========================
-          CANDIDATE LIST
-      ========================== */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
 
-        {/* LOADING */}
-        {loading && selectedRequisition && (
-          <div className="px-6 py-8 text-center text-sm text-slate-500">
-            Loading candidates...
-          </div>
-        )}
+        {loading &&
+          selectedRequisition && (
+            <div className="px-6 py-8 text-center text-sm text-slate-500">
+              Loading candidates...
+            </div>
+          )}
 
-        {/* ERROR */}
         {!loading && error && (
           <div className="px-6 py-8 text-center text-sm text-red-500">
             {error}
           </div>
         )}
 
-        {/* NO CANDIDATES */}
         {!loading &&
           !error &&
           selectedRequisition &&
@@ -305,117 +518,111 @@ function ATSRanking() {
             </div>
           )}
 
-        {/* CANDIDATES */}
         {!loading &&
           !error &&
           candidates.length > 0 &&
-          candidates.map((candidate, index) => (
-
-            <CandidateCard
-              key={
-                candidate.candidateId ||
-                candidate._id ||
-                index
-              }
-
-              candidate={{
-                id:
+          candidates.map(
+            (candidate, index) => (
+              <CandidateCard
+                key={
                   candidate.candidateId ||
-                  candidate._id,
+                  candidate._id ||
+                  index
+                }
+                candidate={{
+                  id:
+                    candidate.candidateId ||
+                    candidate._id,
 
-                rank: String(
-                  candidate.rank ||
+                  rank: String(
+                    candidate.rank ||
                     index + 1
-                ).padStart(2, "0"),
+                  ).padStart(2, "0"),
 
-                score:
-                  candidate.score || 0,
+                  score:
+                    candidate.score || 0,
 
-                color:
-                  candidate.score >= 90
-                    ? "green"
-                    : candidate.score >= 75
-                    ? "yellow"
-                    : "red",
+                  color:
+                    candidate.score >= 90
+                      ? "green"
+                      : candidate.score >= 75
+                      ? "yellow"
+                      : "red",
 
-                name:
-                  candidate.name,
+                  name:
+                    candidate.name,
 
-                experience:
-                  candidate.experienceMatch
-                    ? "Experience matches"
-                    : "Experience does not match",
+                  experience:
+                    candidate.experienceMatch
+                      ? "Experience matches"
+                      : "Experience does not match",
 
-                role:
-                  candidate.role,
+                  role:
+                    candidate.role,
 
-                skills:
-                  candidate.matchedSkills ||
-                  [],
+                  skills:
+                    candidate.matchedSkills ||
+                    [],
 
-                stage:
-                  candidate.stage,
-              }}
-
-              onViewResume={() => {
-                setOfferCandidate(null);
-                setOpenModal(false);
-
-                setSelectedCandidate(
-                  candidate
-                );
-              }}
-
-              onMoveOffer={() => {
-                handleOpenOffer(
-                  candidate
-                );
-              }}
-
-              onReject={() => {
-                handleRejectCandidate(
-                  candidate
-                );
-              }}
-            />
-
-          ))}
-
+                  stage:
+                    candidate.stage,
+                }}
+                onViewResume={() => {
+                  setOfferCandidate(null);
+                  setOpenModal(false);
+                  handleViewCandidate(candidate);
+                }}
+                onMoveOffer={() => {
+                  handleOpenOffer(candidate);
+                }}
+                onReject={() => {
+                  handleRejectCandidate(
+                    candidate
+                  );
+                }}
+              />
+            )
+          )}
       </div>
 
-      {/* ==========================
-          OFFER LETTER MODAL
-      ========================== */}
       <OfferLetterModal
         isOpen={openModal}
         candidate={offerCandidate}
-
         onClose={() => {
           setOpenModal(false);
           setOfferCandidate(null);
         }}
-
-        onSendOffer={() => {
-          handleSendOffer(
-            offerCandidate
-          );
-        }}
+        onSendOffer={handleSendOffer}
       />
 
-      {/* ==========================
-          CANDIDATE PROFILE
-      ========================== */}
       <CandidateProfile
         isOpen={
           !!selectedCandidate
         }
-
         onClose={() => {
           setSelectedCandidate(null);
         }}
-
         candidate={
           selectedCandidate
+        }
+        onScheduleInterview={
+          handleScheduleInterview
+        }
+      />
+
+      <ScheduleInterviewModal
+        isOpen={
+          scheduleModalOpen
+        }
+        candidate={
+          scheduleCandidate
+        }
+        onClose={() => {
+          setScheduleModalOpen(false);
+          setScheduleCandidate(null);
+        }}
+        onSubmit={
+          handleSubmitInterview
         }
       />
 
