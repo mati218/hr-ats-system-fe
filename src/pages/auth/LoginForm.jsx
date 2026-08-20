@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { loginUser } from "../../lib/api/authApi";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext"
+import { useAuth } from "../../context/useAuth";
 
 import Checkbox from "../../components/ui/Checkbox";
 import Button from "../../components/ui/Button";
