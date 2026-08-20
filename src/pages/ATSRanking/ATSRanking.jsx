@@ -220,9 +220,6 @@ function ATSRanking() {
       setOpenModal(false);
       setOfferCandidate(null);
 
-      alert(
-        "Candidate moved to Offer stage successfully."
-      );
     } catch (error) {
       console.error(
         "SEND OFFER ERROR:",
@@ -240,7 +237,6 @@ function ATSRanking() {
     <div className="min-h-screen bg-[#f5f6fa] px-6 py-7 sm:px-8">
 
       <div className="mb-5 flex items-start justify-between gap-5 text-left">
-
         <div>
           <h1 className="text-[22px] font-medium leading-tight text-slate-900">
             ATS Ranking

@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import FormInput from "../../components/ui/FormInput";
 import Button from "../../components/ui/Button";
@@ -35,19 +36,28 @@ function OfferLetter({
       console.log("OFFER CANDIDATE:", candidate);
 
       if (!candidate) {
+        toast.error("Candidate not found.");
         return;
       }
 
-      // Rejected candidate ko offer nahi bhejni
       if (isRejected) {
+        toast.error("Rejected candidates cannot receive an offer.");
         return;
       }
 
       if (onSendOffer) {
         await onSendOffer(candidate, data);
+
+        toast.success("Offer sent successfully.");
+        onClose();
       }
     } catch (error) {
       console.error("SEND OFFER ERROR:", error);
+
+      toast.error(
+        error?.response?.data?.message ||
+        "Failed to send offer. Please try again."
+      );
     }
   };
 
@@ -145,14 +155,23 @@ function OfferLetter({
                 </label>
 
                 <select
-                  {...register("template")}
+                  {...register("template", {
+                    required: "Offer template is required",
+                  })}
                   disabled={isRejected}
                   className="h-10 w-full appearance-auto rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
                 >
-                  <option>Contract</option>
-                  <option>Standard Full-Time</option>
-                  <option>Internship</option>
+                  <option value="">Select template</option>
+                  <option value="Contract">Contract</option>
+                  <option value="Standard Full-Time">Standard Full-Time</option>
+                  <option value="Internship">Internship</option>
                 </select>
+
+                {errors.template && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.template.message}
+                  </p>
+                )}
 
               </div>
 
@@ -169,6 +188,9 @@ function OfferLetter({
                   register={register}
                   errors={errors}
                   disabled={isRejected}
+                  rules={{
+                    required: "Joining date is required",
+                  }}
                 />
 
               </div>
@@ -194,6 +216,9 @@ function OfferLetter({
                   register={register}
                   errors={errors}
                   disabled={isRejected}
+                  rules={{
+                    required: "Offered salary is required",
+                  }}
                 />
 
               </div>
@@ -206,14 +231,23 @@ function OfferLetter({
                 </label>
 
                 <select
-                  {...register("probation")}
+                  {...register("probation", {
+                    required: "Probation period is required",
+                  })}
                   disabled={isRejected}
                   className="h-10 w-full appearance-auto rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
                 >
-                  <option>3 months</option>
-                  <option>6 months</option>
-                  <option>None</option>
+                  <option value="">Select probation period</option>
+                  <option value="3 months">3 months</option>
+                  <option value="6 months">6 months</option>
+                  <option value="None">None</option>
                 </select>
+
+                {errors.probation && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.probation.message}
+                  </p>
+                )}
 
               </div>
 
