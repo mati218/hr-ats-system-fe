@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast, Toaster } from "react-hot-toast";
 
 import CandidateCard from "../../components/ui/CandidateCard";
 import OfferLetterModal from "./OfferLetter";
@@ -12,6 +13,8 @@ import {
   rejectCandidate,
   scheduleInterview,
   moveCandidateStage,
+  createOffer,
+  sendOffer,
 } from "../../lib/api/candidateApi";
 
 function ATSRanking() {
@@ -21,28 +24,19 @@ function ATSRanking() {
     useState("");
 
   const [openModal, setOpenModal] = useState(false);
-
   const [selectedCandidate, setSelectedCandidate] =
     useState(null);
-
   const [offerCandidate, setOfferCandidate] =
     useState(null);
 
-  // ==========================
-  // SCHEDULE INTERVIEW MODAL
-  // ==========================
   const [scheduleModalOpen, setScheduleModalOpen] =
     useState(false);
-
   const [scheduleCandidate, setScheduleCandidate] =
     useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // ==========================
-  // GET OPEN REQUISITIONS
-  // ==========================
   useEffect(() => {
     const fetchRequisitions = async () => {
       try {
@@ -64,16 +58,16 @@ function ATSRanking() {
         );
 
         setError("Failed to load job requisitions");
-        setLoading(false);
+
+        toast.error(
+          "Failed to load job requisitions."
+        );
       }
     };
 
     fetchRequisitions();
   }, []);
 
-  // ==========================
-  // GET ATS RANKING
-  // ==========================
   useEffect(() => {
     if (!selectedRequisition) {
       return;
@@ -89,20 +83,17 @@ function ATSRanking() {
           selectedRequisition
         );
 
-        console.log(
-          "ATS RANKING RESPONSE:",
-          response
-        );
-
         if (response.success) {
           setCandidates(response.data || []);
         } else {
           setCandidates([]);
 
-          setError(
+          const message =
             response.message ||
-              "Failed to load ATS ranking"
-          );
+            "Failed to load ATS ranking";
+
+          setError(message);
+          toast.error(message);
         }
       } catch (error) {
         console.error(
@@ -112,10 +103,12 @@ function ATSRanking() {
 
         setCandidates([]);
 
-        setError(
+        const message =
           error?.response?.data?.message ||
-            "Failed to load ATS ranking"
-        );
+          "Failed to load ATS ranking";
+
+        setError(message);
+        toast.error(message);
       } finally {
         setLoading(false);
       }
@@ -124,9 +117,6 @@ function ATSRanking() {
     fetchRanking();
   }, [selectedRequisition]);
 
-  // ==========================
-  // REJECT CANDIDATE
-  // ==========================
   const handleRejectCandidate = async (candidate) => {
     try {
       const candidateId =
@@ -134,14 +124,9 @@ function ATSRanking() {
         candidate._id;
 
       if (!candidateId) {
-        alert("Candidate ID not found.");
+        toast.error("Candidate ID not found.");
         return;
       }
-
-      console.log(
-        "REJECTING CANDIDATE:",
-        candidateId
-      );
 
       await rejectCandidate(candidateId);
 
@@ -151,7 +136,10 @@ function ATSRanking() {
             item.candidateId ||
             item._id;
 
-          return itemId !== candidateId;
+          return (
+            String(itemId) !==
+            String(candidateId)
+          );
         })
       );
 
@@ -161,7 +149,7 @@ function ATSRanking() {
       setScheduleModalOpen(false);
       setScheduleCandidate(null);
 
-      alert(
+      toast.success(
         "Candidate rejected successfully."
       );
     } catch (error) {
@@ -170,46 +158,33 @@ function ATSRanking() {
         error?.response?.data || error
       );
 
-      alert(
+      toast.error(
         error?.response?.data?.message ||
-          "Failed to reject candidate."
+        "Failed to reject candidate."
       );
     }
   };
 
-  // ==========================
-  // OPEN SCHEDULE INTERVIEW MODAL
-  // ==========================
   const handleScheduleInterview = (candidate) => {
     const candidateId =
       candidate.candidateId ||
       candidate._id;
 
     if (!candidateId) {
-      alert("Candidate ID not found.");
+      toast.error("Candidate ID not found.");
       return;
     }
 
-    console.log(
-      "OPENING INTERVIEW MODAL FOR:",
-      candidateId
-    );
-
     setScheduleCandidate({
       ...candidate,
-
-      // Make sure both are available
       _id: candidateId,
-      candidateId: candidateId,
+      candidateId,
     });
 
     setSelectedCandidate(null);
     setScheduleModalOpen(true);
   };
 
-  // ==========================
-  // SUBMIT INTERVIEW
-  // ==========================
   const handleSubmitInterview = async (
     candidate,
     interviewData
@@ -220,95 +195,76 @@ function ATSRanking() {
         candidate?._id;
 
       if (!candidateId) {
-        alert("Candidate ID not found.");
+        toast.error("Candidate ID not found.");
         return;
       }
 
       if (!interviewData) {
-        alert("Interview details not found.");
+        toast.error(
+          "Interview details not found."
+        );
         return;
       }
 
-      // ==========================
-      // VALIDATE REQUIRED DATA
-      // ==========================
       if (!interviewData.round) {
-        alert("Interview round is required.");
+        toast.error(
+          "Interview round is required."
+        );
         return;
       }
 
       if (!interviewData.mode) {
-        alert("Interview mode is required.");
+        toast.error(
+          "Interview mode is required."
+        );
         return;
       }
 
       if (!interviewData.date) {
-        alert("Interview date is required.");
+        toast.error(
+          "Interview date is required."
+        );
         return;
       }
 
       if (!interviewData.time) {
-        alert("Interview time is required.");
+        toast.error(
+          "Interview time is required."
+        );
         return;
       }
 
       if (!interviewData.duration) {
-        alert("Interview duration is required.");
+        toast.error(
+          "Interview duration is required."
+        );
         return;
       }
 
       if (!interviewData.interviewerId) {
-        alert("Please select interviewer.");
+        toast.error(
+          "Please select interviewer."
+        );
         return;
       }
 
-      console.log(
-        "SCHEDULING INTERVIEW FOR:",
-        candidateId
-      );
-
-      console.log(
-        "INTERVIEW DATA:",
-        interviewData
-      );
-
-      // ==========================
-      // SEND INTERVIEW DATA
-      // ==========================
       const payload = {
-        candidateId: candidateId,
-
+        candidateId,
         round: interviewData.round,
-
         mode: interviewData.mode,
-
         date: interviewData.date,
-
         time: interviewData.time,
-
         duration: interviewData.duration,
-
-        // Backend receives interviewer
         interviewer:
           interviewData.interviewerId,
-
         location:
           interviewData.location || "",
-
         notes:
           interviewData.notes || "",
       };
 
-      console.log(
-        "INTERVIEW PAYLOAD:",
-        payload
-      );
-
       await scheduleInterview(payload);
 
-      // ==========================
-      // MOVE CANDIDATE TO INTERVIEW
-      // ==========================
       try {
         await moveCandidateStage(
           candidateId,
@@ -318,23 +274,20 @@ function ATSRanking() {
         console.error(
           "MOVE TO INTERVIEW STAGE ERROR:",
           stageError?.response?.data ||
-            stageError
+          stageError
         );
-
-        // Interview was already created,
-        // so don't show scheduling failure.
       }
 
-      // ==========================
-      // UPDATE ATS RANKING LOCALLY
-      // ==========================
       setCandidates((prev) =>
         prev.map((item) => {
           const itemId =
             item.candidateId ||
             item._id;
 
-          if (itemId === candidateId) {
+          if (
+            String(itemId) ===
+            String(candidateId)
+          ) {
             return {
               ...item,
               stage: "Interview",
@@ -345,14 +298,11 @@ function ATSRanking() {
         })
       );
 
-      // ==========================
-      // CLOSE MODALS
-      // ==========================
       setScheduleModalOpen(false);
       setScheduleCandidate(null);
       setSelectedCandidate(null);
 
-      alert(
+      toast.success(
         "Interview scheduled successfully."
       );
     } catch (error) {
@@ -361,33 +311,31 @@ function ATSRanking() {
         error?.response?.data || error
       );
 
-      alert(
+      toast.error(
         error?.response?.data?.message ||
-          error?.message ||
-          "Failed to schedule interview."
+        error?.message ||
+        "Failed to schedule interview."
       );
 
       throw error;
     }
   };
 
-  // ==========================
-  // OPEN OFFER MODAL
-  // ==========================
   const handleOpenOffer = (candidate) => {
     setSelectedCandidate(null);
     setOfferCandidate(candidate);
     setOpenModal(true);
   };
 
-  // ==========================
-  // SEND OFFER
-  // ==========================
-  const handleSendOffer = async (candidate) => {
+  const handleSendOffer = async (
+    candidate,
+    offerData
+  ) => {
     try {
       if (!candidate) {
-        alert("Candidate not selected.");
-        return;
+        throw new Error(
+          "Candidate not selected."
+        );
       }
 
       const candidateId =
@@ -395,33 +343,53 @@ function ATSRanking() {
         candidate._id;
 
       if (!candidateId) {
-        alert("Candidate ID not found.");
-        return;
+        throw new Error(
+          "Candidate ID not found."
+        );
       }
 
       console.log(
-        "MOVING CANDIDATE TO OFFER:",
-        candidateId
+        "OFFER DATA:",
+        offerData
       );
 
-      // ==========================
-      // USE API FUNCTION
-      // ==========================
+      const createResponse =
+        await createOffer({
+          ...offerData,
+          candidateId,
+        });
+
+      console.log(
+        "OFFER CREATED:",
+        createResponse.data
+      );
+
+      const offerId =
+        createResponse.data?.data?._id;
+
+      if (!offerId) {
+        throw new Error(
+          "Offer ID not found."
+        );
+      }
+
+      await sendOffer(offerId);
+
       await moveCandidateStage(
         candidateId,
         "Offer"
       );
 
-      // ==========================
-      // UPDATE UI
-      // ==========================
       setCandidates((prev) =>
         prev.map((item) => {
           const itemId =
             item.candidateId ||
             item._id;
 
-          if (itemId === candidateId) {
+          if (
+            String(itemId) ===
+            String(candidateId)
+          ) {
             return {
               ...item,
               stage: "Offer",
@@ -435,31 +403,38 @@ function ATSRanking() {
       setOpenModal(false);
       setOfferCandidate(null);
 
-      alert(
-        "Candidate moved to Offer stage successfully."
+      toast.success(
+        "Offer sent successfully!"
       );
     } catch (error) {
       console.error(
         "SEND OFFER ERROR:",
-        error?.response?.data || error
+        error?.response?.data ||
+        error?.message ||
+        error
       );
 
-      alert(
+      toast.error(
         error?.response?.data?.message ||
-          error?.message ||
-          "Failed to move candidate to Offer stage."
+        error?.message ||
+        "Failed to send offer."
       );
+
+      throw error;
     }
   };
 
   return (
     <div className="min-h-screen bg-[#f5f6fa] px-6 py-7 sm:px-8">
 
-      {/* ==========================
-          PAGE HEADER
-      ========================== */}
-      <div className="mb-5 flex items-start justify-between gap-5 text-left">
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          duration: 3000,
+        }}
+      />
 
+      <div className="mb-5 flex items-start justify-between gap-5 text-left">
         <div>
           <h1 className="text-[22px] font-medium leading-tight text-slate-900">
             ATS Ranking
@@ -470,7 +445,6 @@ function ATSRanking() {
           </p>
         </div>
 
-        {/* JOB SELECT */}
         <select
           value={selectedRequisition}
           onChange={(e) => {
@@ -490,38 +464,34 @@ function ATSRanking() {
             Select Job
           </option>
 
-          {requisitions.map((requisition) => (
-            <option
-              key={requisition._id}
-              value={requisition._id}
-            >
-              {requisition.role}
-            </option>
-          ))}
+          {requisitions.map(
+            (requisition) => (
+              <option
+                key={requisition._id}
+                value={requisition._id}
+              >
+                {requisition.role}
+              </option>
+            )
+          )}
         </select>
-
       </div>
 
-      {/* ==========================
-          CANDIDATE LIST
-      ========================== */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
 
-        {/* LOADING */}
-        {loading && selectedRequisition && (
-          <div className="px-6 py-8 text-center text-sm text-slate-500">
-            Loading candidates...
-          </div>
-        )}
+        {loading &&
+          selectedRequisition && (
+            <div className="px-6 py-8 text-center text-sm text-slate-500">
+              Loading candidates...
+            </div>
+          )}
 
-        {/* ERROR */}
         {!loading && error && (
           <div className="px-6 py-8 text-center text-sm text-red-500">
             {error}
           </div>
         )}
 
-        {/* NO CANDIDATES */}
         {!loading &&
           !error &&
           selectedRequisition &&
@@ -531,150 +501,111 @@ function ATSRanking() {
             </div>
           )}
 
-        {/* CANDIDATES */}
         {!loading &&
           !error &&
           candidates.length > 0 &&
-          candidates.map((candidate, index) => (
-
-            <CandidateCard
-              key={
-                candidate.candidateId ||
-                candidate._id ||
-                index
-              }
-
-              candidate={{
-                id:
+          candidates.map(
+            (candidate, index) => (
+              <CandidateCard
+                key={
                   candidate.candidateId ||
-                  candidate._id,
+                  candidate._id ||
+                  index
+                }
+                candidate={{
+                  id:
+                    candidate.candidateId ||
+                    candidate._id,
 
-                rank: String(
-                  candidate.rank ||
+                  rank: String(
+                    candidate.rank ||
                     index + 1
-                ).padStart(2, "0"),
+                  ).padStart(2, "0"),
 
-                score:
-                  candidate.score || 0,
+                  score:
+                    candidate.score || 0,
 
-                color:
-                  candidate.score >= 90
-                    ? "green"
-                    : candidate.score >= 75
-                    ? "yellow"
-                    : "red",
+                  color:
+                    candidate.score >= 90
+                      ? "green"
+                      : candidate.score >= 75
+                      ? "yellow"
+                      : "red",
 
-                name:
-                  candidate.name,
+                  name:
+                    candidate.name,
 
-                experience:
-                  candidate.experienceMatch
-                    ? "Experience matches"
-                    : "Experience does not match",
+                  experience:
+                    candidate.experienceMatch
+                      ? "Experience matches"
+                      : "Experience does not match",
 
-                role:
-                  candidate.role,
+                  role:
+                    candidate.role,
 
-                skills:
-                  candidate.matchedSkills ||
-                  [],
+                  skills:
+                    candidate.matchedSkills ||
+                    [],
 
-                stage:
-                  candidate.stage,
-              }}
-
-              // ==========================
-              // VIEW PROFILE / RESUME
-              // ==========================
-              onViewResume={() => {
-                setOfferCandidate(null);
-                setOpenModal(false);
-
-                setSelectedCandidate(
-                  candidate
-                );
-              }}
-
-              // ==========================
-              // MOVE TO OFFER
-              // ==========================
-              onMoveOffer={() => {
-                handleOpenOffer(
-                  candidate
-                );
-              }}
-
-              // ==========================
-              // REJECT
-              // ==========================
-              onReject={() => {
-                handleRejectCandidate(
-                  candidate
-                );
-              }}
-            />
-
-          ))}
-
+                  stage:
+                    candidate.stage,
+                }}
+                onViewResume={() => {
+                  setOfferCandidate(null);
+                  setOpenModal(false);
+                  setSelectedCandidate(
+                    candidate
+                  );
+                }}
+                onMoveOffer={() => {
+                  handleOpenOffer(candidate);
+                }}
+                onReject={() => {
+                  handleRejectCandidate(
+                    candidate
+                  );
+                }}
+              />
+            )
+          )}
       </div>
 
-      {/* ==========================
-          OFFER LETTER MODAL
-      ========================== */}
       <OfferLetterModal
         isOpen={openModal}
         candidate={offerCandidate}
-
         onClose={() => {
           setOpenModal(false);
           setOfferCandidate(null);
         }}
-
-        onSendOffer={() => {
-          handleSendOffer(
-            offerCandidate
-          );
-        }}
+        onSendOffer={handleSendOffer}
       />
 
-      {/* ==========================
-          CANDIDATE PROFILE
-      ========================== */}
       <CandidateProfile
         isOpen={
           !!selectedCandidate
         }
-
         onClose={() => {
           setSelectedCandidate(null);
         }}
-
         candidate={
           selectedCandidate
         }
-
         onScheduleInterview={
           handleScheduleInterview
         }
       />
 
-      {/* ==========================
-          SCHEDULE INTERVIEW MODAL
-      ========================== */}
       <ScheduleInterviewModal
         isOpen={
           scheduleModalOpen
         }
-
         candidate={
           scheduleCandidate
         }
-
         onClose={() => {
           setScheduleModalOpen(false);
           setScheduleCandidate(null);
         }}
-
         onSubmit={
           handleSubmitInterview
         }
