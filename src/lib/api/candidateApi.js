@@ -96,12 +96,12 @@ export const scheduleInterview = async (
 // ==========================================
 
 export const submitInterviewResult = async (
-  candidateId,
+  interviewId,
   result,
   notes = ""
 ) => {
   return api.patch(
-    `/interviews/${candidateId}/result`,
+    `/interviews/${interviewId}/result`,
     {
       result,
       notes,
@@ -184,5 +184,17 @@ export const hireCandidate = async (
     {
       stage: "Hired",
     }
+  );
+};
+
+export const completeScreening = async (
+  id,
+  status,
+  score = 0,
+  notes = ""
+) => {
+  return api.patch(
+    `/candidates/${id}/screening`,
+    { status, score, notes }
   );
 };

@@ -1,13 +1,18 @@
 import { useState } from "react";
 import ScoreCircle from "./ScoreCircle";
-import { rejectCandidate } from "../../lib/api/candidateApi";
+import {
+  completeScreening,
+  rejectCandidate,
+  submitInterviewResult,
+} from "../../lib/api/candidateApi";
 
 const PIPELINE_STAGES = [
   "Applied",
   "Screening",
   "Shortlisted",
   "Interview",
-  "Offer",
+  "Offer Draft",
+  "Offer Sent",
   "Hired",
 ];
 
@@ -21,6 +26,7 @@ function CandidateProfile({
   const [rejecting, setRejecting] = useState(false);
   const [rejectError, setRejectError] = useState("");
   const [downloading, setDownloading] = useState(false);
+  const [decisionLoading, setDecisionLoading] = useState(false);
 
   if (!isOpen || !candidate) {
     return null;
@@ -44,6 +50,7 @@ function CandidateProfile({
           (PIPELINE_STAGES.length - 1)) *
         100;
 
+  // Candidate initials
   const initials =
     candidate.name
       ?.split(" ")
@@ -53,86 +60,93 @@ function CandidateProfile({
       .slice(0, 2)
       .toUpperCase() || "C";
 
-  const getResumeUrl = () => {
-    if (!candidate?.resumeUrl) {
-      return "";
-    }
+  // =====================================================
+  // CLOUDINARY RESUME URL
+  // =====================================================
+  // Backend now returns:
+  //
+  // candidate.resumeUrl =
+  // "https://res.cloudinary.com/...."
+  //
+  // So we don't need to build the URL anymore.
+  // =====================================================
+const getResumeUrl = () => {
+  if (!candidate?.resumeUrl) {
+    return "";
+  }
 
-    if (
-      candidate.resumeUrl.startsWith("http://") ||
-      candidate.resumeUrl.startsWith("https://")
-    ) {
-      return candidate.resumeUrl;
-    }
+  // Cloudinary URL
+  if (/^https?:\/\//i.test(candidate.resumeUrl)) {
+    return candidate.resumeUrl;
+  }
 
-    const apiBaseUrl =
-      import.meta.env.VITE_API_BASE_URL ||
-      "http://localhost:5000/api";
+  // Old local resume
+  console.warn(
+    "Old local resume URL found:",
+    candidate.resumeUrl
+  );
 
-    const backendUrl = apiBaseUrl.replace(
-      /\/api\/?$/,
-      ""
-    );
-
-    return `${backendUrl}${
-      candidate.resumeUrl.startsWith("/")
-        ? ""
-        : "/"
-    }${candidate.resumeUrl}`;
-  };
+  return "";
+};
 
   const resumeUrl = getResumeUrl();
 
-  const resumeName =
-    candidate?.resumeName ||
-    candidate?.resumeUrl?.split("/").pop() ||
-    "Download Resume.pdf";
+const resumeName =
+  candidate?.originalResumeName ||
+  candidate?.resumeName ||
+  "Resume.pdf";
 
-  const handleDownloadResume = async () => {
-    if (!resumeUrl || downloading) {
-      return;
+ const handleDownloadResume = async () => {
+  if (!resumeUrl || downloading) {
+    return;
+  }
+
+  try {
+    setDownloading(true);
+
+    const response = await fetch(resumeUrl);
+
+    if (!response.ok) {
+      throw new Error(
+        `Unable to download resume. Status: ${response.status}`
+      );
     }
 
-    try {
-      setDownloading(true);
+    const blob = await response.blob();
 
-      const response = await fetch(resumeUrl);
+    const blobUrl = window.URL.createObjectURL(blob);
 
-      if (!response.ok) {
-        throw new Error(
-          "Unable to download resume."
-        );
-      }
+    const link = document.createElement("a");
 
-      const blob = await response.blob();
+    link.href = blobUrl;
 
-      const blobUrl = window.URL.createObjectURL(blob);
+    link.download = resumeName;
 
-      const link = document.createElement("a");
+    document.body.appendChild(link);
 
-      link.href = blobUrl;
-      link.download = resumeName;
+    link.click();
 
-      document.body.appendChild(link);
+    document.body.removeChild(link);
 
-      link.click();
+    window.URL.revokeObjectURL(blobUrl);
 
-      document.body.removeChild(link);
+  } catch (error) {
+    console.error(
+      "RESUME DOWNLOAD ERROR:",
+      error
+    );
 
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      console.error(
-        "RESUME DOWNLOAD ERROR:",
-        error
-      );
+    alert(
+      "Unable to download resume. Please try again."
+    );
 
-      alert(
-        "Unable to download resume. Please try again."
-      );
-    } finally {
-      setDownloading(false);
-    }
-  };
+  } finally {
+    setDownloading(false);
+  }
+};
+  // =====================================================
+  // REJECT CANDIDATE
+  // =====================================================
 
   const handleReject = async () => {
     if (isRejected || rejecting) {
@@ -169,6 +183,7 @@ function CandidateProfile({
       }
 
       onClose();
+
     } catch (error) {
       console.error(
         "REJECT CANDIDATE ERROR:",
@@ -179,10 +194,15 @@ function CandidateProfile({
         error?.response?.data?.message ||
           "Failed to reject candidate."
       );
+
     } finally {
       setRejecting(false);
     }
   };
+
+  // =====================================================
+  // SCHEDULE INTERVIEW
+  // =====================================================
 
   const handleScheduleInterview = () => {
     if (isRejected || interviewScheduled) {
@@ -191,6 +211,42 @@ function CandidateProfile({
 
     if (onScheduleInterview) {
       onScheduleInterview(candidate);
+    }
+  };
+
+  const handleScreeningDecision = async (status) => {
+    try {
+      setDecisionLoading(true);
+      await completeScreening(candidate._id, status);
+      onClose();
+    } catch (error) {
+      setRejectError(
+        error?.response?.data?.message ||
+          "Failed to update screening."
+      );
+    } finally {
+      setDecisionLoading(false);
+    }
+  };
+
+  const handleInterviewDecision = async (result) => {
+    const interview = candidate.interviews?.at(-1);
+    if (!interview?._id) {
+      setRejectError("No interview record found.");
+      return;
+    }
+
+    try {
+      setDecisionLoading(true);
+      await submitInterviewResult(interview._id, result);
+      onClose();
+    } catch (error) {
+      setRejectError(
+        error?.response?.data?.message ||
+          "Failed to update interview result."
+      );
+    } finally {
+      setDecisionLoading(false);
     }
   };
 
@@ -320,6 +376,7 @@ function CandidateProfile({
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 
+              {/* Email */}
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
                   Email
@@ -330,6 +387,7 @@ function CandidateProfile({
                 </div>
               </div>
 
+              {/* Phone */}
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
                   Phone
@@ -357,17 +415,16 @@ function CandidateProfile({
                     </span>
                   </div>
 
-                  {/* View */}
-                  <a
-                    href={resumeUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-                  >
-                    View
-                  </a>
+ <a
+  href={resumeUrl}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+>
+  View
+</a>
 
-                  {/* Download */}
+                  {/* Download Resume */}
                   <button
                     type="button"
                     onClick={handleDownloadResume}
@@ -454,12 +511,63 @@ function CandidateProfile({
               {rejectError}
             </div>
           )}
+
+          {candidate.stage === "Screening" && (
+            <div className="mx-6 mb-5 flex gap-2">
+              <button
+                type="button"
+                disabled={decisionLoading}
+                onClick={() => handleScreeningDecision("Passed")}
+                className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white"
+              >
+                Pass Screening
+              </button>
+              <button
+                type="button"
+                disabled={decisionLoading}
+                onClick={() => handleScreeningDecision("Hold")}
+                className="rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white"
+              >
+                Hold
+              </button>
+            </div>
+          )}
+
+          {candidate.stage === "Interview" && (
+            <div className="mx-6 mb-5 flex gap-2">
+              <button
+                type="button"
+                disabled={decisionLoading}
+                onClick={() => handleInterviewDecision("Passed")}
+                className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white"
+              >
+                Interview Passed
+              </button>
+              <button
+                type="button"
+                disabled={decisionLoading}
+                onClick={() => handleInterviewDecision("Hold")}
+                className="rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white"
+              >
+                Hold Interview
+              </button>
+              <button
+                type="button"
+                disabled={decisionLoading}
+                onClick={() => handleInterviewDecision("Failed")}
+                className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white"
+              >
+                Interview Failed
+              </button>
+            </div>
+          )}
+
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-slate-200 bg-white px-6 py-4">
 
-          {/* Reject Button */}
+          {/* Reject */}
           <div>
             {!isRejected && (
               <button
@@ -502,6 +610,7 @@ function CandidateProfile({
 
           </div>
         </div>
+
       </div>
     </div>
   );

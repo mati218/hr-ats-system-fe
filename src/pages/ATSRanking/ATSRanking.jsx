@@ -11,6 +11,7 @@ import { getRequisitions } from "../../lib/api/requisitionApi";
 
 import {
   rejectCandidate,
+  getCandidate,
   scheduleInterview,
   moveCandidateStage,
   createOffer,
@@ -116,6 +117,37 @@ function ATSRanking() {
 
     fetchRanking();
   }, [selectedRequisition]);
+
+  const handleViewCandidate = async (candidate) => {
+    const candidateId =
+      candidate?.candidateId || candidate?._id;
+
+    if (!candidateId) {
+      toast.error("Candidate ID not found.");
+      return;
+    }
+
+    try {
+      const response = await getCandidate(candidateId);
+      const fullCandidate = response?.data?.data;
+
+      if (!fullCandidate) {
+        throw new Error("Candidate data not found.");
+      }
+
+      setSelectedCandidate(fullCandidate);
+    } catch (error) {
+      console.error(
+        "GET CANDIDATE ERROR:",
+        error?.response?.data || error
+      );
+
+      toast.error(
+        error?.response?.data?.message ||
+        "Failed to load candidate profile."
+      );
+    }
+  };
 
   const handleRejectCandidate = async (candidate) => {
     try {
@@ -375,11 +407,6 @@ function ATSRanking() {
 
       await sendOffer(offerId);
 
-      await moveCandidateStage(
-        candidateId,
-        "Offer"
-      );
-
       setCandidates((prev) =>
         prev.map((item) => {
           const itemId =
@@ -392,7 +419,7 @@ function ATSRanking() {
           ) {
             return {
               ...item,
-              stage: "Offer",
+              stage: "Offer Sent",
             };
           }
 
@@ -553,9 +580,7 @@ function ATSRanking() {
                 onViewResume={() => {
                   setOfferCandidate(null);
                   setOpenModal(false);
-                  setSelectedCandidate(
-                    candidate
-                  );
+                  handleViewCandidate(candidate);
                 }}
                 onMoveOffer={() => {
                   handleOpenOffer(candidate);
