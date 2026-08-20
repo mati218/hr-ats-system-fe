@@ -64,7 +64,11 @@ function CandidatePipeline() {
   // =====================================================
 
   useEffect(() => {
-    loadCandidates();
+    const loadTimeout = setTimeout(() => {
+      void loadCandidates();
+    }, 0);
+
+    return () => clearTimeout(loadTimeout);
   }, [loadCandidates]);
 
   // =====================================================
