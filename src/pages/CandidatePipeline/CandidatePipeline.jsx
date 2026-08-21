@@ -348,7 +348,7 @@ function CandidatePipeline() {
 
         <select
           defaultValue="Senior Frontend Engineer"
-          className="h-10 min-w-43.75 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-semibold"
+          className="h-10 min-w-47 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-semibold"
         >
           <option>Senior Frontend Engineer</option>
           <option>Backend Engineer</option>
@@ -359,14 +359,14 @@ function CandidatePipeline() {
       {/* PIPELINE */}
 
       <div className="overflow-x-auto">
-        <div className="flex min-w-43.75 gap-3">
+        <div className="flex min-w-47 gap-3">
           {STAGES.map((stage) => {
             const stageCandidates = candidates.filter(
               (candidate) => candidate.stage === stage
             );
 
             return (
-              <div key={stage} className="w-47.5 shrink-0">
+              <div key={stage} className="w-55 shrink-0">
                 {/* STAGE HEADER */}
 
                 <div className="mb-2 flex justify-between px-1">
@@ -397,9 +397,6 @@ function CandidatePipeline() {
           })}
         </div>
       </div>
-
-      {/* PROFILE LOADING */}
-
       {profileLoading && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40">
           <div className="rounded-xl bg-white px-6 py-4 shadow-xl">
@@ -409,9 +406,6 @@ function CandidatePipeline() {
           </div>
         </div>
       )}
-
-      {/* CANDIDATE PROFILE */}
-
       <CandidateProfile
         isOpen={!!viewingCandidate}
         candidate={viewingCandidate}
