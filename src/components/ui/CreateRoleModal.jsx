@@ -28,6 +28,10 @@ const modules = [
     key: "users",
   },
   {
+    label: "Departments",
+    key: "departments",
+  },
+  {
     label: "Reports",
     key: "reports",
   },
