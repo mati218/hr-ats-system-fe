@@ -42,24 +42,13 @@ export const AuthProvider = ({ children }) => {
     userRef.current = user;
   }, [user]);
 
- 
-
   const login = (userData, tokenData) => {
     setUser(userData);
     setToken(tokenData);
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify(userData)
-    );
-
-    localStorage.setItem(
-      "token",
-      tokenData
-    );
+    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("token", tokenData);
   };
-
- 
 
   const logout = () => {
     setUser(null);
@@ -68,8 +57,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
   };
-
-  
 
   const refreshPermissions = useCallback(async () => {
     try {
@@ -101,29 +88,37 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
+      const updatedRole = {
+        ...currentUser.role,
+
+        id:
+          latestRole.id ||
+          latestRole._id ||
+          roleId,
+
+        _id:
+          latestRole._id ||
+          latestRole.id ||
+          roleId,
+
+        roleName:
+          latestRole.roleName ||
+          currentUser.role.roleName,
+
+        permissions:
+          latestRole.permissions || [],
+      };
+
+      // Guard: Agar permissions exact same hain to state update bypass karein
+      if (
+        JSON.stringify(currentUser.role) === JSON.stringify(updatedRole)
+      ) {
+        return;
+      }
+
       const updatedUser = {
         ...currentUser,
-
-        role: {
-          ...currentUser.role,
-
-          id:
-            latestRole.id ||
-            latestRole._id ||
-            roleId,
-
-          _id:
-            latestRole._id ||
-            latestRole.id ||
-            roleId,
-
-          roleName:
-            latestRole.roleName ||
-            currentUser.role.roleName,
-
-          permissions:
-            latestRole.permissions || [],
-        },
+        role: updatedRole,
       };
 
       setUser(updatedUser);
@@ -140,26 +135,23 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // ================= AUTO REFRESH =================
+  // Extract primitive string ID so object reference doesn't trigger effect loop
+  const roleId =
+    typeof user?.role === "object"
+      ? user?.role?.id || user?.role?._id
+      : user?.role;
+
+  // ================= SINGLE API CALL ON MOUNT / ROLE CHANGE =================
 
   useEffect(() => {
-    if (!token || !user?.role) {
+    if (!token || !roleId) {
       return;
     }
 
-    const refreshTimeout = setTimeout(() => {
-      void refreshPermissions();
-    }, 0);
+    // Single time execution only when roleId is available
+    refreshPermissions();
 
-    const interval = setInterval(() => {
-      void refreshPermissions();
-    }, 5000);
-
-    return () => {
-      clearTimeout(refreshTimeout);
-      clearInterval(interval);
-    };
-  }, [token, user?.role, refreshPermissions]);
+  }, [token, roleId, refreshPermissions]); // Sirf tab chalega jab roleId ya token update ho
 
   return (
     <AuthContext.Provider
@@ -175,6 +167,3 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
-
-

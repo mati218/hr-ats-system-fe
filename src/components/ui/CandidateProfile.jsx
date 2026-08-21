@@ -24,6 +24,8 @@ function CandidateProfile({
   onScheduleInterview,
   onReject,
   onRefresh,
+  onAcceptOffer,
+  onOpenOfferModal, // Callback to trigger Offer Letter Modal
 }) {
   const [rejecting, setRejecting] = useState(false);
   const [rejectError, setRejectError] = useState("");
@@ -144,29 +146,18 @@ function CandidateProfile({
     }
   };
 
-  const handleInterviewDecision = async (status) => {
-    try {
-      setDecisionLoading(true);
-      setRejectError("");
-      
-      await updateInterviewStatus(candidateId, {
-        status,
-        notes: `Interview outcome updated to ${status}`,
-        rejectionReason: status === "Failed" ? "Failed interview evaluation" : "",
-      });
-
-      if (onRefresh) onRefresh();
-      onClose();
-    } catch (error) {
-      setRejectError(
-        error?.response?.data?.message || "Failed to update interview result."
-      );
-    } finally {
-      setDecisionLoading(false);
+  const handlePassInterview = () => {
+    if (onOpenOfferModal) {
+      onOpenOfferModal(candidate);
     }
   };
 
   const handleOfferDecision = async (status) => {
+    if (status === "Accepted" && onAcceptOffer) {
+      onAcceptOffer(candidate);
+      return;
+    }
+
     try {
       setDecisionLoading(true);
       setRejectError("");
@@ -193,10 +184,7 @@ function CandidateProfile({
         
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
-          <h2 className="text-base font-bold text-slate-800">
-            Candidate Profile
-          </h2>
-
+          <h2 className="text-base font-bold text-slate-800">Candidate Profile</h2>
           <button
             type="button"
             onClick={onClose}
@@ -206,7 +194,7 @@ function CandidateProfile({
           </button>
         </div>
 
-        <div className="max-h-[75vh] overflow-y-auto">
+        <div className="max-h-[65vh] overflow-y-auto">
           {/* Candidate Info Header */}
           <div className="flex items-center justify-between px-6 py-5">
             <div className="flex items-center gap-4">
@@ -218,7 +206,6 @@ function CandidateProfile({
                 <h3 className="text-base font-bold text-slate-800">
                   {candidate.name}
                 </h3>
-
                 <p className="mt-0.5 text-sm text-slate-500">
                   Applied for {candidate.role}
                   {" · "}
@@ -389,104 +376,58 @@ function CandidateProfile({
               {rejectError}
             </div>
           )}
-
-          {/* Screening Actions */}
-          {candidate.stage === "Screening" && (
-            <div className="mx-6 mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <h5 className="mb-2 text-xs font-bold text-slate-700">Screening Action:</h5>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={decisionLoading}
-                  onClick={() => handleScreeningDecision("Passed")}
-                  className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
-                >
-                  Pass Screening
-                </button>
-                <button
-                  type="button"
-                  disabled={decisionLoading}
-                  onClick={() => handleScreeningDecision("Hold")}
-                  className="rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-amber-600 disabled:opacity-50"
-                >
-                  Hold
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Interview Actions */}
-          {candidate.stage === "Interview" && (
-            <div className="mx-6 mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <h5 className="mb-2 text-xs font-bold text-slate-700">Interview Decision:</h5>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={decisionLoading}
-                  onClick={() => handleInterviewDecision("Passed")}
-                  className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
-                >
-                  Pass (Move to Offer)
-                </button>
-                <button
-                  type="button"
-                  disabled={decisionLoading}
-                  onClick={() => handleInterviewDecision("Hold")}
-                  className="rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-amber-600 disabled:opacity-50"
-                >
-                  Hold Candidate
-                </button>
-                <button
-                  type="button"
-                  disabled={decisionLoading}
-                  onClick={() => handleInterviewDecision("Failed")}
-                  className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
-                >
-                  Fail Interview
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Offer Actions */}
-          {candidate.stage === "Offer Sent" && (
-            <div className="mx-6 mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <h5 className="mb-2 text-xs font-bold text-slate-700">Offer Response:</h5>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={decisionLoading}
-                  onClick={() => handleOfferDecision("Accepted")}
-                  className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
-                >
-                  Offer Accepted (Mark as Hired)
-                </button>
-                <button
-                  type="button"
-                  disabled={decisionLoading}
-                  onClick={() => handleOfferDecision("Rejected")}
-                  className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
-                >
-                  Offer Declined
-                </button>
-              </div>
-            </div>
-          )}
-
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between border-t border-slate-200 bg-white px-6 py-4">
-          <div>
+        {/* Footer Actions */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white px-6 py-4">
+          <div className="flex flex-wrap items-center gap-2">
             {!isRejected && (
               <button
                 type="button"
                 onClick={handleReject}
-                disabled={rejecting}
+                disabled={rejecting || decisionLoading}
                 className="rounded-lg bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {rejecting ? "Rejecting..." : "Reject Candidate"}
               </button>
+            )}
+
+            {/* Screening Stage Actions */}
+            {candidate.stage === "Screening" && (
+              <button
+                type="button"
+                disabled={decisionLoading}
+                onClick={() => handleScreeningDecision("Passed")}
+                className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+              >
+                Pass Screening
+              </button>
+            )}
+
+            {/* Interview Stage Actions: Pass Only */}
+            {candidate.stage === "Interview" && (
+              <button
+                type="button"
+                disabled={decisionLoading}
+                onClick={handlePassInterview}
+                className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+              >
+                Pass (Move to Offer)
+              </button>
+            )}
+
+            {/* Offer Stage Actions */}
+            {candidate.stage === "Offer Sent" && (
+              <>
+                <button
+                  type="button"
+                  disabled={decisionLoading}
+                  onClick={() => handleOfferDecision("Accepted")}
+                  className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  Offer Accepted (Mark as Hired)
+                </button>
+              </>
             )}
           </div>
 
