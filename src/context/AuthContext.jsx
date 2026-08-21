@@ -66,6 +66,23 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
+      const roleName =
+        typeof currentUser.role === "string"
+          ? currentUser.role
+          : currentUser.role.roleName ||
+            currentUser.role.name ||
+            currentUser.roleName ||
+            "";
+
+      // Super Admin already has full access and does not need a protected role lookup.
+      if (
+        String(roleName)
+          .toLowerCase()
+          .replace(/\s+/g, "") === "superadmin"
+      ) {
+        return;
+      }
+
       // Support both id and _id
       const roleId =
         currentUser.role.id ||
