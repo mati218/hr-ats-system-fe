@@ -42,10 +42,6 @@ export const ResetPasswordApi = ({
       confirmPassword,
     }
   );
-  return api.post(`/auth/reset-password/${token}`, {
-    password,
-    confirmPassword,
-  });
 };
 
 export const createUser = (data) => {
