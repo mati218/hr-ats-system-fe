@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import Button from "../../components/ui/Button";
@@ -6,6 +6,7 @@ import RoleCard from "../../components/ui/RoleCard";
 import CreateRoleModal from "../../components/ui/CreateRoleModal";
 
 import { useAuth } from "../../context/useAuth";
+import { hasPermission } from "../../components/utils/permissions";
 
 import {
   getRoles,
@@ -21,31 +22,60 @@ function RolesPermissions() {
   const [editingRole, setEditingRole] = useState(null);
   const [saveError, setSaveError] = useState("");
   const [loadingRole, setLoadingRole] = useState(false);
+  const [loadingRoles, setLoadingRoles] = useState(false);
 
-  // =====================================
-  // CURRENT LOGGED-IN USER
-  // =====================================
   const { user } = useAuth();
 
-  // =====================================
-  // FETCH ALL ROLES
-  // =====================================
-  const fetchRoles = async () => {
-    try {
-      const res = await getRoles();
+  // =========================================
+  // CURRENT USER ROLE
+  // =========================================
 
-      const roleData = Array.isArray(res.data)
-        ? res.data
-        : res.data?.data || [];
+  const canViewRoles = hasPermission(user, "roles", "view");
+  const canCreateRoles = hasPermission(user, "roles", "create");
+  const canEditRoles = hasPermission(user, "roles", "edit");
+  const canDeleteRoles = hasPermission(user, "roles", "delete");
+
+  // =========================================
+  // FETCH ALL ROLES
+  // =========================================
+
+  const fetchRoles = useCallback(async () => {
+    if (!canViewRoles) {
+      setRoles([]);
+      return [];
+    }
+
+    try {
+      setLoadingRoles(true);
+
+      const response = await getRoles();
+
+      /*
+       * API response:
+       *
+       * {
+       *   success: true,
+       *   count: 5,
+       *   data: [...]
+       * }
+       */
+
+      const roleData = Array.isArray(response?.data)
+        ? response.data
+        : Array.isArray(response?.data?.data)
+        ? response.data.data
+        : [];
 
       setRoles(roleData);
 
       return roleData;
     } catch (error) {
-      console.log(
+      console.error(
         "FETCH ROLES ERROR:",
         error.response?.data || error.message
       );
+
+      setRoles([]);
 
       toast.error(
         error.response?.data?.message ||
@@ -53,48 +83,60 @@ function RolesPermissions() {
       );
 
       return [];
+    } finally {
+      setLoadingRoles(false);
     }
-  };
+  }, [canViewRoles]);
 
-  // =====================================
+  // =========================================
   // LOAD ROLES
-  // =====================================
+  // =========================================
+
   useEffect(() => {
-    const loadRoles = async () => {
-      await fetchRoles();
-    };
+    if (user && canViewRoles) {
+      void Promise.resolve().then(fetchRoles);
+    }
+  }, [user, canViewRoles, fetchRoles]);
 
-    loadRoles();
-  }, []);
-
-  // =====================================
+  // =========================================
   // CREATE NEW ROLE
-  // =====================================
+  // =========================================
+
   const handleNewRoleClick = () => {
+    if (!canCreateRoles) {
+      toast.error(
+        "You do not have permission to create roles"
+      );
+      return;
+    }
+
     setEditingRole(null);
     setSaveError("");
+    setLoadingRole(false);
     setOpenModal(true);
   };
 
-  // =====================================
+  // =========================================
   // OPEN ROLE
-  // =====================================
-  const handleCardClick = async (roleStub) => {
-    if (!roleStub?._id) return;
+  // =========================================
 
-    // =====================================
-    // SUPER ADMIN CANNOT BE OPENED
-    // =====================================
+  const handleCardClick = async (roleStub) => {
+    if (!roleStub?._id) {
+      return;
+    }
+
     const roleName = String(
       roleStub?.roleName || ""
     )
       .toLowerCase()
+      .replace(/\s+/g, "")
       .trim();
 
-    if (
-      roleName === "super admin" ||
-      roleName === "superadmin"
-    ) {
+    // =========================================
+    // SUPER ADMIN PROTECTED
+    // =========================================
+
+    if (roleName === "superadmin") {
       toast.info(
         "Super Admin role cannot be edited."
       );
@@ -102,25 +144,54 @@ function RolesPermissions() {
       return;
     }
 
-    // =====================================
-    // OPEN OTHER ROLES
-    // =====================================
+    // =========================================
+    // EDIT PERMISSION
+    // =========================================
+
+    if (!canEditRoles) {
+      toast.error(
+        "You do not have permission to edit roles"
+      );
+
+      return;
+    }
+
     setSaveError("");
     setLoadingRole(true);
-    setOpenModal(true);
     setEditingRole(null);
+    setOpenModal(true);
 
     try {
-      const res = await getRole(roleStub._id);
+      const response = await getRole(
+        roleStub._id
+      );
+
+      /*
+       * API:
+       *
+       * {
+       *   success: true,
+       *   data: role
+       * }
+       */
 
       const roleData =
-        res.data?.data || res.data;
+        response?.data?.data ||
+        response?.data ||
+        null;
+
+      if (!roleData) {
+        throw new Error(
+          "Role data not found"
+        );
+      }
 
       setEditingRole(roleData);
     } catch (error) {
-      console.log(
+      console.error(
         "GET ROLE ERROR:",
-        error.response?.data || error.message
+        error.response?.data ||
+          error.message
       );
 
       toast.error(
@@ -129,19 +200,33 @@ function RolesPermissions() {
       );
 
       setOpenModal(false);
+      setEditingRole(null);
     } finally {
       setLoadingRole(false);
     }
   };
 
-  // =====================================
+  // =========================================
   // SAVE ROLE
-  // =====================================
+  // =========================================
+
   const handleSaveRole = async (payload) => {
     setSaveError("");
 
     try {
+      // =====================================
+      // EDIT
+      // =====================================
+
       if (editingRole?._id) {
+        if (!canEditRoles) {
+          toast.error(
+            "You do not have permission to edit roles"
+          );
+
+          return;
+        }
+
         await updateRole(
           editingRole._id,
           payload
@@ -150,7 +235,21 @@ function RolesPermissions() {
         toast.success(
           "Role updated successfully"
         );
-      } else {
+      }
+
+      // =====================================
+      // CREATE
+      // =====================================
+
+      else {
+        if (!canCreateRoles) {
+          toast.error(
+            "You do not have permission to create roles"
+          );
+
+          return;
+        }
+
         await createRole(payload);
 
         toast.success(
@@ -158,14 +257,19 @@ function RolesPermissions() {
         );
       }
 
+      // =====================================
+      // REFRESH LIST
+      // =====================================
+
       await fetchRoles();
 
       setOpenModal(false);
       setEditingRole(null);
     } catch (error) {
-      console.log(
+      console.error(
         "SAVE ROLE ERROR:",
-        error.response?.data || error.message
+        error.response?.data ||
+          error.message
       );
 
       const message =
@@ -173,34 +277,50 @@ function RolesPermissions() {
         "Role didn't save. Try again";
 
       setSaveError(message);
+
       toast.error(message);
     }
   };
 
-  // =====================================
+  // =========================================
   // DELETE ROLE
-  // =====================================
+  // =========================================
+
   const handleDeleteRole = (roleToDelete) => {
+    if (!canDeleteRoles) {
+      toast.error(
+        "You do not have permission to delete roles"
+      );
+
+      return;
+    }
+
     const targetId =
       roleToDelete?._id ||
       editingRole?._id;
 
-    const roleName = String(
+    if (!targetId) {
+      return;
+    }
+
+    const roleName =
       roleToDelete?.roleName ||
-        editingRole?.roleName ||
-        "this role"
+      editingRole?.roleName ||
+      "this role";
+
+    const normalizedRoleName = String(
+      roleName
     )
       .toLowerCase()
+      .replace(/\s+/g, "")
       .trim();
 
-    if (!targetId) return;
+    // =========================================
+    // SUPER ADMIN PROTECTED
+    // =========================================
 
-    // =====================================
-    // SUPER ADMIN CANNOT BE DELETED
-    // =====================================
     if (
-      roleName === "super admin" ||
-      roleName === "superadmin"
+      normalizedRoleName === "superadmin"
     ) {
       toast.info(
         "Super Admin role cannot be deleted."
@@ -210,7 +330,7 @@ function RolesPermissions() {
     }
 
     toast.warning(
-      `Are you sure you want to delete "${roleToDelete?.roleName || editingRole?.roleName || "this role"}"? This action cannot be undone.`,
+      `Are you sure you want to delete "${roleName}"? This action cannot be undone.`,
       {
         duration: Infinity,
 
@@ -230,7 +350,7 @@ function RolesPermissions() {
                 "Role deleted successfully"
               );
             } catch (error) {
-              console.log(
+              console.error(
                 "DELETE ROLE ERROR:",
                 error.response?.data ||
                   error.message
@@ -251,52 +371,105 @@ function RolesPermissions() {
     );
   };
 
+  // =========================================
+  // NO USER
+  // =========================================
+
+  if (!user) {
+    return null;
+  }
+
+  // =========================================
+  // NO VIEW PERMISSION
+  // =========================================
+
+  if (!canViewRoles) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-6">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-600">
+          You do not have permission to view
+          Roles & Permissions.
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================
+  // UI
+  // =========================================
+
   return (
     <div className="min-h-screen bg-slate-50 p-6">
 
       {/* =====================================
-          PAGE HEADER
+          HEADER
       ===================================== */}
-      <div className="mb-5 flex items-center justify-between font-semibold">
+
+      <div className="mb-5 flex items-center justify-between">
 
         <div>
-          <h1 className="float-left gap-1 text-2xl">
+          <h1 className="text-2xl font-semibold text-slate-900">
             Roles & Permissions
           </h1>
 
-          <p className="mt-9 flex text-sm text-gray-400">
-            Control what each role can view, create,
-            edit and delete.
+          <p className="mt-2 text-sm text-gray-400">
+            Control what each role can view,
+            create, edit and delete.
           </p>
         </div>
 
-        <Button
-          text="+ New Role"
-          onClick={handleNewRoleClick}
-        />
+        {/* CREATE ONLY IF PERMITTED */}
 
+        {canCreateRoles && (
+          <Button
+            text="+ New Role"
+            onClick={handleNewRoleClick}
+          />
+        )}
       </div>
 
       {/* =====================================
-          ROLE CARDS
+          LOADING
       ===================================== */}
-      <div className="grid grid-cols-1 gap-6 text-left md:grid-cols-3">
 
-        {roles.map((role) => (
-          <RoleCard
-            key={role._id}
-            role={role}
-            selectedRole={editingRole}
-            setSelectedRole={handleCardClick}
-            onDelete={handleDeleteRole}
-          />
-        ))}
+      {loadingRoles ? (
+        <div className="rounded-xl bg-white p-8 text-center text-sm text-slate-400">
+          Loading roles...
+        </div>
+      ) : (
+        <>
+          {/* =================================
+              ROLE CARDS
+          ================================= */}
 
-      </div>
+          <div className="grid grid-cols-1 gap-6 text-left md:grid-cols-3">
+
+            {roles.map((role) => (
+              <RoleCard
+                key={role._id}
+                role={role}
+                selectedRole={editingRole}
+                setSelectedRole={handleCardClick}
+                onDelete={handleDeleteRole}
+              />
+            ))}
+
+          </div>
+
+          {/* NO ROLES */}
+
+          {roles.length === 0 && (
+            <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400">
+              No roles found.
+            </div>
+          )}
+        </>
+      )}
 
       {/* =====================================
           ROLE MODAL
       ===================================== */}
+
       {openModal && (
         <CreateRoleModal
           isOpen={openModal}
@@ -307,14 +480,16 @@ function RolesPermissions() {
           onClose={() => {
             setOpenModal(false);
             setEditingRole(null);
+            setSaveError("");
           }}
 
           onSave={handleSaveRole}
+
           onDelete={handleDeleteRole}
+
           errorMessage={saveError}
         />
       )}
-
     </div>
   );
 }

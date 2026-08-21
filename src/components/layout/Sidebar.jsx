@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+
 import {
   FaTableColumns,
   FaSuitcase,
@@ -23,29 +24,36 @@ const Sidebar = () => {
   const permissions = user?.role?.permissions || [];
 
   // =====================================
-  // CHECK NORMAL MODULE PERMISSION
+  // NORMALIZE ROLE
   // =====================================
-  const canView = (module) => {
-    const permission = permissions.find(
-      (item) => item.module === module
-    );
-
-    return permission?.view === true;
-  };
-
-  // =====================================
-  // ROLE NAME NORMALIZE
-  // =====================================
-  const normalizedRole = roleName
+  const normalizedRole = String(roleName)
     .toLowerCase()
+    .replace(/\s+/g, "")
     .trim();
 
+  const isSuperAdmin =
+    normalizedRole === "superadmin";
+
   // =====================================
-  // ROLES & AUDIT LOGS
-  // Everyone EXCEPT Interviewer
+  // CHECK VIEW PERMISSION
   // =====================================
-  const canViewAdministrationSpecial =
-    normalizedRole !== "interviewer";
+  const canView = (module) => {
+    // SuperAdmin can see everything
+    if (isSuperAdmin) {
+      return true;
+    }
+
+    const permission = permissions.find(
+      (item) =>
+        String(item.module).toLowerCase().trim() ===
+        String(module).toLowerCase().trim()
+    );
+
+    return (
+      permission?.view === true ||
+      permission?.view === "true"
+    );
+  };
 
   // =====================================
   // RECRUITMENT
@@ -104,7 +112,6 @@ const Sidebar = () => {
       icon: <FaShield />,
       path: "/roles-permissions",
       module: "roles",
-      special: true,
     },
     {
       name: "Departments & Types",
@@ -117,33 +124,20 @@ const Sidebar = () => {
       icon: <FaClock />,
       path: "/audit-log",
       module: "auditLogs",
-      special: true,
     },
   ];
 
   // =====================================
-  // RECRUITMENT FILTER
-  // Permission based
+  // FILTER MENUS
   // =====================================
-  const visibleRecruitment = recruitment.filter((item) =>
-    canView(item.module)
+  const visibleRecruitment = recruitment.filter(
+    (item) => canView(item.module)
   );
 
-  // =====================================
-  // ADMINISTRATION FILTER
-  // Special items:
-  // roles + auditLogs = everyone except interviewer
-  //
-  // Other items:
-  // permission based
-  // =====================================
-  const visibleAdministration = administration.filter((item) => {
-    if (item.special) {
-      return canViewAdministrationSpecial;
-    }
-
-    return canView(item.module);
-  });
+  const visibleAdministration =
+    administration.filter(
+      (item) => canView(item.module)
+    );
 
   // =====================================
   // LOGOUT

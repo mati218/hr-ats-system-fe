@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import Button from "../../components/ui/Button";
 import FormInput from "./FormInput";
 import PermissionTable from "./PermissionTable";
+import { isSuperAdmin } from "../utils/permissions";
 
 const modules = [
   {
@@ -30,6 +31,14 @@ const modules = [
   {
     label: "Departments",
     key: "departments",
+  },
+  {
+    label: "Roles & Permissions",
+    key: "roles"
+  },
+  {
+    label: "Audit Logs",
+    key: "auditLogs"
   },
   {
     label: "Reports",
@@ -77,21 +86,7 @@ function CreateRoleModal({
   // =====================================
   // CURRENT LOGGED-IN USER ROLE
   // =====================================
-  const currentUserRole =
-  typeof currentUser?.role === "string"
-    ? currentUser.role
-    : currentUser?.role?.roleName ||
-      currentUser?.roleName ||
-      "";
-
-const normalizedCurrentUserRole =
-  String(currentUserRole).toLowerCase().trim();
-
-const isCurrentUserSuperAdmin =
-  normalizedCurrentUserRole === "superadmin" ||
-  normalizedCurrentUserRole === "super admin";
-
-const canEditPermissions = isCurrentUserSuperAdmin;
+  const canEditPermissions = isSuperAdmin(currentUser);
 
   const {
     register,
