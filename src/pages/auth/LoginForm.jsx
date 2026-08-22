@@ -26,18 +26,17 @@ const onSubmit = async (data) => {
     console.log("Response:", response.data);
 
     login(response.data.data, response.data.token);
-   
-    localStorage.setItem("token", response.data.token);
 
-    
-    localStorage.setItem(
-      "user",
-      JSON.stringify(response.data.data)
-    );
+localStorage.setItem("token", response.data.token);
 
-    alert("Successfully logged in");
+localStorage.setItem(
+  "user",
+  JSON.stringify(response.data.data)
+);
 
-     navigate("/dashboard");
+alert("Successfully logged in");
+
+navigate("/dashboard");
 
     console.log("Token:", localStorage.getItem("token"));
     console.log(

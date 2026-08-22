@@ -37,21 +37,36 @@ const Sidebar = () => {
   // =====================================
   // CHECK VIEW PERMISSION
   // =====================================
-  const canView = (module) => {
+  const canView = (module, requires = []) => {
     // SuperAdmin can see everything
     if (isSuperAdmin) {
       return true;
     }
 
-    const permission = permissions.find(
-      (item) =>
-        String(item.module).toLowerCase().trim() ===
-        String(module).toLowerCase().trim()
-    );
+    // Main module + required modules
+    const modulesToCheck = [
+      module,
+      ...requires,
+    ];
 
-    return (
-      permission?.view === true ||
-      permission?.view === "true"
+    // Every required permission must have view=true
+    return modulesToCheck.every(
+      (requiredModule) => {
+        const permission = permissions.find(
+          (item) =>
+            String(item.module)
+              .toLowerCase()
+              .trim() ===
+            String(requiredModule)
+              .toLowerCase()
+              .trim()
+        );
+
+        return (
+          permission?.view === true ||
+          permission?.view === "true"
+        );
+      }
     );
   };
 
@@ -65,30 +80,38 @@ const Sidebar = () => {
       path: "/job-requisitions",
       module: "jobRequisitions",
     },
+
     {
       name: "Candidate Pipeline",
       icon: <FaSliders />,
       path: "/candidate-pipeline",
       module: "candidates",
     },
+
     {
       name: "ATS Ranking",
       icon: <FaChartLine />,
       path: "/ats-ranking",
-      module: "candidates",
+      module: "atsRanking",
+
+      // ATS depends on Candidates permission
+      requires: ["candidates"],
     },
+
     {
       name: "Interviews",
       icon: <FaCalendarDays />,
       path: "/interviews",
       module: "interviews",
     },
+
     {
       name: "Offer Letters",
       icon: <FaFileLines />,
       path: "/offer-letters",
       module: "offerLetters",
     },
+
     {
       name: "Reports",
       icon: <FaClock />,
@@ -107,18 +130,21 @@ const Sidebar = () => {
       path: "/user-management",
       module: "users",
     },
+
     {
       name: "Roles & Permissions",
       icon: <FaShield />,
       path: "/roles-permissions",
       module: "roles",
     },
+
     {
       name: "Departments & Types",
       icon: <FaBuilding />,
       path: "/departments",
       module: "departments",
     },
+
     {
       name: "Audit Log",
       icon: <FaClock />,
@@ -130,13 +156,17 @@ const Sidebar = () => {
   // =====================================
   // FILTER MENUS
   // =====================================
-  const visibleRecruitment = recruitment.filter(
-    (item) => canView(item.module)
-  );
+  const visibleRecruitment =
+    recruitment.filter((item) =>
+      canView(
+        item.module,
+        item.requires || []
+      )
+    );
 
   const visibleAdministration =
-    administration.filter(
-      (item) => canView(item.module)
+    administration.filter((item) =>
+      canView(item.module)
     );
 
   // =====================================
@@ -152,6 +182,7 @@ const Sidebar = () => {
 
       {/* LOGO */}
       <div className="flex items-center gap-2 p-6">
+
         <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-md font-semibold">
           T
         </div>
@@ -165,6 +196,7 @@ const Sidebar = () => {
             HR / ATS
           </p>
         </div>
+
       </div>
 
       {/* MENU */}
@@ -241,10 +273,12 @@ const Sidebar = () => {
             ))}
           </>
         )}
+
       </div>
 
       {/* USER INFO */}
       <div className="border-t border-gray-800 p-6">
+
         <div className="flex items-center gap-3">
 
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-600 font-bold">
@@ -270,6 +304,7 @@ const Sidebar = () => {
         >
           Log out →
         </button>
+
       </div>
 
     </aside>

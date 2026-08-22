@@ -17,6 +17,10 @@ const modules = [
     key: "candidates",
   },
   {
+    label: "ATS Ranking",
+    key: "atsRanking"
+  },
+  {
     label: "Interviews",
     key: "interviews",
   },
