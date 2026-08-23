@@ -10,13 +10,25 @@ function getScoreClass(score) {
   return "bg-red-50 text-red-500";
 }
 
-function CandidateCard({ candidate, onClick }) {
-  const skills = candidate.skills || [];
-  const tags = candidate.tags || [];
+function CandidateCard({
+  candidate,
+  onClick,
+}) {
+  const skills =
+    Array.isArray(candidate?.skills)
+      ? candidate.skills
+      : [];
+
+  const tags =
+    Array.isArray(candidate?.tags)
+      ? candidate.tags
+      : [];
 
   return (
     <div
-      onClick={() => onClick(candidate)}
+      onClick={() =>
+        onClick(candidate)
+      }
       className="
         w-full
         max-w-225
@@ -33,10 +45,14 @@ function CandidateCard({ candidate, onClick }) {
         hover:shadow-md
       "
     >
+
       {/* NAME + SCORE */}
+
       <div className="flex items-center justify-between gap-2">
+
         <h3 className="truncate text-[14px] font-bold text-slate-900">
-          {candidate.name}
+          {candidate?.name ||
+            "Unknown Candidate"}
         </h3>
 
         <span
@@ -47,46 +63,64 @@ function CandidateCard({ candidate, onClick }) {
             py-1.5
             text-[9px]
             font-bold
-            ${getScoreClass(candidate.score)}
+            ${getScoreClass(
+              Number(candidate?.score || 0)
+            )}
           `}
         >
-          {candidate.score}
+          {candidate?.score ?? 0}
         </span>
+
       </div>
 
       {/* EXPERIENCE / SKILLS */}
+
       <p className="mt-0.5 truncate text-[11px] text-slate-500">
-        {candidate.experience}
+
+        {candidate?.experience ||
+          "Experience not specified"}
 
         {skills.length > 0 && (
           <>
-            <span className="mx-1">·</span>
-            {skills.slice(0, 2).join("/")}
+            <span className="mx-1">
+              ·
+            </span>
+
+            {skills
+              .slice(0, 2)
+              .join("/")}
           </>
         )}
+
       </p>
 
       {/* TAGS */}
+
       {tags.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-2">
-          {tags.map((tag, index) => (
-            <span
-              key={`${tag}-${index}`}
-              className="
-                rounded-sm
-                bg-slate-100
-                px-2
-                py-0.75
-                text-[8px]
-                font-lg
-                text-slate-600
-              "
-            >
-              {tag}
-            </span>
-          ))}
+
+          {tags.map(
+            (tag, index) => (
+              <span
+                key={`${tag}-${index}`}
+                className="
+                  rounded-sm
+                  bg-slate-100
+                  px-2
+                  py-0.75
+                  text-[8px]
+                  font-medium
+                  text-slate-600
+                "
+              >
+                {tag}
+              </span>
+            )
+          )}
+
         </div>
       )}
+
     </div>
   );
 }

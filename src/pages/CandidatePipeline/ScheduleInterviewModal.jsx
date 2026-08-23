@@ -1,4 +1,6 @@
 import { useEffect, useReducer, useState } from "react";
+import toast from "react-hot-toast";
+
 import { toast } from "sonner";
 import { getUsersLookup } from "../../lib/api/lookupApi";
 
@@ -14,18 +16,21 @@ const INITIAL_FORM = {
 };
 
 function formReducer(form, action) {
-  if (action.type === "reset") {
-    return INITIAL_FORM;
-  }
+  switch (action.type) {
+    case "reset":
+      return {
+        ...INITIAL_FORM,
+      };
 
-  if (action.type === "update") {
-    return {
-      ...form,
-      [action.field]: action.value,
-    };
-  }
+    case "update":
+      return {
+        ...form,
+        [action.field]: action.value,
+      };
 
-  return form;
+    default:
+      return form;
+  }
 }
 
 function ScheduleInterviewModal({
@@ -34,78 +39,100 @@ function ScheduleInterviewModal({
   onClose,
   onSubmit,
 }) {
-  const [form, dispatchForm] = useReducer(
-    formReducer,
-    INITIAL_FORM
-  );
+  const [form, dispatchForm] =
+    useReducer(
+      formReducer,
+      INITIAL_FORM
+    );
 
-  const [interviewers, setInterviewers] = useState([]);
-  const [loadingInterviewers, setLoadingInterviewers] =
+  const [interviewers, setInterviewers] =
+    useState([]);
+
+  const [
+    loadingInterviewers,
+    setLoadingInterviewers,
+  ] = useState(false);
+
+  const [submitting, setSubmitting] =
     useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
       return;
     }
 
-    const loadInterviewers = async () => {
-      try {
-        setLoadingInterviewers(true);
+    const loadInterviewers =
+      async () => {
+        try {
+          setLoadingInterviewers(true);
 
-        const response = await getUsersLookup(
-          "Interviewer"
-        );
+          const response =
+            await getUsersLookup(
+              "Interviewer"
+            );
 
-        const users =
-          response?.data?.data || [];
+          const users =
+            response?.data?.data || [];
 
-        const normalizedUsers = users.map(
-          (user) => ({
-            ...user,
+          const normalizedUsers =
+            Array.isArray(users)
+              ? users.map((user) => ({
+                  ...user,
 
-            id:
-              user?.id ||
-              user?._id,
+                  id:
+                    user?.id ||
+                    user?._id,
 
-            _id:
-              user?._id ||
-              user?.id,
+                  _id:
+                    user?._id ||
+                    user?.id,
 
-            name:
-              user?.name ||
-              "Unknown User",
-          })
-        );
+                  name:
+                    user?.name ||
+                    user?.fullName ||
+                    user?.username ||
+                    "Unknown User",
+                }))
+              : [];
 
-        console.log(
-          "INTERVIEWERS:",
-          normalizedUsers
-        );
+          setInterviewers(
+            normalizedUsers
+          );
+        } catch (error) {
+          console.error(
+            "GET INTERVIEWERS ERROR:",
+            error?.response?.data ||
+              error
+          );
 
-        setInterviewers(normalizedUsers);
-      } catch (error) {
-        console.error(
-          "GET INTERVIEWERS ERROR:",
-          error?.response?.data ||
-            error
-        );
+          setInterviewers([]);
 
-        setInterviewers([]);
-      } finally {
-        setLoadingInterviewers(false);
-      }
-    };
+          toast.error(
+            error?.response?.data?.message ||
+              "Failed to load interviewers."
+          );
+        } finally {
+          setLoadingInterviewers(
+            false
+          );
+        }
+      };
 
     loadInterviewers();
   }, [isOpen]);
 
+  // =====================================================
+  // RESET FORM
+  // =====================================================
+
   useEffect(() => {
     if (!isOpen) {
       return;
     }
 
-    dispatchForm({ type: "reset" });
+    dispatchForm({
+      type: "reset",
+    });
   }, [isOpen, candidate]);
 
   const update = (field, value) => {
@@ -144,11 +171,6 @@ function ScheduleInterviewModal({
     try {
       setSubmitting(true);
 
-      console.log(
-        "INTERVIEW FORM:",
-        form
-      );
-
       await onSubmit(
         {
           ...candidate,
@@ -163,6 +185,16 @@ function ScheduleInterviewModal({
         error?.response?.data ||
           error
       );
+
+      // Parent also handles API error.
+      // This handles validation/component errors.
+      if (
+        error?.response?.data?.message
+      ) {
+        toast.error(
+          error.response.data.message
+        );
+      }
     } finally {
       setSubmitting(false);
     }
@@ -205,7 +237,8 @@ function ScheduleInterviewModal({
             </label>
 
             <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-              {candidate.name}
+              {candidate.name ||
+                "Unknown Candidate"}
             </div>
           </div>
 
@@ -317,6 +350,7 @@ function ScheduleInterviewModal({
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">
                 Duration
@@ -374,9 +408,9 @@ function ScheduleInterviewModal({
                   {loadingInterviewers
                     ? "Loading interviewers..."
                     : interviewers.length ===
-                      0
-                    ? "No interviewers found"
-                    : "Select interviewer"}
+                        0
+                      ? "No interviewers found"
+                      : "Select interviewer"}
                 </option>
 
                 {interviewers.map(
