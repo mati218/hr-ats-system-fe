@@ -1,6 +1,7 @@
 import { useEffect, useReducer, useState } from "react";
 import toast from "react-hot-toast";
 
+import { toast } from "sonner";
 import { getUsersLookup } from "../../lib/api/lookupApi";
 
 const INITIAL_FORM = {
@@ -54,10 +55,6 @@ function ScheduleInterviewModal({
 
   const [submitting, setSubmitting] =
     useState(false);
-
-  // =====================================================
-  // LOAD INTERVIEWERS
-  // =====================================================
 
   useEffect(() => {
     if (!isOpen) {
@@ -138,14 +135,7 @@ function ScheduleInterviewModal({
     });
   }, [isOpen, candidate]);
 
-  // =====================================================
-  // UPDATE FORM
-  // =====================================================
-
-  const update = (
-    field,
-    value
-  ) => {
+  const update = (field, value) => {
     dispatchForm({
       type: "update",
       field,
@@ -153,40 +143,28 @@ function ScheduleInterviewModal({
     });
   };
 
-  // =====================================================
-  // SUBMIT
-  // =====================================================
-
   const handleSubmit = async () => {
     const candidateId =
       candidate?.candidateId ||
       candidate?._id;
 
     if (!candidateId) {
-      toast.error(
-        "Candidate ID not found."
-      );
+      toast.error("Candidate ID not found.");
       return;
     }
 
     if (!form.date) {
-      toast.error(
-        "Please select interview date."
-      );
+      toast.error("Please select interview date.");
       return;
     }
 
     if (!form.time) {
-      toast.error(
-        "Please select interview time."
-      );
+      toast.error("Please select interview time.");
       return;
     }
 
     if (!form.interviewerId) {
-      toast.error(
-        "Please select interviewer."
-      );
+      toast.error("Please select interviewer.");
       return;
     }
 
@@ -222,27 +200,15 @@ function ScheduleInterviewModal({
     }
   };
 
-  // =====================================================
-  // DON'T SHOW
-  // =====================================================
-
   if (!isOpen || !candidate) {
     return null;
   }
 
-  // =====================================================
-  // UI
-  // =====================================================
-
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-3">
-
+    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 p-3">
       <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl bg-white shadow-xl">
 
-        {/* HEADER */}
-
         <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4">
-
           <div>
             <h2 className="text-base font-bold text-slate-900">
               Schedule Interview
@@ -261,14 +227,9 @@ function ScheduleInterviewModal({
           >
             ×
           </button>
-
         </div>
 
-        {/* BODY */}
-
         <div className="space-y-4 px-5 py-4">
-
-          {/* CANDIDATE */}
 
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">
@@ -281,10 +242,7 @@ function ScheduleInterviewModal({
             </div>
           </div>
 
-          {/* ROUND + MODE */}
-
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">
                 Interview Round
@@ -344,13 +302,9 @@ function ScheduleInterviewModal({
                 </option>
               </select>
             </div>
-
           </div>
 
-          {/* DATE + TIME */}
-
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">
                 Date
@@ -393,10 +347,7 @@ function ScheduleInterviewModal({
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500"
               />
             </div>
-
           </div>
-
-          {/* DURATION + INTERVIEWER */}
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 
@@ -440,9 +391,7 @@ function ScheduleInterviewModal({
               </label>
 
               <select
-                value={
-                  form.interviewerId
-                }
+                value={form.interviewerId}
                 onChange={(e) =>
                   update(
                     "interviewerId",
@@ -475,9 +424,7 @@ function ScheduleInterviewModal({
                         key={id}
                         value={id}
                       >
-                        {
-                          interviewer.name
-                        }
+                        {interviewer.name}
                       </option>
                     );
                   }
@@ -492,10 +439,7 @@ function ScheduleInterviewModal({
                   </p>
                 )}
             </div>
-
           </div>
-
-          {/* LOCATION */}
 
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">
@@ -517,8 +461,6 @@ function ScheduleInterviewModal({
             />
           </div>
 
-          {/* NOTES */}
-
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">
               Notes for Interviewer
@@ -538,13 +480,9 @@ function ScheduleInterviewModal({
               className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500"
             />
           </div>
-
         </div>
 
-        {/* FOOTER */}
-
         <div className="flex justify-end gap-2 border-t border-slate-200 px-5 py-4">
-
           <button
             type="button"
             onClick={onClose}
@@ -568,9 +506,7 @@ function ScheduleInterviewModal({
               ? "Scheduling..."
               : "Schedule Interview"}
           </button>
-
         </div>
-
       </div>
     </div>
   );

@@ -44,6 +44,7 @@ export const ResetPasswordApi = ({
   );
 };
 
+
 export const createUser = (data) => {
   return api.post("/user", data);
 };

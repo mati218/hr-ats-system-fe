@@ -54,7 +54,7 @@ function OfferLetter({ isOpen, onClose, candidate, onSendOffer }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-[520px] overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="w-full max-w-130 overflow-hidden rounded-2xl bg-white shadow-2xl">
         
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
@@ -70,7 +70,7 @@ function OfferLetter({ isOpen, onClose, candidate, onSendOffer }) {
           </button>
         </div>
 
-        {/* Rejected Alert */}
+       
         {isRejected && (
           <div className="mx-6 mt-4 rounded-lg bg-red-50 px-3 py-2.5 text-xs font-semibold text-red-600">
             This candidate has been rejected.
