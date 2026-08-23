@@ -1,5 +1,9 @@
 import api from "./axios";
 
+// =====================================================
+// DEPARTMENTS
+// =====================================================
+
 export const getDepartments = () => {
   return api.get("/departments");
 };
@@ -19,6 +23,10 @@ export const updateDepartment = (id, data) => {
 export const deleteDepartment = (id) => {
   return api.delete(`/departments/${id}`);
 };
+
+// =====================================================
+// LOOKUPS
+// =====================================================
 
 export const getRolesLookup = () => {
   return api.get("/lookups/roles");
