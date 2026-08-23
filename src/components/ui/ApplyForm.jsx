@@ -46,7 +46,7 @@ function ApplyForm({ isOpen, onClose, onApplied }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-8 py-6">
           <h2 className="text-xl font-bold text-slate-900">Apply Now</h2>
