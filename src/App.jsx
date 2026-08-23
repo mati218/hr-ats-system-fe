@@ -1,10 +1,4 @@
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
-
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 
 import Login from "./pages/auth/LoginPage";
@@ -33,20 +27,20 @@ function App() {
 
       <BrowserRouter>
         <Routes>
-          {/* Public Routes */}
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
           <Route
             path="/forgot-password"
             element={<ForgotPassword />}
           />
+
           <Route
             path="/reset-password/:token"
             element={<ResetPassword />}
           />
 
-          {/* Password change */}
           <Route
             path="/change-password"
             element={<ChangePassword />}
@@ -57,23 +51,35 @@ function App() {
             element={<CareerPortal />}
           />
 
-          {/* Protected Routes */}
           <Route element={<PrivateRoute />}>
             <Route element={<MainLayout />}>
+
               <Route
                 path="/dashboard"
                 element={<Dashboard />}
               />
 
               <Route
-                path="/user-management"
-                element={<UserManagement />}
-              />
+                element={
+                  <PrivateRoute module="users" />
+                }
+              >
+                <Route
+                  path="/user-management"
+                  element={<UserManagement />}
+                />
+              </Route>
 
               <Route
-                path="/roles-permissions"
-                element={<RolesPermissions />}
-              />
+                element={
+                  <PrivateRoute module="roles" />
+                }
+              >
+                <Route
+                  path="/roles-permissions"
+                  element={<RolesPermissions />}
+                />
+              </Route>
 
               <Route
                 path="/roles"
@@ -86,29 +92,63 @@ function App() {
               />
 
               <Route
-                path="/departments"
-                element={<Departmenttype />}
-              />
+                element={
+                  <PrivateRoute module="departments" />
+                }
+              >
+                <Route
+                  path="/departments"
+                  element={<Departmenttype />}
+                />
+              </Route>
 
               <Route
-                path="/audit-log"
-                element={<AuditLog />}
-              />
+                element={
+                  <PrivateRoute module="auditLogs" />
+                }
+              >
+                <Route
+                  path="/audit-log"
+                  element={<AuditLog />}
+                />
+              </Route>
 
               <Route
-                path="/ats-ranking"
-                element={<ATSRanking />}
-              />
+                element={
+                  <PrivateRoute
+                    module="atsRanking"
+                    requires={["candidates"]}
+                  />
+                }
+              >
+                <Route
+                  path="/ats-ranking"
+                  element={<ATSRanking />}
+                />
+              </Route>
 
               <Route
-                path="/job-requisitions"
-                element={<JobRequisition />}
-              />
+                element={
+                  <PrivateRoute module="jobRequisitions" />
+                }
+              >
+                <Route
+                  path="/job-requisitions"
+                  element={<JobRequisition />}
+                />
+              </Route>
 
               <Route
-                path="/candidate-pipeline"
-                element={<CandidatePipeline />}
-              />
+                element={
+                  <PrivateRoute module="candidates" />
+                }
+              >
+                <Route
+                  path="/candidate-pipeline"
+                  element={<CandidatePipeline />}
+                />
+              </Route>
+
             </Route>
           </Route>
         </Routes>

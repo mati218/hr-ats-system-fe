@@ -1,11 +1,56 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
 
-const PrivateRoute = () => {
-  const { token } = useAuth();
+const PrivateRoute = ({ module, requires = [] }) => {
+  const { token, user } = useAuth();
 
   if (!token) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (!module) {
+    return <Outlet />;
+  }
+
+  const roleName =
+    typeof user?.role === "string"
+      ? user.role
+      : user?.role?.roleName || "";
+
+  const normalizedRole = String(roleName)
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .trim();
+
+  if (normalizedRole === "superadmin") {
+    return <Outlet />;
+  }
+
+  const permissions = user?.role?.permissions || [];
+
+  const modulesToCheck = [module, ...requires];
+
+  const hasAccess = modulesToCheck.every(
+    (requiredModule) => {
+      const permission = permissions.find(
+        (item) =>
+          String(item?.module)
+            .toLowerCase()
+            .trim() ===
+          String(requiredModule)
+            .toLowerCase()
+            .trim()
+      );
+
+      return (
+        permission?.view === true ||
+        permission?.view === "true"
+      );
+    }
+  );
+
+  if (!hasAccess) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <Outlet />;
