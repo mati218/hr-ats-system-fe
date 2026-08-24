@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-
 import {
   fetchAllCandidates,
   getCandidate,
-  scheduleInterview,
   sendOffer,
   updateOfferStatus,
 } from "../../lib/api/candidateApi";
+
+import {
+  scheduleInterview,
+} from "../../lib/api/interviewApi";
 
 import { getRequisitions } from "../../lib/api/requisitionApi";
 import { useAuth } from "../../context/useAuth";
