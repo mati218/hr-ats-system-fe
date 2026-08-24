@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 import { getUsersLookup } from "../../lib/api/lookupApi";
 
@@ -8,7 +8,7 @@ const INITIAL_FORM = {
   mode: "Video Call",
   date: "",
   time: "",
-  duration: "45 minutes",
+  duration: "45",
   interviewerId: "",
   location: "",
   notes: "",
@@ -38,91 +38,62 @@ function ScheduleInterviewModal({
   onClose,
   onSubmit,
 }) {
-  const [form, dispatchForm] =
-    useReducer(
-      formReducer,
-      INITIAL_FORM
-    );
+  const [form, dispatchForm] = useReducer(
+    formReducer,
+    INITIAL_FORM
+  );
 
-  const [interviewers, setInterviewers] =
-    useState([]);
-
-  const [
-    loadingInterviewers,
-    setLoadingInterviewers,
-  ] = useState(false);
-
-  const [submitting, setSubmitting] =
+  const [interviewers, setInterviewers] = useState([]);
+  const [loadingInterviewers, setLoadingInterviewers] =
     useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
       return;
     }
 
-    const loadInterviewers =
-      async () => {
-        try {
-          setLoadingInterviewers(true);
+    const loadInterviewers = async () => {
+      try {
+        setLoadingInterviewers(true);
 
-          const response =
-            await getUsersLookup(
-              "Interviewer"
-            );
+        const response = await getUsersLookup("Interviewer");
 
-          const users =
-            response?.data?.data || [];
+        const users = response?.data?.data || [];
 
-          const normalizedUsers =
-            Array.isArray(users)
-              ? users.map((user) => ({
-                  ...user,
+        const normalizedUsers = Array.isArray(users)
+          ? users.map((user) => ({
+              ...user,
+              id: user?.id || user?._id,
+              _id: user?._id || user?.id,
+              name:
+                user?.name ||
+                user?.fullName ||
+                user?.username ||
+                "Unknown User",
+            }))
+          : [];
 
-                  id:
-                    user?.id ||
-                    user?._id,
+        setInterviewers(normalizedUsers);
+      } catch (error) {
+        console.error(
+          "GET INTERVIEWERS ERROR:",
+          error?.response?.data || error
+        );
 
-                  _id:
-                    user?._id ||
-                    user?.id,
+        setInterviewers([]);
 
-                  name:
-                    user?.name ||
-                    user?.fullName ||
-                    user?.username ||
-                    "Unknown User",
-                }))
-              : [];
-
-          setInterviewers(
-            normalizedUsers
-          );
-        } catch (error) {
-          console.error(
-            "GET INTERVIEWERS ERROR:",
-            error?.response?.data ||
-              error
-          );
-
-          setInterviewers([]);
-
-          toast.error(
-            error?.response?.data?.message ||
-              "Failed to load interviewers."
-          );
-        } finally {
-          setLoadingInterviewers(
-            false
-          );
-        }
-      };
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to load interviewers."
+        );
+      } finally {
+        setLoadingInterviewers(false);
+      }
+    };
 
     loadInterviewers();
   }, [isOpen]);
-
-  // =====================================================
-  // RESET FORM
-  // =====================================================
 
   useEffect(() => {
     if (!isOpen) {
@@ -144,8 +115,7 @@ function ScheduleInterviewModal({
 
   const handleSubmit = async () => {
     const candidateId =
-      candidate?.candidateId ||
-      candidate?._id;
+      candidate?.candidateId || candidate?._id;
 
     if (!candidateId) {
       toast.error("Candidate ID not found.");
@@ -174,25 +144,18 @@ function ScheduleInterviewModal({
         {
           ...candidate,
           _id: candidateId,
-          candidateId: candidateId,
+          candidateId,
         },
         form
       );
     } catch (error) {
       console.error(
         "SCHEDULE ERROR:",
-        error?.response?.data ||
-          error
+        error?.response?.data || error
       );
 
-      // Parent also handles API error.
-      // This handles validation/component errors.
-      if (
-        error?.response?.data?.message
-      ) {
-        toast.error(
-          error.response.data.message
-        );
+      if (error?.response?.data?.message) {
+        toast.error(error.response.data.message);
       }
     } finally {
       setSubmitting(false);
@@ -206,7 +169,6 @@ function ScheduleInterviewModal({
   return (
     <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 p-3">
       <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl bg-white shadow-xl">
-
         <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4">
           <div>
             <h2 className="text-base font-bold text-slate-900">
@@ -229,15 +191,13 @@ function ScheduleInterviewModal({
         </div>
 
         <div className="space-y-4 px-5 py-4">
-
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">
               Candidate
             </label>
 
             <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-              {candidate.name ||
-                "Unknown Candidate"}
+              {candidate.name || "Unknown Candidate"}
             </div>
           </div>
 
@@ -250,10 +210,7 @@ function ScheduleInterviewModal({
               <select
                 value={form.round}
                 onChange={(e) =>
-                  update(
-                    "round",
-                    e.target.value
-                  )
+                  update("round", e.target.value)
                 }
                 disabled={submitting}
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500"
@@ -280,10 +237,7 @@ function ScheduleInterviewModal({
               <select
                 value={form.mode}
                 onChange={(e) =>
-                  update(
-                    "mode",
-                    e.target.value
-                  )
+                  update("mode", e.target.value)
                 }
                 disabled={submitting}
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500"
@@ -312,16 +266,11 @@ function ScheduleInterviewModal({
               <input
                 type="date"
                 value={form.date}
-                min={
-                  new Date()
-                    .toISOString()
-                    .split("T")[0]
-                }
+                min={new Date()
+                  .toISOString()
+                  .split("T")[0]}
                 onChange={(e) =>
-                  update(
-                    "date",
-                    e.target.value
-                  )
+                  update("date", e.target.value)
                 }
                 disabled={submitting}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500"
@@ -337,10 +286,7 @@ function ScheduleInterviewModal({
                 type="time"
                 value={form.time}
                 onChange={(e) =>
-                  update(
-                    "time",
-                    e.target.value
-                  )
+                  update("time", e.target.value)
                 }
                 disabled={submitting}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500"
@@ -349,38 +295,35 @@ function ScheduleInterviewModal({
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">
                 Duration
               </label>
-<select
-  value={form.duration}
-  onChange={(e) =>
-    update(
-      "duration",
-      e.target.value
-    )
-  }
-  disabled={submitting}
-  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500"
->
-  <option value="30">
-    30 minutes
-  </option>
 
-  <option value="45">
-    45 minutes
-  </option>
+              <select
+                value={form.duration}
+                onChange={(e) =>
+                  update("duration", e.target.value)
+                }
+                disabled={submitting}
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500"
+              >
+                <option value="30">
+                  30 minutes
+                </option>
 
-  <option value="60">
-    60 minutes
-  </option>
+                <option value="45">
+                  45 minutes
+                </option>
 
-  <option value="90">
-    90 minutes
-  </option>
-</select>
+                <option value="60">
+                  60 minutes
+                </option>
+
+                <option value="90">
+                  90 minutes
+                </option>
+              </select>
             </div>
 
             <div>
@@ -405,33 +348,26 @@ function ScheduleInterviewModal({
                 <option value="">
                   {loadingInterviewers
                     ? "Loading interviewers..."
-                    : interviewers.length ===
-                        0
-                      ? "No interviewers found"
-                      : "Select interviewer"}
+                    : interviewers.length === 0
+                    ? "No interviewers found"
+                    : "Select interviewer"}
                 </option>
 
-                {interviewers.map(
-                  (interviewer) => {
-                    const id =
-                      interviewer.id ||
-                      interviewer._id;
+                {interviewers.map((interviewer) => {
+                  const id =
+                    interviewer.id ||
+                    interviewer._id;
 
-                    return (
-                      <option
-                        key={id}
-                        value={id}
-                      >
-                        {interviewer.name}
-                      </option>
-                    );
-                  }
-                )}
+                  return (
+                    <option key={id} value={id}>
+                      {interviewer.name}
+                    </option>
+                  );
+                })}
               </select>
 
               {!loadingInterviewers &&
-                interviewers.length ===
-                  0 && (
+                interviewers.length === 0 && (
                   <p className="mt-1 text-[11px] text-red-500">
                     No interviewer users found.
                   </p>
@@ -448,10 +384,7 @@ function ScheduleInterviewModal({
               type="text"
               value={form.location}
               onChange={(e) =>
-                update(
-                  "location",
-                  e.target.value
-                )
+                update("location", e.target.value)
               }
               disabled={submitting}
               placeholder="Zoom link or office address"
@@ -467,10 +400,7 @@ function ScheduleInterviewModal({
             <textarea
               value={form.notes}
               onChange={(e) =>
-                update(
-                  "notes",
-                  e.target.value
-                )
+                update("notes", e.target.value)
               }
               disabled={submitting}
               placeholder="Focus areas, prior round notes, etc."

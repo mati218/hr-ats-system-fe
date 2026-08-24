@@ -19,7 +19,7 @@ import Departmenttype from "./pages/DepartmentTypes.jsx/Departmenttype";
 import AuditLog from "./pages/Audit Log/AuditLog";
 import ATSRanking from "./pages/ATSRanking/ATSRanking";
 import CandidatePipeline from "./pages/CandidatePipeline/CandidatePipeline";
-
+import OfferLetters from "./pages/OfferLetters/OfferLetters";
 function App() {
   return (
     <>
@@ -147,6 +147,16 @@ function App() {
                   path="/candidate-pipeline"
                   element={<CandidatePipeline />}
                 />
+              </Route>
+              <Route
+                  element={
+                <PrivateRoute module="offerLetters" />
+                }
+              >
+              <Route
+                 path="/offer-letters"
+                 element={<OfferLetters />}
+              />
               </Route>
 
             </Route>
