@@ -1,7 +1,6 @@
 import { useEffect, useReducer, useState } from "react";
 import toast from "react-hot-toast";
 
-import { toast } from "sonner";
 import { getUsersLookup } from "../../lib/api/lookupApi";
 
 const INITIAL_FORM = {
@@ -355,34 +354,33 @@ function ScheduleInterviewModal({
               <label className="mb-1 block text-xs font-semibold text-slate-700">
                 Duration
               </label>
+<select
+  value={form.duration}
+  onChange={(e) =>
+    update(
+      "duration",
+      e.target.value
+    )
+  }
+  disabled={submitting}
+  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500"
+>
+  <option value="30">
+    30 minutes
+  </option>
 
-              <select
-                value={form.duration}
-                onChange={(e) =>
-                  update(
-                    "duration",
-                    e.target.value
-                  )
-                }
-                disabled={submitting}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500"
-              >
-                <option value="30 minutes">
-                  30 minutes
-                </option>
+  <option value="45">
+    45 minutes
+  </option>
 
-                <option value="45 minutes">
-                  45 minutes
-                </option>
+  <option value="60">
+    60 minutes
+  </option>
 
-                <option value="60 minutes">
-                  60 minutes
-                </option>
-
-                <option value="90 minutes">
-                  90 minutes
-                </option>
-              </select>
+  <option value="90">
+    90 minutes
+  </option>
+</select>
             </div>
 
             <div>
