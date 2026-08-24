@@ -12,10 +12,10 @@ import { Toaster } from "sonner";
 // =====================================================
 
 import Login from "./pages/auth/LoginPage";
-import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ChangePassword from "./pages/ChangePassword";
+import UpdatePassword from "./pages/UpdatePassword";
 
 import MainLayout from "./layouts/MainLayout";
 import PrivateRoute from "./components/ui/PrivateRoute";
@@ -41,21 +41,8 @@ function App() {
 
       <BrowserRouter>
         <Routes>
-
-          <Route
-            path="/"
-            element={<Login />}
-          />
-
-          <Route
-            path="/login"
-            element={<Login />}
-          />
-
-          <Route
-            path="/register"
-            element={<Register />}
-          />
+          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
 
           <Route
             path="/forgot-password"
@@ -70,6 +57,11 @@ function App() {
           <Route
             path="/change-password"
             element={<ChangePassword />}
+          />
+
+          <Route
+            path="/update-password/:token"
+            element={<UpdatePassword />}
           />
 
           <Route
