@@ -4,7 +4,7 @@ import { toast } from "react-hot-toast";
 import CandidateCard from "../../components/ui/CandidateCard";
 import OfferLetterModal from "./OfferLetter";
 import CandidateProfile from "../../components/ui/CandidateProfile";
-import ScheduleInterviewModal from "../CandidatePipeline/ScheduleInterviewModal";
+import ScheduleInterviewModal from "../../components/ui/ScheduleInterviewModal";
 
 import { getATSRanking } from "../../lib/api/atsApi";
 import { getRequisitions } from "../../lib/api/requisitionApi";

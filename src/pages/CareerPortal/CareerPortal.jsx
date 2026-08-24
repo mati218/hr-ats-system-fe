@@ -157,28 +157,6 @@ const CareerPortal = () => {
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={() => navigate("/login")}
-            className="
-              absolute
-              right-36
-              top-19
-              rounded-xl
-              border
-              border-[#303544]
-              px-3
-              py-1
-              text-[13px]
-              font-semibold
-              text-white
-              transition
-              hover:bg-[#1B1D27]
-            "
-          >
-            Back to login
-          </button>
-
           <div className="pb-15 pt-8.75">
             <h1
               className="
