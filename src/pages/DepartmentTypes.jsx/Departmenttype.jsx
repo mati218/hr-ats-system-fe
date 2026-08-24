@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { X } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 import DeptTable from "./DeptTable";
 
@@ -24,7 +24,6 @@ const Departmenttype = () => {
     formState: { errors },
   } = useForm();
 
-  // ================= FETCH DEPARTMENTS =================
   const fetchDepartments = async () => {
     try {
       const response = await getDepartments();
@@ -55,20 +54,28 @@ const Departmenttype = () => {
       setDepartments(sortedDepartments);
     } catch (error) {
       console.error("Error fetching departments:", error);
+
       setDepartments([]);
+
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to load departments."
+      );
     }
   };
 
   // ================= INITIAL LOAD =================
+
   useEffect(() => {
-    const initailzers = async () => {
+    const initializers = async () => {
       await fetchDepartments();
     };
 
-    initailzers();
+    initializers();
   }, []);
 
   // ================= ADD MODAL =================
+
   const openAddModal = () => {
     setEditDepartment(null);
     reset();
@@ -76,20 +83,22 @@ const Departmenttype = () => {
   };
 
   // ================= EDIT =================
+
   const handleEdit = (department) => {
     setEditDepartment(department);
 
     setValue("departmentName", department.name);
 
-    // FIX:
-    // Department Head comes from headName,
-    // NOT employees.
-    setValue("departmentHead", department.headName || "");
+    setValue(
+      "departmentHead",
+      department.headName || ""
+    );
 
     setShowModal(true);
   };
 
   // ================= CLOSE MODAL =================
+
   const closeModal = () => {
     setShowModal(false);
     setEditDepartment(null);
@@ -97,81 +106,108 @@ const Departmenttype = () => {
   };
 
   // ================= SUBMIT =================
+
   const onSubmit = async (data) => {
     try {
-      const departmentName = data.departmentName.trim();
-      const departmentHead = data.departmentHead.trim();
+      const departmentName =
+        data.departmentName.trim();
+
+      const departmentHead =
+        data.departmentHead.trim();
+
+      // ================= VALIDATION =================
 
       if (!departmentName) {
-        alert("Department name is required");
+        toast.error(
+          "Department name is required."
+        );
         return;
       }
 
       if (!departmentHead) {
-        alert("Department head is required");
+        toast.error(
+          "Department head is required."
+        );
         return;
       }
 
       // ================= UPDATE =================
+
       if (editDepartment) {
         const alreadyExists = departments.some(
           (department) =>
-            department._id !== editDepartment._id &&
-            department.name?.trim().toLowerCase() ===
+            department._id !==
+              editDepartment._id &&
+            department.name
+              ?.trim()
+              .toLowerCase() ===
               departmentName.toLowerCase()
         );
 
         if (alreadyExists) {
-          alert("Department already exists!");
+          toast.error(
+            "Department already exists!"
+          );
           return;
         }
 
-        // FIX:
-        // Save Department Head in headName,
-        // NOT employees.
-        await updateDepartment(editDepartment._id, {
-          name: departmentName,
-          headName: departmentHead,
-        });
+        await updateDepartment(
+          editDepartment._id,
+          {
+            name: departmentName,
+            headName: departmentHead,
+          }
+        );
 
-        toast.success("Department updated successfully");
+        toast.success(
+          "Department updated successfully."
+        );
       }
 
       // ================= CREATE =================
+
       else {
         const alreadyExists = departments.some(
           (department) =>
-            department.name?.trim().toLowerCase() ===
+            department.name
+              ?.trim()
+              .toLowerCase() ===
             departmentName.toLowerCase()
         );
 
         if (alreadyExists) {
-          alert("Department already exists!");
+          toast.error(
+            "Department already exists!"
+          );
           return;
         }
 
-        // FIX:
-        // Save Department Head in headName,
-        // NOT employees.
         await createDepartment({
           name: departmentName,
           headName: departmentHead,
         });
 
-        toast.success("Department added successfully");
+        toast.success(
+          "Department added successfully."
+        );
       }
 
-      // Refresh table
+      // ================= REFRESH TABLE =================
+
       await fetchDepartments();
 
-      // Close modal
+      // ================= CLOSE MODAL =================
+
       closeModal();
     } catch (error) {
-      console.error("Department error:", error);
+      console.error(
+        "Department error:",
+        error
+      );
 
-      alert(
-        error.response?.data?.message ||
-          "Something went wrong"
+      toast.error(
+        error?.response?.data?.message ||
+          "Something went wrong."
       );
     }
   };
@@ -180,6 +216,7 @@ const Departmenttype = () => {
     <div className="min-h-screen bg-slate-50 px-8 py-6">
 
       {/* ================= HEADER ================= */}
+
       <div className="mb-6 flex items-center justify-between">
 
         <div>
@@ -197,21 +234,31 @@ const Departmenttype = () => {
           onClick={openAddModal}
           className="flex items-center gap-2 rounded-xl bg-blue-700 px-3 py-1 text-sm font-bold text-white shadow-sm transition hover:bg-blue-800"
         >
-          <span className="text-lg leading-none">+</span>
+          <span className="text-lg leading-none">
+            +
+          </span>
+
           Add Department
         </button>
 
       </div>
+
+      {/* ================= TABLE ================= */}
+
       <DeptTable
         departments={departments}
         handleEdit={handleEdit}
       />
+
+      {/* ================= MODAL ================= */}
+
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4 backdrop-blur-[1px]">
 
           <div className="w-full max-w-130 overflow-hidden rounded-2xl bg-white shadow-2xl">
 
-            {/* HEADER */}
+            {/* ================= HEADER ================= */}
+
             <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
 
               <div>
@@ -238,12 +285,16 @@ const Departmenttype = () => {
 
             </div>
 
-            {/* FORM */}
-            <form onSubmit={handleSubmit(onSubmit)}>
+            {/* ================= FORM ================= */}
+
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+            >
 
               <div className="space-y-4 px-6 py-5">
 
                 {/* Department Name */}
+
                 <div>
                   <label className="mb-1 block text-sm font-semibold text-slate-800">
                     Department Name
@@ -252,26 +303,36 @@ const Departmenttype = () => {
                   <input
                     type="text"
                     placeholder="Enter department name"
-                    {...register("departmentName", {
-                      required:
-                        "Department name is required",
-                      pattern: {
-                        value: /^[A-Za-z\s]+$/,
-                        message:
-                          "Name can contain letters and spaces only",
-                      },
-                    })}
+                    {...register(
+                      "departmentName",
+                      {
+                        required:
+                          "Department name is required",
+
+                        pattern: {
+                          value:
+                            /^[A-Za-z\s]+$/,
+
+                          message:
+                            "Name can contain letters and spaces only",
+                        },
+                      }
+                    )}
                     className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
 
                   {errors.departmentName && (
                     <p className="mt-1 text-xs text-red-500">
-                      {errors.departmentName.message}
+                      {
+                        errors.departmentName
+                          .message
+                      }
                     </p>
                   )}
                 </div>
 
                 {/* Department Head */}
+
                 <div>
                   <label className="mb-1 block text-sm font-semibold text-slate-800">
                     Department Head
@@ -280,42 +341,68 @@ const Departmenttype = () => {
                   <input
                     type="text"
                     placeholder="Enter department head"
-                    {...register("departmentHead", {
-                      required:
-                        "Department head is required",
-                      pattern: {
-                        value: /^[A-Za-z\s]+$/,
-                        message:
-                          "Name can contain letters and spaces only",
-                      },
-                    })}
-                    className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-blue-500 focus:ring-2 focus:ring-blue-10" />
+                    {...register(
+                      "departmentHead",
+                      {
+                        required:
+                          "Department head is required",
+
+                        pattern: {
+                          value:
+                            /^[A-Za-z\s]+$/,
+
+                          message:
+                            "Name can contain letters and spaces only",
+                        },
+                      }
+                    )}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+
                   {errors.departmentHead && (
                     <p className="mt-1 text-xs text-red-500">
-                      {errors.departmentHead.message}
+                      {
+                        errors.departmentHead
+                          .message
+                      }
                     </p>
                   )}
                 </div>
+
               </div>
+
+              {/* ================= FOOTER ================= */}
+
               <div className="flex justify-end gap-3 border-t border-slate-200 px-6 py-4">
+
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50">
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
+                >
                   Cancel
                 </button>
+
                 <button
                   type="submit"
-                  className="rounded-lg bg-blue-700 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-blue-800">
+                  className="rounded-lg bg-blue-700 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-blue-800"
+                >
                   {editDepartment
                     ? "Update Department"
                     : "Add Department"}
                 </button>
+
               </div>
+
             </form>
+
           </div>
-        </div> )}
+
+        </div>
+      )}
+
     </div>
   );
 };
+
 export default Departmenttype;
