@@ -1,15 +1,23 @@
-
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 import Modal from "../../components/ui/Modal";
 import FormInput from "../../components/ui/FormInput";
 import Button from "../../components/ui/Button";
-import { createRequisition, updateRequisition } from "../../lib/api/requisitionApi";
+import {
+  createRequisition,
+  updateRequisition,
+} from "../../lib/api/requisitionApi";
 import { getEmploymentTypesLookup } from "../../lib/api/lookupApi";
 
-const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode }) => {
+const NewRequisition = ({
+  isOpen,
+  onClose,
+  onSaved,
+  requisition,
+  isCreateMode,
+}) => {
   const {
     register,
     handleSubmit,
@@ -40,13 +48,15 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
   useEffect(() => {
     getEmploymentTypesLookup()
       .then((res) => setEmploymentTypes(res.data.data))
-      .catch((error) => console.log("Failed to load employment types:", error));
+      .catch((error) =>
+        console.log("Failed to load employment types:", error)
+      );
   }, []);
 
   const getTomorrowDate = () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split("T")[0]; // "YYYY-MM-DD"
+    return tomorrow.toISOString().split("T")[0];
   };
 
   useEffect(() => {
@@ -102,49 +112,50 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
       salaryMax: data.salaryMax,
       description: data.description,
       requirements: data.requirements,
-      status: data.publishOption === "publish" ? "Open" : "Draft",
+      status:
+        data.publishOption === "publish"
+          ? "Open"
+          : "Draft",
     };
 
     try {
       let response;
 
       if (requisition) {
-        response = await updateRequisition(requisition._id, finaldata);
+        response = await updateRequisition(
+          requisition._id,
+          finaldata
+        );
       } else {
         response = await createRequisition(finaldata);
       }
 
-      console.log("Requisition saved:", response.data);
+      console.log(
+        "Requisition saved:",
+        response.data
+      );
 
       if (onSaved) {
         onSaved(response.data.data);
       }
 
       onClose();
-      toast.success("Job requisition saved successfully", {
-        style: {
-          background: "#ffffff",
-          color: "#181B25",
-          padding: "16px 20px",
-          borderRadius: "12px",
-          fontSize: "15px",
-          fontWeight: "500",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.12)",
-          border: "1px solid #E5E7EB",
-        },
-        iconTheme: {
-          primary: "#22c55e",
-          secondary: "#ffffff",
-        },
-      });
 
+      toast.success(
+        requisition
+          ? "Job requisition updated successfully"
+          : "Job requisition created successfully"
+      );
     } catch (error) {
       console.log("Full Error:", error);
       console.log("Response:", error.response);
       console.log("Data:", error.response?.data);
       console.log("Status:", error.response?.status);
 
-      toast.error(error.response?.data?.message || "Failed to save requisition");
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save requisition"
+      );
     }
   };
 
@@ -152,33 +163,42 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={requisition ? "Edit Job Requisition" : "Create Job Requisition"}
+      title={
+        requisition
+          ? "Edit Job Requisition"
+          : "Create Job Requisition"
+      }
       subtitle="Fill in role details, then publish or save as draft"
       size="max-w-3xl"
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        {/* BASIC DETAILS */}
-        <p className="text-xs font-semibold text-gray-500 uppercase">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-5"
+      >
+        <p className="text-xs font-semibold uppercase text-gray-500">
           Basic Details
         </p>
 
         <div>
-          <label className="text-sm font-semibold text-gray-800 flex">
+          <label className="flex text-sm font-semibold text-gray-800">
             Job Title
           </label>
+
           <FormInput
             type="text"
             placeholder="e.g. Senior Frontend Engineer"
             name="jobTitle"
             register={register}
             errors={errors}
-            rules={{ required: "Job title is required" }}
+            rules={{
+              required: "Job title is required",
+            }}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-semibold text-gray-800 flex">
+            <label className="flex text-sm font-semibold text-gray-800">
               Department
             </label>
 
@@ -188,14 +208,22 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
                 required: "Department is required",
               })}
             >
-              <option value="" disabled className="text-gray-400">
+              <option value="" disabled>
                 Select Department
               </option>
 
-              <option value="Engineering">Engineering</option>
-              <option value="Design">Design</option>
-              <option value="People Ops">People Ops</option>
-              <option value="Analytics">Analytics</option>
+              <option value="Engineering">
+                Engineering
+              </option>
+              <option value="Design">
+                Design
+              </option>
+              <option value="People Ops">
+                People Ops
+              </option>
+              <option value="Analytics">
+                Analytics
+              </option>
             </select>
 
             {errors.department && (
@@ -204,15 +232,17 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
               </p>
             )}
           </div>
+
           <div>
-            <label className="text-sm font-semibold text-gray-800 flex">
+            <label className="flex text-sm font-semibold text-gray-800">
               Employment Type
             </label>
 
             <select
-              className={`w-full rounded-lg border border-gray-300 px-4 py-3`}
+              className="w-full rounded-lg border border-gray-300 px-4 py-3"
               {...register("employmentType", {
-                required: "Employment type  required",
+                required:
+                  "Employment type is required",
               })}
             >
               <option value="" disabled>
@@ -220,7 +250,10 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
               </option>
 
               {employmentTypes.map((type) => (
-                <option key={type.id} value={type.name}>
+                <option
+                  key={type.id}
+                  value={type.name}
+                >
                   {type.name}
                 </option>
               ))}
@@ -236,9 +269,10 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-semibold text-gray-800 flex">
+            <label className="flex text-sm font-semibold text-gray-800">
               Location
             </label>
+
             <FormInput
               type="text"
               placeholder="e.g. Karachi / Remote"
@@ -252,12 +286,12 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
           </div>
 
           <div>
-            <label className="text-sm font-semibold text-gray-800 flex">
+            <label className="flex text-sm font-semibold text-gray-800">
               Number of Openings
             </label>
+
             <FormInput
               type="number"
-              placeholder=""
               name="openings"
               register={register}
               errors={errors}
@@ -267,19 +301,21 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-semibold text-gray-800 flex">
+            <label className="flex text-sm font-semibold text-gray-800">
               Experience Level
             </label>
 
             <select
               className="w-full rounded-lg border border-gray-300 px-4 py-3"
               {...register("experienceLevel", {
-                required: "Experience level is required",
+                required:
+                  "Experience level is required",
               })}
             >
               <option value="" disabled>
                 Select Experience Level
               </option>
+
               <option value="Entry">Entry</option>
               <option value="Mid">Mid</option>
               <option value="Senior">Senior</option>
@@ -294,33 +330,34 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
           </div>
 
           <div>
-            <label className="text-sm font-semibold text-gray-800 flex">
+            <label className="flex text-sm font-semibold text-gray-800">
               Application Deadline
             </label>
+
             <FormInput
               type="date"
-              placeholder="mm/dd/yyyy"
               name="deadline"
               register={register}
               errors={errors}
               min={getTomorrowDate()}
               rules={{
-                required: "Application deadline is required",
+                required:
+                  "Application deadline is required",
               }}
             />
           </div>
         </div>
 
-        {/* COMPENSATION */}
-        <p className="text-xs font-semibold text-gray-500 uppercase pt-2">
+        <p className="pt-2 text-xs font-semibold uppercase text-gray-500">
           Compensation
         </p>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-semibold text-gray-800 flex">
+            <label className="flex text-sm font-semibold text-gray-800">
               Salary Range — Min (PKR)
             </label>
+
             <FormInput
               type="number"
               placeholder="350000"
@@ -331,9 +368,10 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
           </div>
 
           <div>
-            <label className="text-sm font-semibold text-gray-800 flex">
+            <label className="flex text-sm font-semibold text-gray-800">
               Salary Range — Max (PKR)
             </label>
+
             <FormInput
               type="number"
               placeholder="420000"
@@ -344,13 +382,12 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
           </div>
         </div>
 
-        {/* DESCRIPTION */}
-        <p className="text-xs font-semibold text-gray-500 uppercase pt-2">
+        <p className="pt-2 text-xs font-semibold uppercase text-gray-500">
           Description
         </p>
 
         <div>
-          <label className="text-sm font-semibold text-gray-800 flex">
+          <label className="flex text-sm font-semibold text-gray-800">
             Job Description
           </label>
 
@@ -359,7 +396,8 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
             rows={3}
             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm"
             {...register("description", {
-              required: "Job description is required",
+              required:
+                "Job description is required",
             })}
           />
 
@@ -371,7 +409,7 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
         </div>
 
         <div>
-          <label className="text-sm font-semibold text-gray-800 flex">
+          <label className="flex text-sm font-semibold text-gray-800">
             Requirements / Must-have Skills
           </label>
 
@@ -380,7 +418,8 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
             rows={3}
             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm"
             {...register("requirements", {
-              required: "Requirements / Must-have Skills are required",
+              required:
+                "Requirements / Must-have Skills are required",
             })}
           />
 
@@ -390,43 +429,58 @@ const NewRequisition = ({ isOpen, onClose, onSaved, requisition, isCreateMode })
             </p>
           )}
 
-          <p className="text-xs text-gray-400 mt-1">
-            Comma-separated — used by ATS Ranking for auto-scoring.
+          <p className="mt-1 text-xs text-gray-400">
+            Comma-separated — used by ATS Ranking
+            for auto-scoring.
           </p>
         </div>
 
-        {/* PUBLISHING */}
-        <p className="text-xs font-semibold text-gray-500 uppercase pt-2">
+        <p className="pt-2 text-xs font-semibold uppercase text-gray-500">
           Publishing
         </p>
 
         <div className="grid grid-cols-2 gap-4">
           <button
             type="button"
-            onClick={() => setValue("publishOption", "draft")}
-            className={`flex items-center gap-2 justify-center rounded-lg border px-4 py-3 text-sm font-medium ${publishOption === "draft"
-              ? "border-blue-500 bg-blue-50 text-blue-700"
-              : "border-gray-300 text-gray-600"
-              }`}
+            onClick={() =>
+              setValue("publishOption", "draft")
+            }
+            className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium ${
+              publishOption === "draft"
+                ? "border-blue-500 bg-blue-50 text-blue-700"
+                : "border-gray-300 text-gray-600"
+            }`}
           >
             📝 Save as Draft
           </button>
 
           <button
             type="button"
-            onClick={() => setValue("publishOption", "publish")}
-            className={`flex items-center gap-2 justify-center rounded-lg border px-4 py-3 text-sm font-medium ${publishOption === "publish"
-              ? "border-blue-500 bg-blue-50 text-blue-700"
-              : "border-gray-300 text-gray-600"
-              }`}
+            onClick={() =>
+              setValue("publishOption", "publish")
+            }
+            className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium ${
+              publishOption === "publish"
+                ? "border-blue-500 bg-blue-50 text-blue-700"
+                : "border-gray-300 text-gray-600"
+            }`}
           >
             🌐 Publish to Career Portal
           </button>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-4">
-          <Button type="button" text="Cancel" onClick={onClose} variant="secondary" />
-          <Button type="submit" text="Save Requisition" />
+        <div className="mt-4 flex justify-end gap-3 border-t border-gray-100 pt-4">
+          <Button
+            type="button"
+            text="Cancel"
+            onClick={onClose}
+            variant="secondary"
+          />
+
+          <Button
+            type="submit"
+            text="Save Requisition"
+          />
         </div>
       </form>
     </Modal>

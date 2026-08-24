@@ -1,4 +1,4 @@
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import ScoreCircle from "./ScoreCircle";
 
 function CandidateCard({
@@ -27,9 +27,7 @@ function CandidateCard({
 
   return (
     <div className="flex items-center justify-between border-b border-slate-200 px-10 py-5">
-
       <div className="flex items-center gap-8">
-
         <h2 className="w-3 font-bold text-slate-400">
           {candidate.rank}
         </h2>
@@ -62,9 +60,6 @@ function CandidateCard({
       </div>
 
       <div className="flex gap-4">
-
-        {/* VIEW RESUME */}
-
         <button
           type="button"
           onClick={(e) => {
@@ -76,8 +71,6 @@ function CandidateCard({
           View Resume
         </button>
 
-        {/* MOVE TO OFFER */}
-
         <button
           type="button"
           onClick={handleOfferClick}
@@ -87,11 +80,8 @@ function CandidateCard({
               : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
-          {offerAlreadySent
-            ? "Offer Sent"
-            : "Move to Offer"}
+          {offerAlreadySent ? "Offer Sent" : "Move to Offer"}
         </button>
-
       </div>
     </div>
   );
