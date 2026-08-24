@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 import {
   fetchAllCandidates,
@@ -7,6 +7,7 @@ import {
   scheduleInterview,
   sendOffer,
   updateOfferStatus,
+  moveCandidateStage,
 } from "../../lib/api/candidateApi";
 
 import { getRequisitions } from "../../lib/api/requisitionApi";
@@ -104,15 +105,6 @@ function CandidatePipeline() {
   // =====================================================
   // LOAD ALL CANDIDATES
   // =====================================================
-  //
-  // We load candidates once.
-  // Then filter them according to selected requisition.
-  //
-  // Candidate has:
-  //
-  // candidate.requisitionId
-  //
-  // =====================================================
 
   const loadCandidates = useCallback(async () => {
     try {
@@ -144,6 +136,50 @@ function CandidatePipeline() {
   }, []);
 
   // =====================================================
+  // RELOAD SELECTED JOB CANDIDATES
+  // =====================================================
+
+  const loadCandidatesForSelectedJob =
+    useCallback(async () => {
+      if (!selectedRequisitionId) {
+        setCandidates([]);
+        return;
+      }
+
+      try {
+        const response =
+          await fetchAllCandidates();
+
+        const candidateData =
+          response?.data?.data || [];
+
+        const allCandidates =
+          Array.isArray(candidateData)
+            ? candidateData
+            : [];
+
+        const filteredCandidates =
+          allCandidates.filter(
+            (candidate) =>
+              String(candidate?.requisitionId) ===
+              String(selectedRequisitionId)
+          );
+
+        setCandidates(filteredCandidates);
+      } catch (error) {
+        console.error(
+          "RELOAD SELECTED JOB ERROR:",
+          error?.response?.data || error
+        );
+
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to refresh candidates."
+        );
+      }
+    }, [selectedRequisitionId]);
+
+  // =====================================================
   // INITIAL LOAD
   // =====================================================
 
@@ -158,34 +194,21 @@ function CandidatePipeline() {
       try {
         setLoading(true);
 
-        const [loadedRequisitions, loadedCandidates] =
-          await Promise.all([
-            loadRequisitions(),
-            loadCandidates(),
-          ]);
-
-        // -----------------------------------------------
-        // SET FIRST JOB AS DEFAULT
-        // -----------------------------------------------
-
-        if (loadedRequisitions.length > 0) {
-          setSelectedRequisitionId(
-            String(loadedRequisitions[0]._id)
-          );
-        } else {
-          setSelectedRequisitionId("");
-          setCandidates([]);
-        }
-
-        // -----------------------------------------------
-        // TEMPORARILY STORE ALL CANDIDATES
-        //
-        // If a job is selected, filtering happens below.
-        // -----------------------------------------------
+        const [
+          loadedRequisitions,
+          loadedCandidates,
+        ] = await Promise.all([
+          loadRequisitions(),
+          loadCandidates(),
+        ]);
 
         if (loadedRequisitions.length > 0) {
           const firstRequisitionId =
             String(loadedRequisitions[0]._id);
+
+          setSelectedRequisitionId(
+            firstRequisitionId
+          );
 
           const filteredCandidates =
             loadedCandidates.filter(
@@ -196,6 +219,7 @@ function CandidatePipeline() {
 
           setCandidates(filteredCandidates);
         } else {
+          setSelectedRequisitionId("");
           setCandidates([]);
         }
       } catch (error) {
@@ -212,13 +236,19 @@ function CandidatePipeline() {
     };
 
     initializePipeline();
-  }, [loadCandidates, loadRequisitions, token]);
+  }, [
+    loadCandidates,
+    loadRequisitions,
+    token,
+  ]);
 
   // =====================================================
   // CHANGE JOB / REQUISITION
   // =====================================================
 
-  const handleRequisitionChange = async (event) => {
+  const handleRequisitionChange = async (
+    event
+  ) => {
     const requisitionId =
       event.target.value;
 
@@ -391,9 +421,11 @@ function CandidatePipeline() {
         "Accepted"
       );
 
+      // Update local pipeline immediately
       setCandidates((prev) =>
         prev.map((item) =>
-          item._id === candidateId
+          String(item._id) ===
+          String(candidateId)
             ? {
                 ...item,
                 stage: "Hired",
@@ -407,6 +439,9 @@ function CandidatePipeline() {
       );
 
       setViewingCandidate(null);
+
+      // Get latest database data
+      await loadCandidatesForSelectedJob();
 
       toast.success(
         "Offer accepted! Candidate moved to Hired."
@@ -434,6 +469,7 @@ function CandidatePipeline() {
     candidate
   ) => {
     setViewingCandidate(null);
+
     setOfferCandidate(candidate);
   };
 
@@ -458,18 +494,65 @@ function CandidatePipeline() {
     }
 
     try {
+      // -------------------------------------------------
+      // STEP 1: SEND OFFER
+      // -------------------------------------------------
+
       await sendOffer(
         candidateId,
         offerData
       );
 
-      setOfferCandidate(null);
+      // -------------------------------------------------
+      // STEP 2: MOVE CANDIDATE TO OFFER SENT
+      // -------------------------------------------------
 
-      toast.success(
-        "Offer sent successfully."
+      await moveCandidateStage(
+        candidateId,
+        "Offer Sent"
       );
 
+      // -------------------------------------------------
+      // STEP 3: UPDATE LOCAL STATE IMMEDIATELY
+      // -------------------------------------------------
+
+      setCandidates((prev) =>
+        prev.map((item) =>
+          String(item._id) ===
+          String(candidateId)
+            ? {
+                ...item,
+                stage: "Offer Sent",
+                offer: {
+                  ...(item.offer || {}),
+                  ...offerData,
+                  status: "Sent",
+                },
+              }
+            : item
+        )
+      );
+
+      // -------------------------------------------------
+      // STEP 4: CLOSE MODAL
+      // -------------------------------------------------
+
+      setOfferCandidate(null);
+      setViewingCandidate(null);
+
+      // -------------------------------------------------
+      // STEP 5: REFRESH FROM DATABASE
+      // -------------------------------------------------
+
       await loadCandidatesForSelectedJob();
+
+      // -------------------------------------------------
+      // SUCCESS TOAST
+      // -------------------------------------------------
+
+      toast.success(
+        "Offer sent successfully. Candidate moved to Offer Sent."
+      );
     } catch (error) {
       console.error(
         "SEND OFFER ERROR:",
@@ -484,52 +567,6 @@ function CandidatePipeline() {
       throw error;
     }
   };
-
-  // =====================================================
-  // RELOAD SELECTED JOB CANDIDATES
-  // =====================================================
-
-  const loadCandidatesForSelectedJob =
-    useCallback(async () => {
-      if (!selectedRequisitionId) {
-        setCandidates([]);
-        return;
-      }
-
-      try {
-        const response =
-          await fetchAllCandidates();
-
-        const candidateData =
-          response?.data?.data || [];
-
-        const allCandidates =
-          Array.isArray(candidateData)
-            ? candidateData
-            : [];
-
-        const filteredCandidates =
-          allCandidates.filter(
-            (candidate) =>
-              String(candidate?.requisitionId) ===
-              String(selectedRequisitionId)
-          );
-
-        setCandidates(
-          filteredCandidates
-        );
-      } catch (error) {
-        console.error(
-          "RELOAD SELECTED JOB ERROR:",
-          error?.response?.data || error
-        );
-
-        toast.error(
-          error?.response?.data?.message ||
-            "Failed to refresh candidates."
-        );
-      }
-    }, [selectedRequisitionId]);
 
   // =====================================================
   // OPEN SCHEDULE INTERVIEW
@@ -569,6 +606,7 @@ function CandidatePipeline() {
     }
 
     setViewingCandidate(null);
+
     setSchedulingCandidate(
       candidate
     );
@@ -642,8 +680,8 @@ function CandidatePipeline() {
       setCandidates((prev) =>
         prev.map((item) => {
           if (
-            item._id !==
-            candidate._id
+            String(item._id) !==
+            String(candidate._id)
           ) {
             return item;
           }
@@ -701,9 +739,7 @@ function CandidatePipeline() {
   return (
     <div className="min-h-screen bg-slate-50 px-6 py-6">
 
-      {/* =================================================
-          HEADER
-      ================================================= */}
+      {/* HEADER */}
 
       <div className="mb-5 flex items-start justify-between">
 
@@ -718,9 +754,7 @@ function CandidatePipeline() {
           </p>
         </div>
 
-        {/* =================================================
-            JOB / REQUISITION DROPDOWN
-        ================================================= */}
+        {/* JOB DROPDOWN */}
 
         <select
           value={
@@ -734,7 +768,6 @@ function CandidatePipeline() {
           }
           className="h-10 min-w-47 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-semibold"
         >
-
           {requisitions.length ===
           0 ? (
             <option value="">
@@ -756,13 +789,10 @@ function CandidatePipeline() {
               )
             )
           )}
-
         </select>
       </div>
 
-      {/* =================================================
-          NO JOB SELECTED
-      ================================================= */}
+      {/* NO JOB */}
 
       {!selectedRequisitionId && (
         <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
@@ -778,9 +808,7 @@ function CandidatePipeline() {
         </div>
       )}
 
-      {/* =================================================
-          PIPELINE
-      ================================================= */}
+      {/* PIPELINE */}
 
       {selectedRequisitionId && (
         <div className="overflow-x-auto">
@@ -851,9 +879,7 @@ function CandidatePipeline() {
         </div>
       )}
 
-      {/* =================================================
-          PROFILE LOADING
-      ================================================= */}
+      {/* PROFILE LOADING */}
 
       {profileLoading && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40">
@@ -869,9 +895,7 @@ function CandidatePipeline() {
         </div>
       )}
 
-      {/* =================================================
-          CANDIDATE PROFILE
-      ================================================= */}
+      {/* CANDIDATE PROFILE */}
 
       <CandidateProfile
         isOpen={
@@ -902,9 +926,7 @@ function CandidatePipeline() {
         }
       />
 
-      {/* =================================================
-          SCHEDULE INTERVIEW
-      ================================================= */}
+      {/* SCHEDULE INTERVIEW */}
 
       <ScheduleInterviewModal
         isOpen={
@@ -923,9 +945,7 @@ function CandidatePipeline() {
         }
       />
 
-      {/* =================================================
-          OFFER LETTER
-      ================================================= */}
+      {/* OFFER LETTER */}
 
       <OfferLetter
         isOpen={
