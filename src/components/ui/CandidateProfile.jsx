@@ -12,7 +12,6 @@ const PIPELINE_STAGES = [
   "Screening",
   "Shortlisted",
   "Interview",
-  "Offer Draft",
   "Offer Sent",
   "Hired",
 ];
@@ -404,17 +403,16 @@ function CandidateProfile({
               </button>
             )}
 
-            {/* Interview Stage Actions: Pass Only */}
             {candidate.stage === "Interview" && (
-              <button
-                type="button"
-                disabled={decisionLoading}
-                onClick={handlePassInterview}
-                className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
-              >
-                Pass (Move to Offer)
-              </button>
-            )}
+  <button
+    type="button"
+    disabled={decisionLoading}
+    onClick={handlePassInterview}
+    className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+  >
+    Pass Interview
+  </button>
+)}
 
             {/* Offer Stage Actions */}
             {candidate.stage === "Offer Sent" && (

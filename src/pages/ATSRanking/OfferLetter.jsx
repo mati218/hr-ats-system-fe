@@ -178,21 +178,21 @@ function OfferLetter({ isOpen, onClose, candidate, onSendOffer }) {
             </div>
 
           </div>
+<div className="flex items-center justify-end gap-2 border-t border-slate-200 px-6 py-4">
+  <Button
+    text="Cancel"
+    variant="secondary"
+    type="button"
+    onClick={onClose}
+    disabled={isSubmitting}
+  />
 
-          {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-6 py-4">
-            <Button
-              text="Save Draft"
-              variant="secondary"
-              type="button"
-              disabled={isRejected || isSubmitting}
-            />
-            <Button
-              text={isSubmitting ? "Sending..." : "Send Offer"}
-              type="submit"
-              disabled={isRejected || isSubmitting}
-            />
-          </div>
+  <Button
+    text={isSubmitting ? "Sending..." : "Send Offer"}
+    type="submit"
+    disabled={isRejected || isSubmitting}
+  />
+</div>
         </form>
 
       </div>
