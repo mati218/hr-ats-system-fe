@@ -12,10 +12,10 @@ import { Toaster } from "sonner";
 // =====================================================
 
 import Login from "./pages/auth/LoginPage";
-import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ChangePassword from "./pages/ChangePassword";
+import UpdatePassword from "./pages/UpdatePassword";
 
 import MainLayout from "./layouts/MainLayout";
 import PrivateRoute from "./components/ui/PrivateRoute";
@@ -29,6 +29,7 @@ import Departmenttype from "./pages/DepartmentTypes.jsx/Departmenttype";
 import AuditLog from "./pages/Audit Log/AuditLog";
 import ATSRanking from "./pages/ATSRanking/ATSRanking";
 import CandidatePipeline from "./pages/CandidatePipeline/CandidatePipeline";
+import OfferLetters from "./pages/OfferLetters/OfferLetters";
 import Interviews from "./pages/interviews/Interviews";
 
 function App() {
@@ -41,21 +42,8 @@ function App() {
 
       <BrowserRouter>
         <Routes>
-
-          <Route
-            path="/"
-            element={<Login />}
-          />
-
-          <Route
-            path="/login"
-            element={<Login />}
-          />
-
-          <Route
-            path="/register"
-            element={<Register />}
-          />
+          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
 
           <Route
             path="/forgot-password"
@@ -70,6 +58,11 @@ function App() {
           <Route
             path="/change-password"
             element={<ChangePassword />}
+          />
+
+          <Route
+            path="/update-password/:token"
+            element={<UpdatePassword />}
           />
 
           <Route
@@ -173,6 +166,37 @@ function App() {
                 <Route
                   path="/candidate-pipeline"
                   element={<CandidatePipeline />}
+                />
+              </Route>
+              <Route
+                  element={
+                <PrivateRoute module="offerLetters" />
+                }
+              >
+              <Route
+                 path="/offer-letters"
+                 element={<OfferLetters />}
+              />
+              </Route>
+              <Route
+                  element={
+                <PrivateRoute module="offerLetters" />
+                }
+              >
+              <Route
+                 path="/offer-letters"
+                 element={<OfferLetters />}
+              />
+              </Route>
+
+              <Route
+                element={
+                  <PrivateRoute module="interviews" />
+                }
+              >
+                <Route
+                  path="/interviews"
+                  element={<Interviews />}
                 />
               </Route>
 

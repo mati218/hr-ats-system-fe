@@ -132,13 +132,6 @@ navigate("/dashboard");
 
         </form>
 
-        <p>
-          Don't have an account?
-          <span className="cursor-pointer text-lg text-blue-600 hover:underline sm:text-xl lg:text-2xl">
-            Register
-          </span>
-        </p>
-
       </div>
     </section>
   );

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 import Modal from "../../components/ui/Modal";
 import FormInput from "../../components/ui/FormInput";
@@ -23,33 +23,31 @@ const NewUserModal = ({
   user,
 }) => {
   const [roles, setRoles] = useState([]);
-  const [departments, setDepartments] =
-    useState([]);
+  const [departments, setDepartments] = useState([]);
 
   const {
     register,
     handleSubmit,
-    setValue,
     reset,
     formState: { errors },
   } = useForm();
+
+  // ==========================================
+  // LOAD ROLES + DEPARTMENTS
+  // ==========================================
 
   useEffect(() => {
     if (!isOpen) return;
 
     const loadLookups = async () => {
       try {
-        const [
-          roleResponse,
-          departmentResponse,
-        ] = await Promise.all([
-          getRolesLookup(),
-          getDepartmentLookup(),
-        ]);
+        const [roleResponse, departmentResponse] =
+          await Promise.all([
+            getRolesLookup(),
+            getDepartmentLookup(),
+          ]);
 
-        setRoles(
-          roleResponse.data?.data ?? []
-        );
+        setRoles(roleResponse.data?.data ?? []);
 
         setDepartments(
           departmentResponse.data?.data ?? []
@@ -59,43 +57,27 @@ const NewUserModal = ({
           "Lookup Error:",
           error.response?.data
         );
+
+        toast.error(
+          error.response?.data?.message ||
+            "Failed to load roles and departments"
+        );
       }
     };
 
     loadLookups();
+  }, [isOpen]);
 
-    if (user) {
-      setValue(
-        "name",
-        user.name ?? ""
-      );
+  // ==========================================
+  // POPULATE USER DATA
+  // ONLY AFTER LOOKUPS ARE AVAILABLE
+  // ==========================================
 
-      setValue(
-        "email",
-        user.email ?? ""
-      );
+  useEffect(() => {
+    if (!isOpen) return;
 
-      setValue(
-        "phoneNumber",
-        user.phoneNumber ?? ""
-      );
-
-      setValue(
-        "role",
-        user.role?._id ??
-          user.role?.id ??
-          user.role ??
-          ""
-      );
-
-      setValue(
-        "department",
-        user.department?._id ??
-          user.department?.id ??
-          user.department ??
-          ""
-      );
-    } else {
+    // CREATE USER
+    if (!user) {
       reset({
         name: "",
         email: "",
@@ -103,13 +85,111 @@ const NewUserModal = ({
         role: "",
         department: "",
       });
+
+      return;
     }
+
+    // Don't populate role/department
+    // until lookup data is available
+    if (
+      roles.length === 0 ||
+      departments.length === 0
+    ) {
+      return;
+    }
+
+    // ========================================
+    // FIND USER ROLE ID
+    // ========================================
+
+    let roleId = "";
+
+    if (user.role) {
+      if (typeof user.role === "object") {
+        roleId =
+          user.role._id ||
+          user.role.id ||
+          "";
+      } else if (typeof user.role === "string") {
+        const matchedRole = roles.find(
+          (role) =>
+            role._id === user.role ||
+            role.id === user.role ||
+            role.name === user.role ||
+            role.roleName === user.role ||
+            role.label === user.role ||
+            role.title === user.role
+        );
+
+        roleId =
+          matchedRole?._id ||
+          matchedRole?.id ||
+          user.role;
+      }
+    }
+
+    // ========================================
+    // FIND USER DEPARTMENT ID
+    // ========================================
+
+    let departmentId = "";
+
+    if (user.department) {
+      if (
+        typeof user.department === "object"
+      ) {
+        departmentId =
+          user.department._id ||
+          user.department.id ||
+          "";
+      } else if (
+        typeof user.department === "string"
+      ) {
+        const matchedDepartment =
+          departments.find(
+            (department) =>
+              department._id ===
+                user.department ||
+              department.id ===
+                user.department ||
+              department.name ===
+                user.department ||
+              department.label ===
+                user.department ||
+              department.title ===
+                user.department
+          );
+
+        departmentId =
+          matchedDepartment?._id ||
+          matchedDepartment?.id ||
+          user.department;
+      }
+    }
+
+    // ========================================
+    // SET COMPLETE FORM
+    // ========================================
+
+    reset({
+      name: user.name ?? "",
+      email: user.email ?? "",
+      phoneNumber:
+        user.phoneNumber ?? "",
+      role: roleId,
+      department: departmentId,
+    });
   }, [
     isOpen,
     user,
-    setValue,
+    roles,
+    departments,
     reset,
   ]);
+
+  // ==========================================
+  // CREATE USER
+  // ==========================================
 
   const handleCreate = async (data) => {
     try {
@@ -136,12 +216,13 @@ const NewUserModal = ({
     }
   };
 
+  // ==========================================
+  // UPDATE USER
+  // ==========================================
+
   const handleUpdate = async (data) => {
     try {
-      await updateUser(
-        user._id,
-        data
-      );
+      await updateUser(user._id, data);
 
       toast.success(
         "User updated successfully"
@@ -197,13 +278,9 @@ const NewUserModal = ({
             register={register}
             errors={errors}
             rules={{
-              required:
-                "Name is required",
-
+              required: "Name is required",
               pattern: {
-                value:
-                  /^[A-Za-z\s]+$/,
-
+                value: /^[A-Za-z\s]+$/,
                 message:
                   "Name can contain letters and spaces only",
               },
@@ -225,13 +302,10 @@ const NewUserModal = ({
             register={register}
             errors={errors}
             rules={{
-              required:
-                "Email is required",
-
+              required: "Email is required",
               pattern: {
                 value:
                   /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-
                 message:
                   "Please enter a valid email address",
               },
@@ -255,11 +329,9 @@ const NewUserModal = ({
             rules={{
               required:
                 "Phone number is required",
-
               pattern: {
                 value:
                   /^\+92\s3\d{2}\s\d{7}$/,
-
                 message:
                   "Use format +92 3xx xxxxxxx",
               },
@@ -277,8 +349,7 @@ const NewUserModal = ({
           <select
             className="w-full rounded-lg border border-gray-300 px-4 py-3"
             {...register("role", {
-              required:
-                "Role is required",
+              required: "Role is required",
             })}
           >
             <option value="">
@@ -320,13 +391,10 @@ const NewUserModal = ({
 
           <select
             className="w-full rounded-lg border border-gray-300 px-4 py-3"
-            {...register(
-              "department",
-              {
-                required:
-                  "Department is required",
-              }
-            )}
+            {...register("department", {
+              required:
+                "Department is required",
+            })}
           >
             <option value="">
               Select Department
@@ -354,10 +422,7 @@ const NewUserModal = ({
 
           {errors.department && (
             <p className="text-red-500 text-sm mt-1">
-              {
-                errors.department
-                  .message
-              }
+              {errors.department.message}
             </p>
           )}
         </div>
