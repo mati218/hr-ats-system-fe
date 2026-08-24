@@ -1,4 +1,4 @@
-
+import { toast } from "react-hot-toast";
 import ScoreCircle from "./ScoreCircle";
 
 function CandidateCard({
@@ -7,6 +7,23 @@ function CandidateCard({
   onViewResume,
 }) {
   const skills = candidate.skills || [];
+
+  const offerAlreadySent =
+    candidate?.stage === "Offer Sent" ||
+    candidate?.offer?.status === "Sent";
+
+  const handleOfferClick = (e) => {
+    e.stopPropagation();
+
+    if (offerAlreadySent) {
+      toast.error(
+        "Offer letter has already been sent to this candidate."
+      );
+      return;
+    }
+
+    onMoveOffer();
+  };
 
   return (
     <div className="flex items-center justify-between border-b border-slate-200 px-10 py-5">
@@ -47,6 +64,7 @@ function CandidateCard({
       <div className="flex gap-4">
 
         {/* VIEW RESUME */}
+
         <button
           type="button"
           onClick={(e) => {
@@ -59,15 +77,19 @@ function CandidateCard({
         </button>
 
         {/* MOVE TO OFFER */}
+
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onMoveOffer();
-          }}
-          className="rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white"
+          onClick={handleOfferClick}
+          className={`rounded-xl px-6 py-3 font-semibold text-white ${
+            offerAlreadySent
+              ? "cursor-not-allowed bg-slate-400"
+              : "bg-blue-600 hover:bg-blue-700"
+          }`}
         >
-          Move to Offer
+          {offerAlreadySent
+            ? "Offer Sent"
+            : "Move to Offer"}
         </button>
 
       </div>
@@ -76,4 +98,3 @@ function CandidateCard({
 }
 
 export default CandidateCard;
-
