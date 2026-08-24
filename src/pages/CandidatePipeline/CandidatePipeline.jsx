@@ -4,11 +4,14 @@ import { toast } from "sonner";
 import {
   fetchAllCandidates,
   getCandidate,
-  scheduleInterview,
   sendOffer,
   updateOfferStatus,
   moveCandidateStage,
 } from "../../lib/api/candidateApi";
+
+import {
+  scheduleInterview,
+} from "../../lib/api/interviewApi";
 
 import { getRequisitions } from "../../lib/api/requisitionApi";
 import { useAuth } from "../../context/useAuth";
