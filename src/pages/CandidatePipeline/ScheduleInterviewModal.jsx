@@ -1,7 +1,6 @@
 import { useEffect, useReducer, useState } from "react";
 import toast from "react-hot-toast";
 
-import { toast } from "sonner";
 import { getUsersLookup } from "../../lib/api/lookupApi";
 
 const INITIAL_FORM = {
