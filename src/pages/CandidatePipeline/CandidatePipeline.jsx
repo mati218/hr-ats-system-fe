@@ -14,7 +14,7 @@ import { getRequisitions } from "../../lib/api/requisitionApi";
 import { useAuth } from "../../context/useAuth";
 
 import CandidateCard from "./CandidateCard";
-import ScheduleInterviewModal from "./ScheduleInterviewModal";
+import ScheduleInterviewModal from "../../components/ui/ScheduleInterviewModal";
 import CandidateProfile from "../../components/ui/CandidateProfile";
 import OfferLetter from "../ATSRanking/OfferLetter";
 
