@@ -7,30 +7,20 @@ import {
   rescheduleInterview,
   completeInterview,
   scheduleInterview,
-  updateInterviewStatus,
 } from "../../lib/api/interviewApi";
 
 import ScheduleInterviewModal from "../../components/ui/ScheduleInterviewModal";
 
 function Interviews() {
-  // =====================================================
-  // STATES
-  // =====================================================
-
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedInterview, setSelectedInterview] =
-    useState(null);
+  const [selectedInterview, setSelectedInterview] = useState(null);
 
-  const [showReschedule, setShowReschedule] =
-    useState(false);
+  const [showReschedule, setShowReschedule] = useState(false);
+  const [showScheduleNew, setShowScheduleNew] = useState(false);
 
-  const [showScheduleNew, setShowScheduleNew] =
-    useState(false);
-
-  const [actionLoading, setActionLoading] =
-    useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   // =====================================================
   // LOAD INTERVIEWS
@@ -42,20 +32,13 @@ function Interviews() {
 
       const response = await fetchAllInterviews();
 
-      console.log(
-        "GET INTERVIEWS RESPONSE:",
-        response
-      );
-
       const data =
         response?.data?.data ||
         response?.data?.interviews ||
         response?.data ||
         [];
 
-      setInterviews(
-        Array.isArray(data) ? data : []
-      );
+      setInterviews(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error(
         "GET INTERVIEWS ERROR:",
@@ -74,7 +57,7 @@ function Interviews() {
   }, []);
 
   // =====================================================
-  // USE EFFECT
+  // INITIAL LOAD
   // =====================================================
 
   useEffect(() => {
@@ -89,47 +72,22 @@ function Interviews() {
     candidatePayload,
     interviewPayload
   ) => {
-    try {
-      const candidateId =
-        candidatePayload?._id ||
-        candidatePayload?.id ||
-        candidatePayload?.candidateId;
+    const candidateId =
+      candidatePayload?._id ||
+      candidatePayload?.id ||
+      candidatePayload?.candidateId;
 
-      if (!candidateId) {
-        toast.error(
-          "Candidate ID not found."
-        );
-        return;
-      }
+    if (!candidateId) {
+      toast.error("Candidate ID not found.");
+      return;
+    }
+
+    try {
+      setActionLoading(true);
 
       await scheduleInterview({
         candidateId,
-
-        round:
-          interviewPayload?.round,
-
-        mode:
-          interviewPayload?.mode,
-
-        date:
-          interviewPayload?.date,
-
-        time:
-          interviewPayload?.time,
-
-        duration:
-          Number(
-            interviewPayload?.duration
-          ),
-
-        interviewerId:
-          interviewPayload?.interviewerId,
-
-        location:
-          interviewPayload?.location || "",
-
-        notes:
-          interviewPayload?.notes || "",
+        ...interviewPayload,
       });
 
       toast.success(
@@ -151,52 +109,6 @@ function Interviews() {
       );
 
       throw error;
-    }
-  };
-
-  // =====================================================
-  // CONFIRM INTERVIEW
-  //
-  // Pending → Confirmed
-  // =====================================================
-
-  const handleConfirm = async (
-    interview
-  ) => {
-    const interviewId =
-      interview?._id ||
-      interview?.id;
-
-    if (!interviewId) {
-      toast.error(
-        "Interview ID not found."
-      );
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-
-      await updateInterviewStatus(
-        interviewId,
-        "Confirmed"
-      );
-
-      toast.success(
-        "Interview confirmed successfully."
-      );
-
-      await loadInterviews();
-    } catch (error) {
-      console.error(
-        "CONFIRM INTERVIEW ERROR:",
-        error?.response?.data || error
-      );
-
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to confirm interview."
-      );
     } finally {
       setActionLoading(false);
     }
@@ -204,29 +116,22 @@ function Interviews() {
 
   // =====================================================
   // CANCEL INTERVIEW
-  //
-  // Pending / Confirmed → Cancelled
   // =====================================================
 
-  const handleCancel = async (
-    interviewToCancel
-  ) => {
+  const handleCancel = async (interviewToCancel) => {
     const interviewId =
       interviewToCancel?._id ||
       interviewToCancel?.id ||
       interviewToCancel;
 
     if (!interviewId) {
-      toast.error(
-        "Interview ID not found."
-      );
+      toast.error("Interview ID not found.");
       return;
     }
 
-    const confirmed =
-      window.confirm(
-        "Are you sure you want to cancel this interview?"
-      );
+    const confirmed = window.confirm(
+      "Are you sure you want to cancel this interview?"
+    );
 
     if (!confirmed) {
       return;
@@ -235,9 +140,7 @@ function Interviews() {
     try {
       setActionLoading(true);
 
-      await cancelInterview(
-        interviewId
-      );
+      await cancelInterview(interviewId);
 
       toast.success(
         "Interview cancelled successfully."
@@ -263,29 +166,82 @@ function Interviews() {
   };
 
   // =====================================================
-  // COMPLETE INTERVIEW
-  //
-  // Confirmed → Completed
+  // RESCHEDULE INTERVIEW
   // =====================================================
 
-  const handleComplete = async (
-    interview
+  const handleReschedule = async (
+    candidatePayload,
+    interviewPayload
   ) => {
+    const interviewId =
+      selectedInterview?._id ||
+      selectedInterview?.id;
+
+    if (!interviewId) {
+      toast.error("Interview ID not found.");
+      return;
+    }
+
+    if (!interviewPayload?.date) {
+      toast.error("Please select interview date.");
+      return;
+    }
+
+    if (!interviewPayload?.time) {
+      toast.error("Please select interview time.");
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+
+      await rescheduleInterview(interviewId, {
+        date: interviewPayload.date,
+        time: interviewPayload.time,
+      });
+
+      toast.success(
+        "Interview rescheduled successfully."
+      );
+
+      setShowReschedule(false);
+      setSelectedInterview(null);
+
+      await loadInterviews();
+    } catch (error) {
+      console.error(
+        "RESCHEDULE INTERVIEW ERROR:",
+        error?.response?.data || error
+      );
+
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to reschedule interview."
+      );
+
+      throw error;
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // =====================================================
+  // COMPLETE INTERVIEW
+  // =====================================================
+
+  const handleComplete = async (interview) => {
     const interviewId =
       interview?._id ||
       interview?.id;
 
     if (!interviewId) {
-      toast.error(
-        "Interview ID not found."
-      );
+      toast.error("Interview ID not found.");
       return;
     }
 
-    const confirmed =
-      window.confirm(
-        "Mark this interview as completed?"
-      );
+    const confirmed = window.confirm(
+      "Mark this interview as completed?"
+    );
 
     if (!confirmed) {
       return;
@@ -294,9 +250,7 @@ function Interviews() {
     try {
       setActionLoading(true);
 
-      await completeInterview(
-        interviewId
-      );
+      await completeInterview(interviewId);
 
       toast.success(
         "Interview marked as completed."
@@ -319,102 +273,14 @@ function Interviews() {
   };
 
   // =====================================================
-  // RESCHEDULE INTERVIEW
-  //
-  // Pending / Confirmed → Rescheduled
-  //
-  // Date & Time only
-  // =====================================================
-
-  const handleReschedule = async (
-    candidatePayload,
-    interviewPayload
-  ) => {
-    try {
-      const interviewId =
-        selectedInterview?._id ||
-        selectedInterview?.id;
-
-      if (!interviewId) {
-        toast.error(
-          "Interview ID not found."
-        );
-        return;
-      }
-
-      await rescheduleInterview(
-        interviewId,
-        {
-          date:
-            interviewPayload?.date,
-
-          time:
-            interviewPayload?.time,
-        }
-      );
-
-      toast.success(
-        "Interview rescheduled successfully."
-      );
-
-      setShowReschedule(false);
-      setSelectedInterview(null);
-
-      await loadInterviews();
-    } catch (error) {
-      console.error(
-        "RESCHEDULE INTERVIEW ERROR:",
-        error?.response?.data || error
-      );
-
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to reschedule interview."
-      );
-
-      throw error;
-    }
-  };
-
-  // =====================================================
-  // OPEN RESCHEDULE MODAL
-  // =====================================================
-
-  const handleOpenReschedule = (
-    interview
-  ) => {
-    const status =
-      interview?.status?.toLowerCase();
-
-    if (
-      status === "completed" ||
-      status === "cancelled" ||
-      status === "canceled"
-    ) {
-      toast.error(
-        "This interview cannot be rescheduled."
-      );
-
-      return;
-    }
-
-    setSelectedInterview(
-      interview
-    );
-
-    setShowReschedule(true);
-  };
-
-  // =====================================================
   // STATUS BADGE
   // =====================================================
 
-  const getStatusBadge = (
-    status
-  ) => {
-    switch (
-      status?.toLowerCase()
-    ) {
+  const getStatusBadge = (status) => {
+    const normalizedStatus =
+      String(status || "Pending").toLowerCase();
+
+    switch (normalizedStatus) {
       case "confirmed":
         return "bg-emerald-100 text-emerald-700";
 
@@ -435,56 +301,25 @@ function Interviews() {
   };
 
   // =====================================================
-  // STATUS DISPLAY
+  // FORMAT DATE
   // =====================================================
 
-  const getStatusText = (
-    status
-  ) => {
-    if (!status) {
-      return "Pending";
-    }
-
-    if (
-      status.toLowerCase() ===
-      "scheduled"
-    ) {
-      return "Pending";
-    }
-
-    return status;
-  };
-
-  // =====================================================
-  // DATE FORMAT
-  // =====================================================
-
-  const formatDateBadge = (
-    dateStr
-  ) => {
+  const formatDateBadge = (dateStr) => {
     if (!dateStr) {
       return "N/A";
     }
 
-    const dateObj =
-      new Date(dateStr);
+    const dateObj = new Date(dateStr);
 
-    if (
-      Number.isNaN(
-        dateObj.getTime()
-      )
-    ) {
+    if (Number.isNaN(dateObj.getTime())) {
       return dateStr;
     }
 
-    return dateObj.toLocaleDateString(
-      "en-US",
-      {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      }
-    );
+    return dateObj.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   // =====================================================
@@ -493,7 +328,7 @@ function Interviews() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <div className="flex min-h-[300px] items-center justify-center">
         <p className="text-sm font-semibold text-slate-500">
           Loading interviews...
         </p>
@@ -508,28 +343,23 @@ function Interviews() {
   return (
     <div className="min-h-screen space-y-6 bg-slate-50/50 p-8">
 
-      {/* =================================================
-          HEADER
-      ================================================= */}
-
+      {/* HEADER */}
       <div className="flex items-center justify-between">
-
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
             Interviews
           </h1>
 
           <p className="mt-1 text-sm font-medium text-slate-500">
-            Manage candidate interviews
+            Manage scheduled interviews
           </p>
         </div>
 
         <button
           type="button"
-          onClick={() =>
-            setShowScheduleNew(true)
-          }
-          className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700"
+          onClick={() => setShowScheduleNew(true)}
+          disabled={actionLoading}
+          className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <span className="text-lg leading-none">
             +
@@ -537,16 +367,11 @@ function Interviews() {
 
           Schedule Interview
         </button>
-
       </div>
 
-      {/* =================================================
-          EMPTY STATE
-      ================================================= */}
-
+      {/* EMPTY STATE */}
       {interviews.length === 0 && (
         <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-
           <p className="text-base font-semibold text-slate-700">
             No interviews scheduled
           </p>
@@ -555,265 +380,169 @@ function Interviews() {
             Interviews scheduled from Candidate Pipeline
             will appear here.
           </p>
-
         </div>
       )}
 
-      {/* =================================================
-          INTERVIEW LIST
-      ================================================= */}
-
+      {/* INTERVIEWS */}
       {interviews.length > 0 && (
         <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
 
-          {interviews.map(
-            (interview) => {
+          {interviews.map((interview) => {
+            const candidate =
+              interview?.candidateId;
 
-              const candidate =
-                interview?.candidateId;
+            const interviewer =
+              interview?.interviewerId;
 
-              const interviewer =
-                interview?.interviewerId;
+            const status =
+              interview?.status || "Pending";
 
-              const status =
-                interview?.status?.toLowerCase() ||
-                "pending";
+            const normalizedStatus =
+              String(status).toLowerCase();
 
-              const isPending =
-                status === "pending" ||
-                status === "scheduled";
+            const isCancelled =
+              normalizedStatus ===
+                "cancelled" ||
+              normalizedStatus ===
+                "canceled";
 
-              const isConfirmed =
-                status === "confirmed";
+            const isCompleted =
+              normalizedStatus ===
+              "completed";
 
-              const isCompleted =
-                status === "completed";
+            return (
+              <div
+                key={interview._id}
+                className="flex flex-col gap-4 p-5 transition-colors hover:bg-slate-50/50 sm:flex-row sm:items-center sm:justify-between"
+              >
 
-              const isCancelled =
-                status === "cancelled" ||
-                status === "canceled";
+                {/* LEFT */}
+                <div className="flex items-center gap-5">
 
-              return (
-                <div
-                  key={
-                    interview._id
-                  }
-                  className="flex flex-col gap-4 p-5 transition-colors hover:bg-slate-50/50 sm:flex-row sm:items-center sm:justify-between"
-                >
+                  {/* DATE/TIME */}
+                  <div className="flex min-w-[100px] flex-col items-center justify-center rounded-xl border border-slate-200/60 bg-slate-100/80 px-3 py-2 text-center">
 
-                  {/* =================================================
-                      LEFT SIDE
-                  ================================================= */}
-
-                  <div className="flex items-center gap-5">
-
-                    {/* TIME / DATE */}
-
-                    <div className="flex min-w-[100px] flex-col items-center justify-center rounded-xl border border-slate-200/60 bg-slate-100/80 px-3 py-2 text-center">
-
-                      <span className="text-sm font-bold leading-tight text-slate-900">
-                        {interview.time ||
-                          "N/A"}
-                      </span>
-
-                      <span className="mt-0.5 text-[10px] leading-tight text-slate-500">
-                        {formatDateBadge(
-                          interview.date
-                        )}
-                      </span>
-
-                    </div>
-
-                    {/* CANDIDATE */}
-
-                    <div>
-
-                      <h2 className="text-base font-bold capitalize leading-tight text-slate-900">
-                        {candidate?.name ||
-                          candidate?.fullName ||
-                          "Unknown Candidate"}
-                      </h2>
-
-                      <p className="mt-1 text-xs font-medium text-slate-500">
-
-                        {candidate?.role ||
-                          "Candidate"}
-
-                        {interview.round &&
-                          ` · ${interview.round}`}
-
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                  {/* =================================================
-                      RIGHT SIDE
-                  ================================================= */}
-
-                  <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-
-                    {/* MODE */}
-
-                    {interview.mode && (
-                      <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">
-                        {interview.mode}
-                      </span>
-                    )}
-
-                    {/* INTERVIEWER */}
-
-                    <span className="text-xs font-medium text-slate-600">
-                      {interviewer?.name ||
-                        interviewer?.username ||
-                        "Unknown Interviewer"}
+                    <span className="text-sm font-bold leading-tight text-slate-900">
+                      {interview?.time || "N/A"}
                     </span>
 
-                    {/* STATUS */}
-
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadge(
-                        interview.status
-                      )}`}
-                    >
-                      {getStatusText(
-                        interview.status
+                    <span className="mt-0.5 text-[10px] leading-tight text-slate-500">
+                      {formatDateBadge(
+                        interview?.date
                       )}
                     </span>
 
-                    {/* =================================================
-                        PENDING ACTIONS
-                    ================================================= */}
+                  </div>
 
-                    {isPending && (
-                      <>
-                        <button
-                          type="button"
-                          disabled={
-                            actionLoading
-                          }
-                          onClick={() =>
-                            handleConfirm(
-                              interview
-                            )
-                          }
-                          className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Confirm
-                        </button>
+                  {/* CANDIDATE */}
+                  <div>
+                    <h2 className="text-base font-bold capitalize leading-tight text-slate-900">
+                      {candidate?.name ||
+                        candidate?.fullName ||
+                        "Unknown Candidate"}
+                    </h2>
 
-                        <button
-                          type="button"
-                          disabled={
-                            actionLoading
-                          }
-                          onClick={() =>
-                            handleOpenReschedule(
-                              interview
-                            )
-                          }
-                          className="rounded-lg border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
-                        >
-                          Reschedule
-                        </button>
+                    <p className="mt-1 text-xs font-medium text-slate-500">
+                      {candidate?.role ||
+                        "No role"}
 
-                        <button
-                          type="button"
-                          disabled={
-                            actionLoading
-                          }
-                          onClick={() =>
-                            handleCancel(
-                              interview
-                            )
-                          }
-                          className="rounded-lg bg-rose-50 px-3.5 py-1.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-100 disabled:opacity-50"
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    )}
-
-                    {/* =================================================
-                        CONFIRMED ACTIONS
-                    ================================================= */}
-
-                    {isConfirmed && (
-                      <>
-                        <button
-                          type="button"
-                          disabled={
-                            actionLoading
-                          }
-                          onClick={() =>
-                            handleComplete(
-                              interview
-                            )
-                          }
-                          className="rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
-                        >
-                          Complete
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled={
-                            actionLoading
-                          }
-                          onClick={() =>
-                            handleOpenReschedule(
-                              interview
-                            )
-                          }
-                          className="rounded-lg border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
-                        >
-                          Reschedule
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled={
-                            actionLoading
-                          }
-                          onClick={() =>
-                            handleCancel(
-                              interview
-                            )
-                          }
-                          className="rounded-lg bg-rose-50 px-3.5 py-1.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-100 disabled:opacity-50"
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    )}
-
-                    {/* =================================================
-                        COMPLETED
-                    ================================================= */}
-
-                    {isCompleted && (
-                      <span className="text-xs font-semibold text-blue-600">
-                        Interview Completed
-                      </span>
-                    )}
-
-                    {/* =================================================
-                        CANCELLED
-                    ================================================= */}
-
-                    {isCancelled && (
-                      <span className="text-xs font-semibold text-rose-600">
-                        Interview Cancelled
-                      </span>
-                    )}
-
+                      {interview?.round &&
+                        ` · ${interview.round}`}
+                    </p>
                   </div>
                 </div>
-              );
-            }
-          )}
 
+                {/* RIGHT */}
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+
+                  {/* MODE */}
+                  {interview?.mode && (
+                    <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">
+                      {interview.mode}
+                    </span>
+                  )}
+
+                  {/* INTERVIEWER */}
+                  <span className="text-xs font-medium text-slate-600">
+                    {interviewer?.name ||
+                      interviewer?.username ||
+                      "Unknown Interviewer"}
+                  </span>
+
+                  {/* STATUS */}
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadge(
+                      status
+                    )}`}
+                  >
+                    {status}
+                  </span>
+
+                  {/* RESCHEDULE */}
+                  {!isCancelled &&
+                    !isCompleted && (
+                      <button
+                        type="button"
+                        disabled={actionLoading}
+                        onClick={() => {
+                          setSelectedInterview(
+                            interview
+                          );
+
+                          setShowReschedule(
+                            true
+                          );
+                        }}
+                        className="rounded-lg border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Reschedule
+                      </button>
+                    )}
+
+                  {/* COMPLETE */}
+                  {(
+                    normalizedStatus ===
+                      "confirmed" ||
+                    normalizedStatus ===
+                      "scheduled" ||
+                    normalizedStatus ===
+                      "pending"
+                  ) && (
+                    <button
+                      type="button"
+                      disabled={actionLoading}
+                      onClick={() =>
+                        handleComplete(
+                          interview
+                        )
+                      }
+                      className="rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Complete
+                    </button>
+                  )}
+
+                  {/* CANCEL */}
+                  {!isCancelled &&
+                    !isCompleted && (
+                      <button
+                        type="button"
+                        disabled={actionLoading}
+                        onClick={() =>
+                          handleCancel(
+                            interview
+                          )
+                        }
+                        className="rounded-lg bg-red-50 px-3.5 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                    )}
+
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -824,34 +553,19 @@ function Interviews() {
       {showReschedule &&
         selectedInterview && (
           <ScheduleInterviewModal
-            isOpen={
-              showReschedule
-            }
-
+            isOpen={showReschedule}
             candidate={
-              selectedInterview.candidateId
+              selectedInterview?.candidateId
             }
-
             interview={
               selectedInterview
             }
-
             mode="reschedule"
-
             onClose={() => {
-              setShowReschedule(
-                false
-              );
-
-              setSelectedInterview(
-                null
-              );
+              setShowReschedule(false);
+              setSelectedInterview(null);
             }}
-
-            onSubmit={
-              handleReschedule
-            }
-
+            onSubmit={handleReschedule}
             onCancelInterview={
               handleCancel
             }
@@ -859,29 +573,19 @@ function Interviews() {
         )}
 
       {/* =================================================
-          NEW SCHEDULE MODAL
+          NEW INTERVIEW MODAL
       ================================================= */}
 
       {showScheduleNew && (
         <ScheduleInterviewModal
-          isOpen={
-            showScheduleNew
-          }
-
+          isOpen={showScheduleNew}
           mode="schedule"
-
           onClose={() =>
-            setShowScheduleNew(
-              false
-            )
+            setShowScheduleNew(false)
           }
-
-          onSubmit={
-            handleScheduleNew
-          }
+          onSubmit={handleScheduleNew}
         />
       )}
-
     </div>
   );
 }
