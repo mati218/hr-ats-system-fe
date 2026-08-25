@@ -5,6 +5,9 @@ import {
   useState,
 } from "react";
 
+import { jwtDecode } from "jwt-decode";
+import { toast } from "sonner";
+
 import { getRole } from "../lib/api/authroleApi";
 import { AuthContext } from "./AuthContextValue";
 
@@ -36,11 +39,14 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(
     () => localStorage.getItem("token") || null
   );
+
   const userRef = useRef(user);
 
   useEffect(() => {
     userRef.current = user;
   }, [user]);
+
+  // ================= LOGIN =================
 
   const login = (userData, tokenData) => {
     setUser(userData);
@@ -50,6 +56,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("token", tokenData);
   };
 
+  // ================= NORMAL LOGOUT =================
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -57,6 +65,69 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
   };
+
+  // ================= EXPIRED SESSION =================
+
+  const handleExpiredSession = useCallback(() => {
+    setUser(null);
+    setToken(null);
+
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+
+    toast.success("Session expired. Please login again.");
+
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 2500);
+  }, []);
+
+  // ================= JWT EXPIRATION CHECK =================
+
+  useEffect(() => {
+    if (!token) {
+      return;
+    }
+
+    try {
+      const decodedToken = jwtDecode(token);
+
+      if (!decodedToken.exp) {
+        console.warn("Token does not contain expiration time.");
+        return;
+      }
+
+      const expirationTime = decodedToken.exp * 1000;
+      const currentTime = Date.now();
+
+      // Token is already expired
+      // Token is already expired
+      if (expirationTime <= currentTime) {
+        const timeout = setTimeout(() => {
+          handleExpiredSession();
+        }, 0);
+
+        return () => clearTimeout(timeout);
+      }
+
+      // Automatically handle expiration while user is using the app
+      const timeout = setTimeout(() => {
+        handleExpiredSession();
+      }, expirationTime - currentTime);
+
+      return () => clearTimeout(timeout);
+    } catch (error) {
+      console.error("Invalid JWT token:", error);
+
+      const timeout = setTimeout(() => {
+        handleExpiredSession();
+      }, 0);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [token, handleExpiredSession]);
+
+  // ================= REFRESH PERMISSIONS =================
 
   const refreshPermissions = useCallback(async () => {
     try {
@@ -70,11 +141,12 @@ export const AuthProvider = ({ children }) => {
         typeof currentUser.role === "string"
           ? currentUser.role
           : currentUser.role.roleName ||
-            currentUser.role.name ||
-            currentUser.roleName ||
-            "";
+          currentUser.role.name ||
+          currentUser.roleName ||
+          "";
 
-      // Super Admin already has full access and does not need a protected role lookup.
+      // Super Admin already has full access
+      // and does not need a protected role lookup.
       if (
         String(roleName)
           .toLowerCase()
@@ -126,9 +198,11 @@ export const AuthProvider = ({ children }) => {
           latestRole.permissions || [],
       };
 
-      // Guard: Agar permissions exact same hain to state update bypass karein
+      // If permissions are exactly the same,
+      // don't update state unnecessarily.
       if (
-        JSON.stringify(currentUser.role) === JSON.stringify(updatedRole)
+        JSON.stringify(currentUser.role) ===
+        JSON.stringify(updatedRole)
       ) {
         return;
       }
@@ -152,7 +226,8 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Extract primitive string ID so object reference doesn't trigger effect loop
+  // ================= ROLE ID =================
+
   const roleId =
     typeof user?.role === "object"
       ? user?.role?.id || user?.role?._id
@@ -165,10 +240,10 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
-    // Single time execution only when roleId is available
     refreshPermissions();
+  }, [token, roleId, refreshPermissions]);
 
-  }, [token, roleId, refreshPermissions]); // Sirf tab chalega jab roleId ya token update ho
+  // ================= CONTEXT =================
 
   return (
     <AuthContext.Provider

@@ -1,5 +1,16 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+
 import { Toaster } from "sonner";
+// import MainRoutes from "./routes/MainRoutes";
+
+// =====================================================
+// AUTH PAGES
+// =====================================================
 
 import Login from "./pages/auth/LoginPage";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -19,11 +30,19 @@ import Departmenttype from "./pages/DepartmentTypes.jsx/Departmenttype";
 import AuditLog from "./pages/Audit Log/AuditLog";
 import ATSRanking from "./pages/ATSRanking/ATSRanking";
 import CandidatePipeline from "./pages/CandidatePipeline/CandidatePipeline";
+import Interviews from "./pages/interviews/Interviews";
 
 function App() {
   return (
     <>
-      <Toaster position="bottom-right" richColors />
+      <Toaster
+        position="bottom-right"
+        richColors
+      />
+
+       {/* <BrowserRouter>
+        <MainRoutes />
+      </BrowserRouter> */}
 
       <BrowserRouter>
         <Routes>
@@ -56,6 +75,7 @@ function App() {
           />
 
           <Route element={<PrivateRoute />}>
+
             <Route element={<MainLayout />}>
 
               <Route
@@ -153,8 +173,20 @@ function App() {
                 />
               </Route>
 
+              <Route
+                element={
+                  <PrivateRoute module="interviews" />
+                }
+              >
+                <Route
+                  path="/interviews"
+                  element={<Interviews />}
+                />
+              </Route>
+
             </Route>
           </Route>
+
         </Routes>
       </BrowserRouter>
     </>

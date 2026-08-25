@@ -42,7 +42,7 @@ const UpdatePassword = () => {
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
-        "Failed to update password"
+          "Failed to update password"
       );
     }
   };
@@ -61,33 +61,51 @@ const UpdatePassword = () => {
 
         <form onSubmit={handleSubmit(onSubmit)}>
 
+          {/* New Password */}
           <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              New Password{" "}
+              <span className="text-red-500">*</span>
+            </label>
+
             <FormInput
               type="password"
               placeholder="New Password"
               register={register}
               name="newPassword"
               errors={errors}
-              required
+              rules={{
+                required: "New password is required",
+                pattern: {
+                  value:
+                    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/,
+                  message:
+                    "Password must be at least 8 characters long and contain at least one letter, one number, and one special character.",
+                },
+              }}
             />
           </div>
 
+          {/* Confirm Password */}
           <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Confirm Password{" "}
+              <span className="text-red-500">*</span>
+            </label>
+
             <FormInput
               type="password"
               placeholder="Confirm Password"
               register={register}
               name="confirmPassword"
               errors={errors}
-              required
+              rules={{
+                required: "Confirm password is required",
+              }}
             />
           </div>
 
-          <p className="text-sm text-gray-500 mb-5">
-            Password must be at least 8 characters long and contain
-            at least one letter, one number, and one special character.
-          </p>
-
+          {/* Update Button */}
           <Button
             className="mt-2 w-full"
             type="submit"
@@ -96,6 +114,7 @@ const UpdatePassword = () => {
 
         </form>
 
+        {/* Back to Login */}
         <p className="text-center mt-5">
           Back to{" "}
           <Link

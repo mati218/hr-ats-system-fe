@@ -124,10 +124,53 @@ function CandidateProfile({
     }
   };
 
-  const handleScheduleInterview = () => {
-    if (isRejected || interviewScheduled) return;
-    if (onScheduleInterview) onScheduleInterview(candidate);
-  };
+const handleScheduleInterview = async (
+  candidate,
+  form
+) => {
+  try {
+    await scheduleInterview({
+      candidateId:
+        candidate.candidateId ||
+        candidate._id,
+
+      round: form.round,
+
+      mode: form.mode,
+
+      date: form.date,
+
+      time: form.time,
+
+      duration: form.duration,
+
+      interviewerId: form.interviewerId,
+
+      location: form.location || "",
+
+      notes: form.notes || "",
+    });
+
+    toast.success(
+      "Interview scheduled successfully"
+    );
+
+    // reload candidates
+    await loadCandidates();
+
+    setSchedulingCandidate(null);
+  } catch (error) {
+    console.error(
+      "SCHEDULE INTERVIEW ERROR:",
+      error?.response?.data || error
+    );
+
+    toast.error(
+      error?.response?.data?.message ||
+        "Failed to schedule interview"
+    );
+  }
+};
 
   const handleScreeningDecision = async (status) => {
     try {
