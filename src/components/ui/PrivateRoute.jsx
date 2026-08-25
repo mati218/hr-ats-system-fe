@@ -4,10 +4,12 @@ import { useAuth } from "../../context/useAuth";
 const PrivateRoute = ({ module, requires = [] }) => {
   const { token, user } = useAuth();
 
+  // Not logged in
   if (!token) {
     return <Navigate to="/login" replace />;
   }
 
+  // Normal protected route
   if (!module) {
     return <Outlet />;
   }
@@ -22,13 +24,18 @@ const PrivateRoute = ({ module, requires = [] }) => {
     .replace(/\s+/g, "")
     .trim();
 
+  // Super Admin has full access
   if (normalizedRole === "superadmin") {
     return <Outlet />;
   }
 
-  const permissions = user?.role?.permissions || [];
+  const permissions =
+    user?.role?.permissions || [];
 
-  const modulesToCheck = [module, ...requires];
+  const modulesToCheck = [
+    module,
+    ...requires,
+  ];
 
   const hasAccess = modulesToCheck.every(
     (requiredModule) => {
@@ -50,7 +57,12 @@ const PrivateRoute = ({ module, requires = [] }) => {
   );
 
   if (!hasAccess) {
-    return <Navigate to="/dashboard" replace />;
+    return (
+      <Navigate
+        to="/dashboard"
+        replace
+      />
+    );
   }
 
   return <Outlet />;
