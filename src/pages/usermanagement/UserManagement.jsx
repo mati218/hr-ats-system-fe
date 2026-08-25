@@ -2,21 +2,20 @@
 import Table from "../../components/ui/Table";
 import NewUserModal from "./NewUserModal";
 
-import { getUsers } from "../../lib/api/authApi";
+import { getUsers, deleteUser } from "../../lib/api/authApi";
+
 import { useAuth } from "../../context/useAuth";
+import { toast } from "sonner";
 
 const UserManagement = () => {
-  const [selectedUser, setSelectedUser] =
-    useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-  const [showModal, setShowModal] =
-    useState(false);
   const { user } = useAuth();
 
   const [users, setUsers] = useState([]);
+  const [pendingInvites, setPendingInvites] = useState(0);
 
-  const [pendingInvites, setPendingInvites] =
-    useState(0);
   const permissions = user?.role?.permissions || [];
 
   const getPermission = (action) => {
@@ -36,13 +35,11 @@ const UserManagement = () => {
     try {
       const response = await getUsers();
 
-      const fetchedUsers =
-        response.data?.data;
+      const fetchedUsers = response.data?.data;
 
-      const usersData =
-        Array.isArray(fetchedUsers)
-          ? fetchedUsers
-          : [];
+      const usersData = Array.isArray(fetchedUsers)
+        ? fetchedUsers
+        : [];
 
       setUsers(usersData);
 
@@ -51,11 +48,37 @@ const UserManagement = () => {
       );
     } catch (error) {
       console.log(
-        error.response?.data
+        "Get users error:",
+        error.response?.data || error.message
       );
 
       setUsers([]);
       setPendingInvites(0);
+    }
+  };
+
+  const handleDeleteUser = async (selected) => {
+    try {
+      if (!selected?._id) {
+        toast.error("User ID not found");
+        return;
+      }
+
+      await deleteUser(selected._id);
+
+      await loadUsers();
+
+      toast.success("User deleted successfully");
+    } catch (error) {
+      console.log(
+        "Delete user error:",
+        error.response?.data || error.message
+      );
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to delete user"
+      );
     }
   };
 
@@ -132,12 +155,7 @@ const UserManagement = () => {
             setSelectedUser(selected);
             setShowModal(true);
           }}
-          onDelete={(selected) => {
-            console.log(
-              "Delete user:",
-              selected
-            );
-          }}
+          onDelete={handleDeleteUser}
         />
       </div>
 

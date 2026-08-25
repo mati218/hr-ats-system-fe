@@ -72,3 +72,7 @@ export const updateUser = (
 export const getUsers = () => {
   return api.get("/user");
 };
+
+export const deleteUser = (id) => {
+  return api.delete(`/user/${id}`);
+};
