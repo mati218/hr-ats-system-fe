@@ -17,7 +17,7 @@ export const getCandidate = async (id) => {
 };
 
 // ==========================================
-// APPLY
+// APPLY NOW
 // ==========================================
 
 export const applyNow = async (data) => {
@@ -79,8 +79,57 @@ export const moveCandidateStage = async (id, stage) => {
 // SCHEDULE INTERVIEW
 // ==========================================
 
-export const scheduleInterview = async (payload) => {
-  return api.post("/interviews", payload);
+export const scheduleInterview = async (
+  candidateId,
+  form
+) => {
+  if (!candidateId) {
+    throw new Error("Candidate ID is required.");
+  }
+
+  if (!form?.date) {
+    throw new Error("Interview date is required.");
+  }
+
+  if (!form?.time) {
+    throw new Error("Interview time is required.");
+  }
+
+  if (!form?.duration) {
+    throw new Error("Interview duration is required.");
+  }
+
+  if (!form?.interviewerId) {
+    throw new Error("Interviewer is required.");
+  }
+
+  const payload = {
+    candidateId,
+
+    round: form.round,
+
+    mode: form.mode,
+
+    date: form.date,
+
+    time: form.time,
+
+    // Selected duration
+    duration: form.duration,
+
+    interviewerId: form.interviewerId,
+
+    location: form.location || "",
+
+    notes: form.notes || "",
+  };
+
+  const response = await api.post(
+    "/interviews",
+    payload
+  );
+
+  return response.data;
 };
 
 // ==========================================
@@ -92,10 +141,13 @@ export const submitInterviewResult = async (
   result,
   notes = ""
 ) => {
-  return api.patch(`/interviews/${interviewId}/result`, {
-    result,
-    notes,
-  });
+  return api.patch(
+    `/interviews/${interviewId}/result`,
+    {
+      result,
+      notes,
+    }
+  );
 };
 
 // ==========================================
@@ -127,14 +179,6 @@ export const getCandidateInterviews = async (
 // ==========================================
 // SEND OFFER
 // ==========================================
-//
-// IMPORTANT:
-// We send candidateId + offer data.
-// Backend will CREATE the offer directly
-// with status = "Sent".
-//
-// No Draft is created.
-//
 
 export const sendOffer = async (
   candidateId,
@@ -159,12 +203,8 @@ export const getCandidateOffer = async (
 };
 
 // ==========================================
-// OFFER RESULT
+// UPDATE OFFER STATUS
 // ==========================================
-//
-// Accepted → Hired
-// Rejected → Rejected
-//
 
 export const updateOfferStatus = async (
   candidateId,
@@ -182,7 +222,7 @@ export const updateOfferStatus = async (
 };
 
 // ==========================================
-// MOVE TO HIRED
+// MOVE CANDIDATE TO HIRED
 // ==========================================
 
 export const hireCandidate = async (
