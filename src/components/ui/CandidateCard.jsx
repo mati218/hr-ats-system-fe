@@ -71,16 +71,20 @@ function CandidateCard({
           View Resume
         </button>
 
+        {/* MOVE TO OFFER */}
         <button
           type="button"
           onClick={handleOfferClick}
+          disabled={offerAlreadySent}
           className={`rounded-xl px-6 py-3 font-semibold text-white ${
             offerAlreadySent
-              ? "cursor-not-allowed bg-slate-400"
+              ? "cursor-not-allowed bg-slate-400 opacity-70"
               : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
-          {offerAlreadySent ? "Offer Sent" : "Move to Offer"}
+          {offerAlreadySent
+            ? "Offer Sent"
+            : "Move to Offer"}
         </button>
       </div>
     </div>
