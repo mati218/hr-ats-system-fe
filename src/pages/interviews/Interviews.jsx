@@ -13,29 +13,24 @@ import {
 import ScheduleInterviewModal from "../../components/ui/ScheduleInterviewModal";
 
 function Interviews() {
+  // =====================================================
+  // STATES
+  // =====================================================
+
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedInterview, setSelectedInterview] = useState(null);
+  const [selectedInterview, setSelectedInterview] =
+    useState(null);
 
-  const [showReschedule, setShowReschedule] = useState(false);
-  const [showScheduleNew, setShowScheduleNew] = useState(false);
+  const [showReschedule, setShowReschedule] =
+    useState(false);
 
-  const [actionLoading, setActionLoading] = useState(false);
+  const [showScheduleNew, setShowScheduleNew] =
+    useState(false);
 
-  // =====================================================
-  // NORMALIZE API RESPONSE
-  // =====================================================
-
-  const normalizeInterviews = (response) => {
-    const data =
-      response?.data?.data ||
-      response?.data?.interviews ||
-      response?.data ||
-      [];
-
-    return Array.isArray(data) ? data : [];
-  };
+  const [actionLoading, setActionLoading] =
+    useState(false);
 
   // =====================================================
   // LOAD INTERVIEWS
@@ -47,9 +42,20 @@ function Interviews() {
 
       const response = await fetchAllInterviews();
 
-      const interviewData = normalizeInterviews(response);
+      console.log(
+        "GET INTERVIEWS RESPONSE:",
+        response
+      );
 
-      setInterviews(interviewData);
+      const data =
+        response?.data?.data ||
+        response?.data?.interviews ||
+        response?.data ||
+        [];
+
+      setInterviews(
+        Array.isArray(data) ? data : []
+      );
     } catch (error) {
       console.error(
         "GET INTERVIEWS ERROR:",
@@ -68,7 +74,7 @@ function Interviews() {
   }, []);
 
   // =====================================================
-  // INITIAL LOAD
+  // USE EFFECT
   // =====================================================
 
   useEffect(() => {
@@ -77,11 +83,6 @@ function Interviews() {
 
   // =====================================================
   // SCHEDULE NEW INTERVIEW
-  //
-  // New interview should normally start as:
-  //
-  // Pending
-  //
   // =====================================================
 
   const handleScheduleNew = async (
@@ -95,18 +96,31 @@ function Interviews() {
         candidatePayload?.candidateId;
 
       if (!candidateId) {
-        toast.error("Candidate ID not found.");
+        toast.error(
+          "Candidate ID not found."
+        );
         return;
       }
 
       await scheduleInterview({
         candidateId,
 
-        round: interviewPayload?.round,
-        mode: interviewPayload?.mode,
-        date: interviewPayload?.date,
-        time: interviewPayload?.time,
-        duration: Number(interviewPayload?.duration),
+        round:
+          interviewPayload?.round,
+
+        mode:
+          interviewPayload?.mode,
+
+        date:
+          interviewPayload?.date,
+
+        time:
+          interviewPayload?.time,
+
+        duration:
+          Number(
+            interviewPayload?.duration
+          ),
 
         interviewerId:
           interviewPayload?.interviewerId,
@@ -116,10 +130,6 @@ function Interviews() {
 
         notes:
           interviewPayload?.notes || "",
-
-        // Important:
-        // Backend should create the interview
-        // with status = "Pending".
       });
 
       toast.success(
@@ -150,13 +160,17 @@ function Interviews() {
   // Pending → Confirmed
   // =====================================================
 
-  const handleConfirm = async (interview) => {
+  const handleConfirm = async (
+    interview
+  ) => {
     const interviewId =
       interview?._id ||
       interview?.id;
 
     if (!interviewId) {
-      toast.error("Interview ID not found.");
+      toast.error(
+        "Interview ID not found."
+      );
       return;
     }
 
@@ -197,26 +211,33 @@ function Interviews() {
   const handleCancel = async (
     interviewToCancel
   ) => {
-    const targetId =
+    const interviewId =
       interviewToCancel?._id ||
       interviewToCancel?.id ||
       interviewToCancel;
 
-    if (!targetId) {
-      toast.error("Interview ID not found.");
+    if (!interviewId) {
+      toast.error(
+        "Interview ID not found."
+      );
       return;
     }
 
-    const confirmed = window.confirm(
-      "Are you sure you want to cancel this interview?"
-    );
+    const confirmed =
+      window.confirm(
+        "Are you sure you want to cancel this interview?"
+      );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
 
     try {
       setActionLoading(true);
 
-      await cancelInterview(targetId);
+      await cancelInterview(
+        interviewId
+      );
 
       toast.success(
         "Interview cancelled successfully."
@@ -247,26 +268,35 @@ function Interviews() {
   // Confirmed → Completed
   // =====================================================
 
-  const handleComplete = async (interview) => {
+  const handleComplete = async (
+    interview
+  ) => {
     const interviewId =
       interview?._id ||
       interview?.id;
 
     if (!interviewId) {
-      toast.error("Interview ID not found.");
+      toast.error(
+        "Interview ID not found."
+      );
       return;
     }
 
-    const confirmed = window.confirm(
-      "Mark this interview as completed?"
-    );
+    const confirmed =
+      window.confirm(
+        "Mark this interview as completed?"
+      );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
 
     try {
       setActionLoading(true);
 
-      await completeInterview(interviewId);
+      await completeInterview(
+        interviewId
+      );
 
       toast.success(
         "Interview marked as completed."
@@ -289,9 +319,11 @@ function Interviews() {
   };
 
   // =====================================================
-  // RESCHEDULE
+  // RESCHEDULE INTERVIEW
   //
-  // Only Pending / Confirmed
+  // Pending / Confirmed → Rescheduled
+  //
+  // Date & Time only
   // =====================================================
 
   const handleReschedule = async (
@@ -299,11 +331,11 @@ function Interviews() {
     interviewPayload
   ) => {
     try {
-      const targetId =
+      const interviewId =
         selectedInterview?._id ||
         selectedInterview?.id;
 
-      if (!targetId) {
+      if (!interviewId) {
         toast.error(
           "Interview ID not found."
         );
@@ -311,7 +343,7 @@ function Interviews() {
       }
 
       await rescheduleInterview(
-        targetId,
+        interviewId,
         {
           date:
             interviewPayload?.date,
@@ -356,7 +388,8 @@ function Interviews() {
 
     if (
       status === "completed" ||
-      status === "cancelled"
+      status === "cancelled" ||
+      status === "canceled"
     ) {
       toast.error(
         "This interview cannot be rescheduled."
@@ -365,7 +398,10 @@ function Interviews() {
       return;
     }
 
-    setSelectedInterview(interview);
+    setSelectedInterview(
+      interview
+    );
+
     setShowReschedule(true);
   };
 
@@ -373,7 +409,9 @@ function Interviews() {
   // STATUS BADGE
   // =====================================================
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (
+    status
+  ) => {
     switch (
       status?.toLowerCase()
     ) {
@@ -397,11 +435,15 @@ function Interviews() {
   };
 
   // =====================================================
-  // STATUS TEXT
+  // STATUS DISPLAY
   // =====================================================
 
-  const getStatusText = (status) => {
-    if (!status) return "Pending";
+  const getStatusText = (
+    status
+  ) => {
+    if (!status) {
+      return "Pending";
+    }
 
     if (
       status.toLowerCase() ===
@@ -420,7 +462,9 @@ function Interviews() {
   const formatDateBadge = (
     dateStr
   ) => {
-    if (!dateStr) return "N/A";
+    if (!dateStr) {
+      return "N/A";
+    }
 
     const dateObj =
       new Date(dateStr);
@@ -476,7 +520,7 @@ function Interviews() {
           </h1>
 
           <p className="mt-1 text-sm font-medium text-slate-500">
-            Manage scheduled candidate interviews
+            Manage candidate interviews
           </p>
         </div>
 
@@ -551,7 +595,9 @@ function Interviews() {
 
               return (
                 <div
-                  key={interview._id}
+                  key={
+                    interview._id
+                  }
                   className="flex flex-col gap-4 p-5 transition-colors hover:bg-slate-50/50 sm:flex-row sm:items-center sm:justify-between"
                 >
 
@@ -561,12 +607,13 @@ function Interviews() {
 
                   <div className="flex items-center gap-5">
 
-                    {/* DATE/TIME */}
+                    {/* TIME / DATE */}
 
-                    <div className="flex min-w-25 flex-col items-center justify-center rounded-xl border border-slate-200/60 bg-slate-100/80 px-3 py-2 text-center">
+                    <div className="flex min-w-[100px] flex-col items-center justify-center rounded-xl border border-slate-200/60 bg-slate-100/80 px-3 py-2 text-center">
 
                       <span className="text-sm font-bold leading-tight text-slate-900">
-                        {interview.time || "N/A"}
+                        {interview.time ||
+                          "N/A"}
                       </span>
 
                       <span className="mt-0.5 text-[10px] leading-tight text-slate-500">
@@ -666,7 +713,7 @@ function Interviews() {
                               interview
                             )
                           }
-                          className="rounded-lg border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+                          className="rounded-lg border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
                         >
                           Reschedule
                         </button>
@@ -762,7 +809,6 @@ function Interviews() {
                     )}
 
                   </div>
-
                 </div>
               );
             }
@@ -778,18 +824,28 @@ function Interviews() {
       {showReschedule &&
         selectedInterview && (
           <ScheduleInterviewModal
-            isOpen={showReschedule}
+            isOpen={
+              showReschedule
+            }
+
             candidate={
               selectedInterview.candidateId
             }
+
             interview={
               selectedInterview
             }
+
             mode="reschedule"
 
             onClose={() => {
-              setShowReschedule(false);
-              setSelectedInterview(null);
+              setShowReschedule(
+                false
+              );
+
+              setSelectedInterview(
+                null
+              );
             }}
 
             onSubmit={
@@ -803,16 +859,21 @@ function Interviews() {
         )}
 
       {/* =================================================
-          NEW INTERVIEW MODAL
+          NEW SCHEDULE MODAL
       ================================================= */}
 
       {showScheduleNew && (
         <ScheduleInterviewModal
-          isOpen={showScheduleNew}
+          isOpen={
+            showScheduleNew
+          }
+
           mode="schedule"
 
           onClose={() =>
-            setShowScheduleNew(false)
+            setShowScheduleNew(
+              false
+            )
           }
 
           onSubmit={
