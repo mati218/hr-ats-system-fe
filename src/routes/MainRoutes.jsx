@@ -1,10 +1,14 @@
-import { Routes, Route } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
+import { useAuth } from "../context/useAuth";
 import AuthRoutes from "./AuthRoutes";
 import ProtectedRoutes from "./ProtectedRoutes";
 import CareerPortal from "../pages/CareerPortal/CareerPortal";
 
 const MainRoutes = () => {
+  const { token } = useAuth();
+  const isAuthenticated = Boolean(token);
+
   return (
     <Routes>
       {/* Public Route */}
@@ -13,11 +17,17 @@ const MainRoutes = () => {
         element={<CareerPortal />}
       />
 
-      {/* Authentication Routes */}
-      <AuthRoutes />
+      {isAuthenticated ? ProtectedRoutes() : AuthRoutes()}
 
-      {/* Protected Routes */}
-      <ProtectedRoutes />
+      <Route
+        path="*"
+        element={
+          <Navigate
+            to={isAuthenticated ? "/dashboard" : "/login"}
+            replace
+          />
+        }
+      />
     </Routes>
   );
 };
