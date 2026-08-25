@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 
 import { Toaster } from "sonner";
+// import MainRoutes from "./routes/MainRoutes";
 
 // =====================================================
 // AUTH PAGES
@@ -39,6 +40,10 @@ function App() {
         position="bottom-right"
         richColors
       />
+
+       {/* <BrowserRouter>
+        <MainRoutes />
+      </BrowserRouter> */}
 
       <BrowserRouter>
         <Routes>

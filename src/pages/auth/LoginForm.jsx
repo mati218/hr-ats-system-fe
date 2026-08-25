@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { loginUser } from "../../lib/api/authApi";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
 
@@ -34,8 +35,7 @@ localStorage.setItem(
   JSON.stringify(response.data.data)
 );
 
-alert("Successfully logged in");
-
+toast.success("Login successful!");
 navigate("/dashboard");
 
     console.log("Token:", localStorage.getItem("token"));
@@ -54,7 +54,7 @@ navigate("/dashboard");
 
   console.log("Status:", error.response?.status);
 
-  alert("Login failed");
+  toast.error("Login failed");
 }
 };
 
