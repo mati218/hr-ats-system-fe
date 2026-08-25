@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import Button from "../components/ui/Button";
@@ -19,13 +20,30 @@ const ForgotPassword = () => {
     try {
       const response = await ForgotPasswordApi(data);
 
-      console.log("Forgot Password Response:", response.data);
+      console.log(
+        "Forgot Password Response:",
+        response.data
+      );
 
-      setEmailSent(true);
-      reset();
+      if (response.data.success) {
+        toast.success(
+          response.data.message ||
+          "Password reset link sent. Please check your email."
+        );
+
+        setEmailSent(true);
+        reset();
+      }
+
     } catch (error) {
-      console.error(error.response?.data || error.message);
-      alert(error.response?.data?.message || "Failed to Send Reset Link");
+      console.error(
+        error.response?.data || error.message
+      );
+
+      toast.error(
+        error.response?.data?.message ||
+        "Failed to send reset link"
+      );
     }
   };
 
@@ -44,8 +62,12 @@ const ForgotPassword = () => {
               placeholder="Enter Email"
               register={register}
               name="email"
-              errors={errors}/>
-            <Button className="mt-5 w-90" text="Send Reset Link" />
+              errors={errors} />
+            <Button
+              type="submit"
+              className="mt-5 w-full"
+              text="Send Reset Link"
+            />
           </form>
         ) : (
           <div className="rounded-lg border border-green-500 bg-green-100 p-5 text-center">
