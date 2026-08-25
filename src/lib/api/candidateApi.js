@@ -174,3 +174,19 @@ export const hireCandidate = async (
     }
   );
 };
+
+export const completeScreening = async (
+  candidateId,
+  status,
+  score = 0,
+  notes = ""
+) => {
+  return api.patch(
+    `/candidates/${candidateId}/screening`,
+    {
+      status,
+      score,
+      notes,
+    }
+  );
+};

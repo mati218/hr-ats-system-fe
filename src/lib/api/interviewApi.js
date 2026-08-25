@@ -4,87 +4,64 @@ import api from "./axios";
 // GET ALL INTERVIEWS
 // =====================================================
 
-export const fetchAllInterviews = async () => {
-  const response = await api.get("/interviews");
-
-  return response.data;
+export const fetchAllInterviews = () => {
+  return api.get("/interviews");
 };
 
 // =====================================================
 // GET SINGLE INTERVIEW
 // =====================================================
 
-export const fetchInterview = async (id) => {
-  const response = await api.get(
-    `/interviews/${id}`
-  );
-
-  return response.data;
+export const fetchInterview = (id) => {
+  return api.get(`/interviews/${id}`);
 };
 
 // =====================================================
 // SCHEDULE INTERVIEW
+// Result: Pending
 // =====================================================
 
-export const scheduleInterview = async (payload) => {
-  const response = await api.post(
-    "/interviews",
-    payload
-  );
+export const scheduleInterview = (data) => {
+  return api.post("/interviews", data);
+};
 
-  return response.data;
+// =====================================================
+// CONFIRM INTERVIEW
+// Pending → Confirmed
+// =====================================================
+
+export const confirmInterview = (id) => {
+  return api.patch(`/interviews/${id}/confirm`);
 };
 
 // =====================================================
 // RESCHEDULE
 // =====================================================
 
-export const rescheduleInterview = async (
-  id,
-  payload
-) => {
-  const response = await api.patch(
+export const rescheduleInterview = (id, data) => {
+  return api.patch(
     `/interviews/${id}/reschedule`,
-    payload
+    data
   );
-
-  return response.data;
 };
 
 // =====================================================
 // CANCEL
 // =====================================================
 
-export const cancelInterview = async (id) => {
-  const response = await api.patch(
+export const cancelInterview = (id) => {
+  return api.patch(
     `/interviews/${id}/cancel`
   );
-
-  return response.data;
 };
 
 // =====================================================
 // COMPLETE
+// Confirmed → Completed
 // =====================================================
 
-export const completeInterview = async (id) => {
-  const response = await api.patch(
+export const completeInterview = (id) => {
+  return api.patch(
     `/interviews/${id}/complete`
   );
-
-  return response.data;
-};
-
-// =====================================================
-// GET CANDIDATE INTERVIEWS
-// =====================================================
-
-export const fetchCandidateInterviews = async (
-  candidateId
-) => {
-  const response = await api.get(
-    `/interviews/candidate/${candidateId}`
-  );
-
-  return response.data;
 };

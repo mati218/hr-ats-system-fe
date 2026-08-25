@@ -4,6 +4,7 @@ import ScoreCircle from "./ScoreCircle";
 import {
   rejectCandidate,
   updateOfferStatus,
+  completeScreening,
 } from "../../lib/api/candidateApi";
 
 const PIPELINE_STAGES = [
@@ -53,17 +54,37 @@ function CandidateProfile({
   const currentStageIndex =
     PIPELINE_STAGES.indexOf(candidate.stage);
 
-  const interviewScheduled =
-    !isRejected &&
-    currentStageIndex >=
-      PIPELINE_STAGES.indexOf("Interview");
-
   const progressPercent =
     currentStageIndex < 0
       ? 0
       : (currentStageIndex /
           (PIPELINE_STAGES.length - 1)) *
         100;
+
+  // =====================================================
+  // INTERVIEW STATUS
+  // =====================================================
+
+  const interviewStatus =
+    candidate.interviewStatus || "Not Scheduled";
+
+  /*
+    Standard interview flow:
+
+    Not Scheduled
+          ↓
+      Scheduled
+          ↓
+      Completed
+          ↓
+    Passed / Failed / Hold
+  */
+
+  const interviewIsScheduled =
+    interviewStatus === "Scheduled";
+
+  const interviewIsCompleted =
+    interviewStatus === "Completed";
 
   // =====================================================
   // INITIALS
@@ -168,7 +189,8 @@ function CandidateProfile({
   const handleReject = async () => {
     if (
       isRejected ||
-      rejecting
+      rejecting ||
+      decisionLoading
     ) {
       return;
     }
@@ -225,10 +247,15 @@ function CandidateProfile({
 
   // =====================================================
   // SCHEDULE INTERVIEW
-  // IMPORTANT:
-  // CandidateProfile DOES NOT CALL API HERE.
-  // Parent CandidatePipeline handles API.
   // =====================================================
+
+  /*
+    IMPORTANT:
+
+    Interview can ONLY be scheduled
+    when candidate has passed screening
+    and is in Shortlisted stage.
+  */
 
   const handleScheduleInterview = () => {
     if (!candidateId) {
@@ -247,9 +274,17 @@ function CandidateProfile({
       return;
     }
 
-    if (interviewScheduled) {
+    if (candidate.stage !== "Shortlisted") {
       setRejectError(
-        "Interview has already been scheduled for this candidate."
+        "Only shortlisted candidates can be scheduled for an interview."
+      );
+
+      return;
+    }
+
+    if (interviewIsScheduled) {
+      setRejectError(
+        "Interview is already scheduled for this candidate."
       );
 
       return;
@@ -266,6 +301,25 @@ function CandidateProfile({
 
   const handleScreeningDecision =
     async (status) => {
+      if (!candidateId) {
+        setRejectError(
+          "Candidate ID not found."
+        );
+
+        return;
+      }
+
+      if (
+        candidate.stage !==
+        "Screening"
+      ) {
+        setRejectError(
+          "Screening decision is only available during Screening."
+        );
+
+        return;
+      }
+
       try {
         setDecisionLoading(true);
         setRejectError("");
@@ -281,6 +335,12 @@ function CandidateProfile({
 
         onClose();
       } catch (error) {
+        console.error(
+          "SCREENING DECISION ERROR:",
+          error?.response?.data ||
+            error
+        );
+
         setRejectError(
           error?.response?.data
             ?.message ||
@@ -295,7 +355,44 @@ function CandidateProfile({
   // PASS INTERVIEW
   // =====================================================
 
+  /*
+    IMPORTANT:
+
+    Candidate must first have a
+    COMPLETED interview.
+
+    Just being in "Interview" stage
+    is NOT enough.
+  */
+
   const handlePassInterview = () => {
+    if (!candidateId) {
+      setRejectError(
+        "Candidate ID not found."
+      );
+
+      return;
+    }
+
+    if (
+      candidate.stage !==
+      "Interview"
+    ) {
+      setRejectError(
+        "Candidate is not currently in the Interview stage."
+      );
+
+      return;
+    }
+
+    if (!interviewIsCompleted) {
+      setRejectError(
+        "Interview must be completed before passing the candidate."
+      );
+
+      return;
+    }
+
     if (onOpenOfferModal) {
       onOpenOfferModal(candidate);
     }
@@ -307,12 +404,9 @@ function CandidateProfile({
 
   const handleOfferDecision =
     async (status) => {
-      if (
-        status === "Accepted" &&
-        onAcceptOffer
-      ) {
-        await onAcceptOffer(
-          candidate
+      if (!candidateId) {
+        setRejectError(
+          "Candidate ID not found."
         );
 
         return;
@@ -321,6 +415,17 @@ function CandidateProfile({
       try {
         setDecisionLoading(true);
         setRejectError("");
+
+        if (
+          status === "Accepted" &&
+          onAcceptOffer
+        ) {
+          await onAcceptOffer(
+            candidate
+          );
+
+          return;
+        }
 
         await updateOfferStatus(
           candidateId,
@@ -339,6 +444,12 @@ function CandidateProfile({
 
         onClose();
       } catch (error) {
+        console.error(
+          "OFFER DECISION ERROR:",
+          error?.response?.data ||
+            error
+        );
+
         setRejectError(
           error?.response?.data
             ?.message ||
@@ -693,7 +804,8 @@ function CandidateProfile({
             {/* PASS INTERVIEW */}
 
             {candidate.stage ===
-              "Interview" && (
+              "Interview" &&
+              interviewIsCompleted && (
               <button
                 type="button"
                 disabled={
@@ -744,18 +856,20 @@ function CandidateProfile({
 
             {/* SCHEDULE */}
 
-            {!isRejected &&
-              !interviewScheduled && (
-                <button
-                  type="button"
-                  onClick={
-                    handleScheduleInterview
-                  }
-                  className="rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-blue-700"
-                >
-                  Schedule Interview
-                </button>
-              )}
+            {candidate.stage ===
+              "Shortlisted" &&
+              !isRejected &&
+              !interviewIsScheduled && (
+              <button
+                type="button"
+                onClick={
+                  handleScheduleInterview
+                }
+                className="rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-blue-700"
+              >
+                Schedule Interview
+              </button>
+            )}
 
           </div>
 
