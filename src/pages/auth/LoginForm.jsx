@@ -66,19 +66,19 @@ navigate("/dashboard");
     >
       <div className="w-full max-w-lg">
 
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 text-left">
+        <h1 className="text-2xl sm:text-4xl lg:text-3xl font-bold text-gray-900 text-left">
           Sign in
         </h1>
 
-        <p className="mt-2 text-left sm:text-xl lg:text-2xl text-gray-500">
+        <p className="mt-2 text-left sm:text-sm lg:text-sm text-gray-500">
           Welcome back — enter your credentials.
         </p>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-3">
 
     
           <div className="mb-5">
-            <span className="text-2xl flex font-semibold text-gray-900">
+            <span className="text-1xl flex font-semibold text-gray-900">
               Email
             </span>
 
@@ -93,7 +93,7 @@ navigate("/dashboard");
 
          
           <div className="mb-5">
-            <span className="text-2xl flex font-semibold text-gray-900">
+            <span className="text-1xl flex font-semibold text-gray-900">
               Password
             </span>
 
@@ -107,7 +107,7 @@ navigate("/dashboard");
           </div>
 
          
-          <div className="mb-8 flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between">
 
             <Checkbox
               label="Keep me signed in"
@@ -118,7 +118,7 @@ navigate("/dashboard");
 
             <Link
               to="/forgot-password"
-              className="text-blue-500 text-base sm:text-xl lg:text-2xl"
+              className="text-blue-700 text-base sm:text-xl lg:text-sm"
             >
               Forgot password?
             </Link>
