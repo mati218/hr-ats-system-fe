@@ -20,6 +20,39 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    if (name === "name") {
+      const cleanedValue = value.replace(/[^A-Za-z\s]/g, "");
+
+      setForm((prev) => ({
+        ...prev,
+        [name]: cleanedValue,
+      }));
+
+      return;
+    }
+
+    if (name === "phone") {
+      const cleanedValue = value.replace(/\D/g, "");
+
+      setForm((prev) => ({
+        ...prev,
+        [name]: cleanedValue,
+      }));
+
+      return;
+    }
+
+    if (name === "experience") {
+      const cleanedValue = value.replace(/\D/g, "");
+
+      setForm((prev) => ({
+        ...prev,
+        [name]: cleanedValue,
+      }));
+
+      return;
+    }
+
     setForm((prev) => ({
       ...prev,
       [name]: value,
@@ -57,8 +90,31 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
       return;
     }
 
+    if (!/^[A-Za-z\s]+$/.test(form.name.trim())) {
+      toast.error("Name should contain characters only.");
+      return;
+    }
+
     if (!form.email.trim()) {
       toast.error("Please enter your email.");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    if (form.phone.trim() && !/^\d+$/.test(form.phone.trim())) {
+      toast.error("Phone number should contain numbers only.");
+      return;
+    }
+
+    if (
+      form.experience.trim() &&
+      !/^\d+$/.test(form.experience.trim())
+    ) {
+      toast.error("Experience should contain numbers only.");
       return;
     }
 
@@ -183,7 +239,8 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
                 name="phone"
                 value={form.phone}
                 onChange={handleChange}
-                placeholder="+92 3xx xxxxxxx"
+                placeholder="03001234567"
+                inputMode="numeric"
                 disabled={submitting}
                 className="mt-1 h-10.5 w-full rounded-[10px] border border-[#DDE2EA] bg-white px-3 text-[14px] text-[#111827] outline-none placeholder:text-[#64748B] focus:border-[#315FEA] disabled:bg-slate-50"
               />
@@ -200,6 +257,7 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
                 value={form.experience}
                 onChange={handleChange}
                 placeholder="5"
+                inputMode="numeric"
                 disabled={submitting}
                 className="mt-1 h-10.5 w-full rounded-[10px] border border-[#DDE2EA] bg-white px-3 text-[14px] text-[#111827] outline-none placeholder:text-[#64748B] focus:border-[#315FEA] disabled:bg-slate-50"
               />
@@ -267,9 +325,7 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
               disabled={submitting}
               className="h-10 rounded-[11px] bg-[#315FEA] px-4 text-[14px] font-semibold text-white hover:bg-[#2853D5] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {submitting
-                ? "Submitting..."
-                : "Submit Application"}
+              {submitting ? "Submitting..." : "Submit Application"}
             </button>
           </div>
         </form>
