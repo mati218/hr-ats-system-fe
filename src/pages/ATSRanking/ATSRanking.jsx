@@ -10,6 +10,7 @@ import { getATSRanking } from "../../lib/api/atsApi";
 import { getRequisitions } from "../../lib/api/requisitionApi";
 
 import {
+  fetchAllCandidates,
   rejectCandidate,
   getCandidate,
   scheduleInterview,
@@ -20,26 +21,17 @@ import {
 function ATSRanking() {
   const [candidates, setCandidates] = useState([]);
   const [requisitions, setRequisitions] = useState([]);
-  const [selectedRequisition, setSelectedRequisition] =
-    useState("");
+  const [selectedRequisition, setSelectedRequisition] = useState("");
 
   const [openModal, setOpenModal] = useState(false);
-  const [selectedCandidate, setSelectedCandidate] =
-    useState(null);
-  const [offerCandidate, setOfferCandidate] =
-    useState(null);
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [offerCandidate, setOfferCandidate] = useState(null);
 
-  const [scheduleModalOpen, setScheduleModalOpen] =
-    useState(false);
-  const [scheduleCandidate, setScheduleCandidate] =
-    useState(null);
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [scheduleCandidate, setScheduleCandidate] = useState(null);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // =====================================================
-  // LOAD REQUISITIONS
-  // =====================================================
 
   useEffect(() => {
     const fetchRequisitions = async () => {
@@ -50,10 +42,7 @@ function ATSRanking() {
           const jobs = response.data.data || [];
 
           setRequisitions(jobs);
-
-          if (jobs.length > 0) {
-            setSelectedRequisition(jobs[0]._id);
-          }
+          setSelectedRequisition("");
         }
       } catch (error) {
         console.error(
@@ -70,23 +59,22 @@ function ATSRanking() {
     fetchRequisitions();
   }, []);
 
-  // =====================================================
-  // LOAD ATS RANKING
-  // =====================================================
-
   useEffect(() => {
-    if (!selectedRequisition) {
-      return;
-    }
-
-    const fetchRanking = async () => {
+    const fetchCandidates = async () => {
       try {
         setLoading(true);
         setError("");
-        setCandidates([]);
 
-        const response =
-          await getATSRanking(selectedRequisition);
+        if (!selectedRequisition) {
+          const response = await fetchAllCandidates();
+
+          const data = response?.data?.data || [];
+
+          setCandidates(data);
+          return;
+        }
+
+        const response = await getATSRanking(selectedRequisition);
 
         if (response.success) {
           setCandidates(response.data || []);
@@ -102,7 +90,7 @@ function ATSRanking() {
         }
       } catch (error) {
         console.error(
-          "ATS RANKING ERROR:",
+          "ATS CANDIDATES ERROR:",
           error?.response?.data || error
         );
 
@@ -110,7 +98,7 @@ function ATSRanking() {
 
         const message =
           error?.response?.data?.message ||
-          "Failed to load ATS ranking";
+          "Failed to load candidates";
 
         setError(message);
         toast.error(message);
@@ -119,12 +107,8 @@ function ATSRanking() {
       }
     };
 
-    fetchRanking();
+    fetchCandidates();
   }, [selectedRequisition]);
-
-  // =====================================================
-  // VIEW CANDIDATE
-  // =====================================================
 
   const handleViewCandidate = async (candidate) => {
     const candidateId =
@@ -162,10 +146,6 @@ function ATSRanking() {
       );
     }
   };
-
-  // =====================================================
-  // REJECT CANDIDATE
-  // =====================================================
 
   const handleRejectCandidate = async (candidate) => {
     try {
@@ -215,10 +195,6 @@ function ATSRanking() {
     }
   };
 
-  // =====================================================
-  // OPEN SCHEDULE INTERVIEW
-  // =====================================================
-
   const handleScheduleInterview = (candidate) => {
     if (!candidate) {
       toast.error("Candidate not found.");
@@ -261,10 +237,6 @@ function ATSRanking() {
     setSelectedCandidate(null);
     setScheduleModalOpen(true);
   };
-
-  // =====================================================
-  // SUBMIT INTERVIEW
-  // =====================================================
 
   const handleSubmitInterview = async (
     candidate,
@@ -392,10 +364,6 @@ function ATSRanking() {
     }
   };
 
-  // =====================================================
-  // OPEN OFFER
-  // =====================================================
-
   const handleOpenOffer = (candidate) => {
     if (!candidate) {
       toast.error("Candidate not found.");
@@ -422,6 +390,13 @@ function ATSRanking() {
       return;
     }
 
+    if (candidate?.stage !== "Interview") {
+      toast.error(
+        "Please schedule an interview before sending an offer."
+      );
+      return;
+    }
+
     setSelectedCandidate(null);
 
     setOfferCandidate({
@@ -432,10 +407,6 @@ function ATSRanking() {
 
     setOpenModal(true);
   };
-
-  // =====================================================
-  // SEND OFFER
-  // =====================================================
 
   const handleSendOffer = async (
     candidate,
@@ -467,28 +438,16 @@ function ATSRanking() {
         return;
       }
 
-      // =================================================
-      // SEND OFFER
-      // =================================================
-
       const response =
         await sendOffer(
           candidateId,
           offerData
         );
 
-      // =================================================
-      // MOVE CANDIDATE TO OFFER SENT
-      // =================================================
-
       await moveCandidateStage(
         candidateId,
         "Offer Sent"
       );
-
-      // =================================================
-      // UPDATE ATS LIST
-      // =================================================
 
       setCandidates((prev) =>
         prev.map((item) => {
@@ -502,9 +461,7 @@ function ATSRanking() {
           ) {
             return {
               ...item,
-
               stage: "Offer Sent",
-
               offer: {
                 ...(item.offer || {}),
                 ...offerData,
@@ -517,23 +474,14 @@ function ATSRanking() {
         })
       );
 
-      // =================================================
-      // CLOSE MODAL
-      // =================================================
-
       setOpenModal(false);
       setOfferCandidate(null);
       setSelectedCandidate(null);
-
-      // =================================================
-      // SUCCESS TOAST
-      // =================================================
 
       toast.success(
         response?.data?.message ||
           "Offer sent successfully."
       );
-
     } catch (error) {
       console.error(
         "SEND OFFER ERROR:",
@@ -550,17 +498,9 @@ function ATSRanking() {
     }
   };
 
-  // =====================================================
-  // UI
-  // =====================================================
-
   return (
     <div className="min-h-screen bg-[#f5f6fa] px-6 py-7 sm:px-8">
-
-      {/* HEADER */}
-
       <div className="mb-5 flex items-start justify-between gap-5 text-left">
-
         <div>
           <h1 className="text-[22px] font-medium leading-tight text-slate-900">
             ATS Ranking
@@ -570,8 +510,6 @@ function ATSRanking() {
             Candidates auto-scored against role requirements
           </p>
         </div>
-
-        {/* JOB SELECT */}
 
         <select
           value={selectedRequisition}
@@ -605,16 +543,12 @@ function ATSRanking() {
         </select>
       </div>
 
-      {/* CANDIDATES */}
-
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-
-        {loading &&
-          selectedRequisition && (
-            <div className="px-6 py-8 text-center text-sm text-slate-500">
-              Loading candidates...
-            </div>
-          )}
+        {loading && (
+          <div className="px-6 py-8 text-center text-sm text-slate-500">
+            Loading candidates...
+          </div>
+        )}
 
         {!loading && error && (
           <div className="px-6 py-8 text-center text-sm text-red-500">
@@ -624,10 +558,9 @@ function ATSRanking() {
 
         {!loading &&
           !error &&
-          selectedRequisition &&
           candidates.length === 0 && (
             <div className="px-6 py-8 text-center text-sm text-slate-500">
-              No candidates found for this job.
+              No candidates found.
             </div>
           )}
 
@@ -642,7 +575,6 @@ function ATSRanking() {
                   candidate?._id ||
                   index
                 }
-
                 candidate={{
                   id:
                     candidate?.candidateId ||
@@ -684,7 +616,6 @@ function ATSRanking() {
                   offer:
                     candidate?.offer,
                 }}
-
                 onViewResume={() => {
                   setOfferCandidate(null);
                   setOpenModal(false);
@@ -693,13 +624,11 @@ function ATSRanking() {
                     candidate
                   );
                 }}
-
                 onMoveOffer={() => {
                   handleOpenOffer(
                     candidate
                   );
                 }}
-
                 onReject={() => {
                   handleRejectCandidate(
                     candidate
@@ -710,63 +639,48 @@ function ATSRanking() {
           )}
       </div>
 
-      {/* OFFER LETTER */}
-
       <OfferLetterModal
         isOpen={openModal}
         candidate={offerCandidate}
-
         onClose={() => {
           setOpenModal(false);
           setOfferCandidate(null);
         }}
-
         onSendOffer={
           handleSendOffer
         }
       />
 
-      {/* CANDIDATE PROFILE */}
-
       <CandidateProfile
         isOpen={
           !!selectedCandidate
         }
-
         onClose={() => {
           setSelectedCandidate(null);
         }}
-
         candidate={
           selectedCandidate
         }
-
         onScheduleInterview={
           handleScheduleInterview
         }
       />
 
-      {/* SCHEDULE INTERVIEW */}
-
       <ScheduleInterviewModal
         isOpen={
           scheduleModalOpen
         }
-
         candidate={
           scheduleCandidate
         }
-
         onClose={() => {
           setScheduleModalOpen(false);
           setScheduleCandidate(null);
         }}
-
         onSubmit={
           handleSubmitInterview
         }
       />
-
     </div>
   );
 }

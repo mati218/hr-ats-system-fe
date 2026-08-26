@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import ScoreCircle from "./ScoreCircle";
 
 import {
@@ -26,12 +27,22 @@ function CandidateProfile({
   onAcceptOffer,
   onOpenOfferModal,
 }) {
-  const [rejecting, setRejecting] = useState(false);
-  const [rejectError, setRejectError] = useState("");
-  const [downloading, setDownloading] = useState(false);
-  const [decisionLoading, setDecisionLoading] = useState(false);
+  const [rejecting, setRejecting] =
+    useState(false);
 
-  if (!isOpen || !candidate) {
+  const [rejectError, setRejectError] =
+    useState("");
+
+  const [downloading, setDownloading] =
+    useState(false);
+
+  const [decisionLoading, setDecisionLoading] =
+    useState(false);
+
+  if (
+    !isOpen ||
+    !candidate
+  ) {
     return null;
   }
 
@@ -52,39 +63,32 @@ function CandidateProfile({
     candidate.stage === "Rejected";
 
   const currentStageIndex =
-    PIPELINE_STAGES.indexOf(candidate.stage);
+    PIPELINE_STAGES.indexOf(
+      candidate.stage
+    );
+
+  const interviewScheduled =
+    !isRejected &&
+    (
+      candidate.stage ===
+        "Interview" ||
+      candidate.stage ===
+        "Offer Sent" ||
+      candidate.stage ===
+        "Hired"
+    );
 
   const progressPercent =
     currentStageIndex < 0
       ? 0
-      : (currentStageIndex /
-          (PIPELINE_STAGES.length - 1)) *
+      : (
+          currentStageIndex /
+          (
+            PIPELINE_STAGES.length -
+            1
+          )
+        ) *
         100;
-
-  // =====================================================
-  // INTERVIEW STATUS
-  // =====================================================
-
-  const interviewStatus =
-    candidate.interviewStatus || "Not Scheduled";
-
-  /*
-    Standard interview flow:
-
-    Not Scheduled
-          ↓
-      Scheduled
-          ↓
-      Completed
-          ↓
-    Passed / Failed / Hold
-  */
-
-  const interviewIsScheduled =
-    interviewStatus === "Scheduled";
-
-  const interviewIsCompleted =
-    interviewStatus === "Completed";
 
   // =====================================================
   // INITIALS
@@ -94,17 +98,22 @@ function CandidateProfile({
     candidate.name
       ?.split(" ")
       .filter(Boolean)
-      .map((word) => word[0])
+      .map(
+        (word) => word[0]
+      )
       .join("")
       .slice(0, 2)
-      .toUpperCase() || "C";
+      .toUpperCase() ||
+    "C";
 
   // =====================================================
   // RESUME
   // =====================================================
 
   const getResumeUrl = () => {
-    if (!candidate?.resumeUrl) {
+    if (
+      !candidate?.resumeUrl
+    ) {
       return "";
     }
 
@@ -119,7 +128,8 @@ function CandidateProfile({
     return "";
   };
 
-  const resumeUrl = getResumeUrl();
+  const resumeUrl =
+    getResumeUrl();
 
   const resumeName =
     candidate?.originalResumeName ||
@@ -130,177 +140,88 @@ function CandidateProfile({
   // DOWNLOAD RESUME
   // =====================================================
 
-  const handleDownloadResume = async () => {
-    if (!resumeUrl || downloading) {
-      return;
-    }
-
-    try {
-      setDownloading(true);
-
-      const response =
-        await fetch(resumeUrl);
-
-      if (!response.ok) {
-        throw new Error(
-          `Status: ${response.status}`
-        );
+  const handleDownloadResume =
+    async () => {
+      if (
+        !resumeUrl ||
+        downloading
+      ) {
+        return;
       }
 
-      const blob =
-        await response.blob();
+      try {
+        setDownloading(true);
 
-      const blobUrl =
-        window.URL.createObjectURL(blob);
+        const response =
+          await fetch(
+            resumeUrl
+          );
 
-      const link =
-        document.createElement("a");
+        if (!response.ok) {
+          throw new Error(
+            `Status: ${response.status}`
+          );
+        }
 
-      link.href = blobUrl;
-      link.download = resumeName;
+        const blob =
+          await response.blob();
 
-      document.body.appendChild(link);
+        const blobUrl =
+          window.URL.createObjectURL(
+            blob
+          );
 
-      link.click();
+        const link =
+          document.createElement(
+            "a"
+          );
 
-      document.body.removeChild(link);
+        link.href =
+          blobUrl;
 
-      window.URL.revokeObjectURL(
-        blobUrl
-      );
-    } catch (error) {
-      console.error(
-        "RESUME DOWNLOAD ERROR:",
-        error
-      );
+        link.download =
+          resumeName;
 
-      alert(
-        "Unable to download resume. Please try again."
-      );
-    } finally {
-      setDownloading(false);
-    }
-  };
+        document.body.appendChild(
+          link
+        );
+
+        link.click();
+
+        document.body.removeChild(
+          link
+        );
+
+        window.URL.revokeObjectURL(
+          blobUrl
+        );
+      } catch (error) {
+        console.error(
+          "RESUME DOWNLOAD ERROR:",
+          error
+        );
+
+        alert(
+          "Unable to download resume. Please try again."
+        );
+      } finally {
+        setDownloading(false);
+      }
+    };
 
   // =====================================================
   // REJECT CANDIDATE
   // =====================================================
 
-  const handleReject = async () => {
-    if (
-      isRejected ||
-      rejecting ||
-      decisionLoading
-    ) {
-      return;
-    }
-
-    if (!candidateId) {
-      setRejectError(
-        "Candidate ID not found."
-      );
-
-      return;
-    }
-
-    try {
-      setRejecting(true);
-      setRejectError("");
-
-      const response =
-        await rejectCandidate(
-          candidateId
-        );
-
-      const updatedCandidate =
-        response?.data?.data || {
-          ...candidate,
-          stage: "Rejected",
-        };
-
-      if (onReject) {
-        onReject(
-          updatedCandidate
-        );
+  const handleReject =
+    async () => {
+      if (
+        isRejected ||
+        rejecting
+      ) {
+        return;
       }
 
-      if (onRefresh) {
-        await onRefresh();
-      }
-
-      onClose();
-    } catch (error) {
-      console.error(
-        "REJECT ERROR:",
-        error?.response?.data ||
-          error
-      );
-
-      setRejectError(
-        error?.response?.data?.message ||
-          "Failed to reject candidate."
-      );
-    } finally {
-      setRejecting(false);
-    }
-  };
-
-  // =====================================================
-  // SCHEDULE INTERVIEW
-  // =====================================================
-
-  /*
-    IMPORTANT:
-
-    Interview can ONLY be scheduled
-    when candidate has passed screening
-    and is in Shortlisted stage.
-  */
-
-  const handleScheduleInterview = () => {
-    if (!candidateId) {
-      setRejectError(
-        "Candidate ID not found."
-      );
-
-      return;
-    }
-
-    if (isRejected) {
-      setRejectError(
-        "Rejected candidate cannot be scheduled for an interview."
-      );
-
-      return;
-    }
-
-    if (candidate.stage !== "Shortlisted") {
-      setRejectError(
-        "Only shortlisted candidates can be scheduled for an interview."
-      );
-
-      return;
-    }
-
-    if (interviewIsScheduled) {
-      setRejectError(
-        "Interview is already scheduled for this candidate."
-      );
-
-      return;
-    }
-
-    if (onScheduleInterview) {
-      onScheduleInterview(candidate);
-    }
-  };
-
-  // =====================================================
-  // SCREENING DECISION
-  // =====================================================
-
-  const handleScreeningDecision =
-    async (status) => {
       if (!candidateId) {
         setRejectError(
           "Candidate ID not found."
@@ -309,19 +230,114 @@ function CandidateProfile({
         return;
       }
 
+      try {
+        setRejecting(true);
+        setRejectError("");
+
+        const response =
+          await rejectCandidate(
+            candidateId
+          );
+
+        const updatedCandidate =
+          response?.data?.data ||
+          {
+            ...candidate,
+            stage: "Rejected",
+          };
+
+        if (onReject) {
+          onReject(
+            updatedCandidate
+          );
+        }
+
+        if (onRefresh) {
+          await onRefresh();
+        }
+
+        onClose();
+      } catch (error) {
+        console.error(
+          "REJECT ERROR:",
+          error?.response?.data ||
+            error
+        );
+
+        setRejectError(
+          error?.response?.data
+            ?.message ||
+            "Failed to reject candidate."
+        );
+      } finally {
+        setRejecting(false);
+      }
+    };
+
+  // =====================================================
+  // SCHEDULE INTERVIEW
+  // =====================================================
+
+  const handleScheduleInterview =
+    () => {
+      if (!candidateId) {
+        setRejectError(
+          "Candidate ID not found."
+        );
+
+        return;
+      }
+
+      if (isRejected) {
+        setRejectError(
+          "Rejected candidate cannot be scheduled for an interview."
+        );
+
+        return;
+      }
+
       if (
-        candidate.stage !==
-        "Screening"
+        interviewScheduled
       ) {
         setRejectError(
-          "Screening decision is only available during Screening."
+          "Interview has already been scheduled for this candidate."
+        );
+
+        return;
+      }
+
+      setRejectError("");
+
+      if (
+        onScheduleInterview
+      ) {
+        onScheduleInterview(
+          candidate
+        );
+      }
+    };
+
+  // =====================================================
+  // SCREENING DECISION
+  // =====================================================
+
+  const handleScreeningDecision =
+    async (
+      status
+    ) => {
+      if (!candidateId) {
+        setRejectError(
+          "Candidate ID not found."
         );
 
         return;
       }
 
       try {
-        setDecisionLoading(true);
+        setDecisionLoading(
+          true
+        );
+
         setRejectError("");
 
         await completeScreening(
@@ -335,19 +351,15 @@ function CandidateProfile({
 
         onClose();
       } catch (error) {
-        console.error(
-          "SCREENING DECISION ERROR:",
-          error?.response?.data ||
-            error
-        );
-
         setRejectError(
           error?.response?.data
             ?.message ||
             "Failed to update screening."
         );
       } finally {
-        setDecisionLoading(false);
+        setDecisionLoading(
+          false
+        );
       }
     };
 
@@ -355,84 +367,52 @@ function CandidateProfile({
   // PASS INTERVIEW
   // =====================================================
 
-  /*
-    IMPORTANT:
-
-    Candidate must first have a
-    COMPLETED interview.
-
-    Just being in "Interview" stage
-    is NOT enough.
-  */
-
-  const handlePassInterview = () => {
-    if (!candidateId) {
-      setRejectError(
-        "Candidate ID not found."
-      );
-
-      return;
-    }
-
-    if (
-      candidate.stage !==
-      "Interview"
-    ) {
-      setRejectError(
-        "Candidate is not currently in the Interview stage."
-      );
-
-      return;
-    }
-
-    if (!interviewIsCompleted) {
-      setRejectError(
-        "Interview must be completed before passing the candidate."
-      );
-
-      return;
-    }
-
-    if (onOpenOfferModal) {
-      onOpenOfferModal(candidate);
-    }
-  };
+  const handlePassInterview =
+    () => {
+      if (
+        onOpenOfferModal
+      ) {
+        onOpenOfferModal(
+          candidate
+        );
+      }
+    };
 
   // =====================================================
   // OFFER DECISION
   // =====================================================
 
   const handleOfferDecision =
-    async (status) => {
-      if (!candidateId) {
-        setRejectError(
-          "Candidate ID not found."
+    async (
+      status
+    ) => {
+      if (
+        status ===
+          "Accepted" &&
+        onAcceptOffer
+      ) {
+        await onAcceptOffer(
+          candidate
         );
 
         return;
       }
 
       try {
-        setDecisionLoading(true);
+        setDecisionLoading(
+          true
+        );
+
         setRejectError("");
-
-        if (
-          status === "Accepted" &&
-          onAcceptOffer
-        ) {
-          await onAcceptOffer(
-            candidate
-          );
-
-          return;
-        }
 
         await updateOfferStatus(
           candidateId,
           {
             status,
+
             rejectionReason:
-              status === "Rejected"
+              status ===
+              "Rejected"
                 ? "Candidate declined offer"
                 : "",
           }
@@ -444,19 +424,15 @@ function CandidateProfile({
 
         onClose();
       } catch (error) {
-        console.error(
-          "OFFER DECISION ERROR:",
-          error?.response?.data ||
-            error
-        );
-
         setRejectError(
           error?.response?.data
             ?.message ||
             "Failed to update offer status."
         );
       } finally {
-        setDecisionLoading(false);
+        setDecisionLoading(
+          false
+        );
       }
     };
 
@@ -466,22 +442,27 @@ function CandidateProfile({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+
       <div className="w-full max-w-[840px] overflow-hidden rounded-2xl bg-white shadow-2xl">
 
         {/* HEADER */}
 
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+
           <h2 className="text-base font-bold text-slate-800">
             Candidate Profile
           </h2>
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={
+              onClose
+            }
             className="text-xl leading-none text-slate-400 transition hover:text-slate-700"
           >
             ×
           </button>
+
         </div>
 
         <div className="max-h-[65vh] overflow-y-auto">
@@ -489,6 +470,7 @@ function CandidateProfile({
           {/* CANDIDATE INFO */}
 
           <div className="flex items-center justify-between px-6 py-5">
+
             <div className="flex items-center gap-4">
 
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-purple-600 text-base font-bold text-white">
@@ -496,6 +478,7 @@ function CandidateProfile({
               </div>
 
               <div>
+
                 <h3 className="text-base font-bold text-slate-800">
                   {candidate.name}
                 </h3>
@@ -507,13 +490,15 @@ function CandidateProfile({
                   {candidate.experience ||
                     "Experience not specified"}
                 </p>
+
               </div>
 
             </div>
 
             <ScoreCircle
               score={
-                candidate.score || 0
+                candidate.score ||
+                0
               }
               color={
                 isRejected
@@ -521,6 +506,7 @@ function CandidateProfile({
                   : "#159570"
               }
             />
+
           </div>
 
           {/* PIPELINE */}
@@ -548,7 +534,10 @@ function CandidateProfile({
                 />
 
                 {PIPELINE_STAGES.map(
-                  (stage, index) => {
+                  (
+                    stage,
+                    index
+                  ) => {
 
                     const isDone =
                       index <
@@ -567,11 +556,13 @@ function CandidateProfile({
                         <div
                           className={
                             "flex h-[22px] w-[22px] items-center justify-center rounded-full text-[10px] font-bold " +
-                            (isDone
-                              ? "bg-emerald-500 text-white"
-                              : isCurrent
-                              ? "bg-blue-600 text-white"
-                              : "border-2 border-slate-200 bg-white text-slate-400")
+                            (
+                              isDone
+                                ? "bg-emerald-500 text-white"
+                                : isCurrent
+                                ? "bg-blue-600 text-white"
+                                : "border-2 border-slate-200 bg-white text-slate-400"
+                            )
                           }
                         >
                           {isDone
@@ -592,6 +583,7 @@ function CandidateProfile({
 
               </div>
             )}
+
           </div>
 
           {/* CONTACT */}
@@ -605,23 +597,29 @@ function CandidateProfile({
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 
               <div>
+
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
                   Email
                 </label>
 
                 <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600">
-                  {candidate.email || "—"}
+                  {candidate.email ||
+                    "—"}
                 </div>
+
               </div>
 
               <div>
+
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
                   Phone
                 </label>
 
                 <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600">
-                  {candidate.phone || "—"}
+                  {candidate.phone ||
+                    "—"}
                 </div>
+
               </div>
 
             </div>
@@ -646,7 +644,9 @@ function CandidateProfile({
                   </div>
 
                   <a
-                    href={resumeUrl}
+                    href={
+                      resumeUrl
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
@@ -659,7 +659,9 @@ function CandidateProfile({
                     onClick={
                       handleDownloadResume
                     }
-                    disabled={downloading}
+                    disabled={
+                      downloading
+                    }
                     className="shrink-0 rounded-lg bg-blue-600 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {downloading
@@ -675,6 +677,7 @@ function CandidateProfile({
               )}
 
             </div>
+
           </div>
 
           {/* SKILLS */}
@@ -689,7 +692,10 @@ function CandidateProfile({
 
               {candidate.skills?.length ? (
                 candidate.skills.map(
-                  (skill, index) => (
+                  (
+                    skill,
+                    index
+                  ) => (
                     <span
                       key={`${skill}-${index}`}
                       className="rounded-md bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600"
@@ -705,6 +711,7 @@ function CandidateProfile({
               )}
 
             </div>
+
           </div>
 
           {/* NOTES */}
@@ -719,7 +726,10 @@ function CandidateProfile({
               <div className="space-y-2">
 
                 {candidate.notes.map(
-                  (note, index) => (
+                  (
+                    note,
+                    index
+                  ) => (
                     <div
                       key={
                         note._id ||
@@ -728,12 +738,16 @@ function CandidateProfile({
                       className="rounded-xl bg-slate-100 px-3.5 py-3 text-sm text-slate-500"
                     >
                       <span className="font-semibold text-slate-800">
-                        {note.author}
+                        {
+                          note.author
+                        }
                       </span>
 
                       {" — "}
 
-                      {note.text}
+                      {
+                        note.text
+                      }
                     </div>
                   )
                 )}
@@ -768,7 +782,9 @@ function CandidateProfile({
             {!isRejected && (
               <button
                 type="button"
-                onClick={handleReject}
+                onClick={
+                  handleReject
+                }
                 disabled={
                   rejecting ||
                   decisionLoading
@@ -804,8 +820,7 @@ function CandidateProfile({
             {/* PASS INTERVIEW */}
 
             {candidate.stage ===
-              "Interview" &&
-              interviewIsCompleted && (
+              "Interview" && (
               <button
                 type="button"
                 disabled={
@@ -848,7 +863,9 @@ function CandidateProfile({
 
             <button
               type="button"
-              onClick={onClose}
+              onClick={
+                onClose
+              }
               className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
             >
               Close
@@ -856,24 +873,23 @@ function CandidateProfile({
 
             {/* SCHEDULE */}
 
-            {candidate.stage ===
-              "Shortlisted" &&
-              !isRejected &&
-              !interviewIsScheduled && (
-              <button
-                type="button"
-                onClick={
-                  handleScheduleInterview
-                }
-                className="rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-blue-700"
-              >
-                Schedule Interview
-              </button>
-            )}
+            {!isRejected &&
+              !interviewScheduled && (
+                <button
+                  type="button"
+                  onClick={
+                    handleScheduleInterview
+                  }
+                  className="rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-blue-700"
+                >
+                  Schedule Interview
+                </button>
+              )}
 
           </div>
 
         </div>
+
       </div>
     </div>
   );

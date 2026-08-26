@@ -12,6 +12,7 @@ import AuditLog from "../pages/Audit Log/AuditLog";
 import ATSRanking from "../pages/ATSRanking/ATSRanking";
 import CandidatePipeline from "../pages/CandidatePipeline/CandidatePipeline";
 import Interviews from "../pages/interviews/Interviews";
+import OfferLetters from "../pages/OfferLetters/OfferLetters";
 
 const ProtectedRoutes = () => {
   return (
@@ -134,6 +135,19 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
+        {/* Offer Letters */}
+        <Route
+          element={
+            <PrivateRoute module="offerLetters" />
+          }
+        >
+          <Route
+            path="/offer-letters"
+            element={<OfferLetters />}
+          />
+        </Route>
+
+        
       </Route>
     </Route>
   );

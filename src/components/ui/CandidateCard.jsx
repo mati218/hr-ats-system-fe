@@ -1,4 +1,3 @@
-import { toast } from "sonner";
 import ScoreCircle from "./ScoreCircle";
 
 function CandidateCard({
@@ -14,14 +13,6 @@ function CandidateCard({
 
   const handleOfferClick = (e) => {
     e.stopPropagation();
-
-    if (offerAlreadySent) {
-      toast.error(
-        "Offer letter has already been sent to this candidate."
-      );
-      return;
-    }
-
     onMoveOffer();
   };
 
@@ -70,13 +61,13 @@ function CandidateCard({
         >
           View Resume
         </button>
-
         <button
           type="button"
           onClick={handleOfferClick}
+          disabled={offerAlreadySent}
           className={`rounded-xl px-6 py-3 font-semibold text-white ${
             offerAlreadySent
-              ? "cursor-not-allowed bg-slate-400"
+              ? "cursor-not-allowed bg-slate-400 opacity-70"
               : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
