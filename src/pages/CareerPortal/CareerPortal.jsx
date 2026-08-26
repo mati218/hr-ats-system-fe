@@ -26,11 +26,16 @@ const CareerPortal = () => {
 
         const allJobs = response?.data?.data || [];
 
-const availableJobs = allJobs.filter(
-  (job) => job.candidates < job.openings
-);
+        const availableJobs = allJobs.filter((job) => {
+          const hasOpenings = job.candidates < job.openings;
 
-setJobs(availableJobs);
+          const deadlineNotPassed =
+            !job.deadline || new Date(job.deadline) >= new Date();
+
+          return hasOpenings && deadlineNotPassed;
+        });
+
+        setJobs(availableJobs);
       } catch (error) {
         console.error(
           "FAILED TO FETCH OPEN JOBS:",
@@ -63,9 +68,9 @@ setJobs(availableJobs);
     }
 
     try {
-     
+
       console.log("CAREER PORTAL APPLICATION");
-      
+
 
       console.log("Candidate Name:", form.name);
       console.log("Candidate Email:", form.email);
@@ -76,7 +81,7 @@ setJobs(availableJobs);
       console.log("Role:", selectedJob.role);
       console.log("Requisition ID:", jobId);
 
-      
+
 
       const response = await applyNow({
         name: form.name,
@@ -96,14 +101,14 @@ setJobs(availableJobs);
       setSelectedJob(null);
       setShowSuccess(true);
     } catch (error) {
-      
+
       console.error("APPLICATION ERROR");
       console.error(error?.response?.data || error);
-      
+
 
       toast.error(
         error?.response?.data?.message ||
-          "Failed to submit application. Please try again."
+        "Failed to submit application. Please try again."
       );
     }
   };
@@ -241,10 +246,9 @@ setJobs(availableJobs);
                   justify-between
                   px-8
                   py-4
-                  ${
-                    index !== jobs.length - 1
-                      ? "border-b border-[#E5E7EB]"
-                      : ""
+                  ${index !== jobs.length - 1
+                    ? "border-b border-[#E5E7EB]"
+                    : ""
                   }
                 `}
               >
