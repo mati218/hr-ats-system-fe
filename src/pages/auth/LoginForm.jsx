@@ -17,9 +17,6 @@ const LoginForm = () => {
     handleSubmit,
     formState: { errors },
   } = useForm();
-
-
-
 const onSubmit = async (data) => {
   try {
     const response = await loginUser(data);
@@ -79,7 +76,7 @@ navigate("/dashboard");
     
           <div className="mb-5">
             <span className="text-1xl flex font-semibold text-gray-900">
-              Email
+              Email 
             </span>
 
             <FormInput
