@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
+
 import Button from "../components/ui/Button";
 import FormInput from "../components/ui/FormInput";
 import { ForgotPasswordApi } from "../lib/api/authApi";
@@ -13,7 +14,7 @@ const ForgotPassword = () => {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm();
 
   const onSubmit = async (data) => {
@@ -28,13 +29,12 @@ const ForgotPassword = () => {
       if (response.data.success) {
         toast.success(
           response.data.message ||
-          "Password reset link sent. Please check your email."
+            "Password reset link sent. Please check your email."
         );
 
         setEmailSent(true);
         reset();
       }
-
     } catch (error) {
       console.error(
         error.response?.data || error.message
@@ -42,7 +42,7 @@ const ForgotPassword = () => {
 
       toast.error(
         error.response?.data?.message ||
-        "Failed to send reset link"
+          "Failed to send reset link"
       );
     }
   };
@@ -50,7 +50,6 @@ const ForgotPassword = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
-
         <h2 className="text-3xl font-bold text-center mb-6">
           Forgot Password
         </h2>
@@ -62,11 +61,14 @@ const ForgotPassword = () => {
               placeholder="Enter Email"
               register={register}
               name="email"
-              errors={errors} />
+              errors={errors}
+            />
+
             <Button
               type="submit"
               className="mt-5 w-full"
-              text="Send Reset Link"
+              text={isSubmitting ? "Sending..." : "Send Reset Link"}
+              disabled={isSubmitting}
             />
           </form>
         ) : (
@@ -76,7 +78,6 @@ const ForgotPassword = () => {
             <h3 className="text-xl font-bold text-green-700">
               Email Sent Successfully
             </h3>
-
           </div>
         )}
 
@@ -89,7 +90,6 @@ const ForgotPassword = () => {
             Login
           </Link>
         </p>
-
       </div>
     </div>
   );

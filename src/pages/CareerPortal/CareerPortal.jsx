@@ -26,7 +26,13 @@ const CareerPortal = () => {
 
         console.log("OPEN JOBS:", response?.data);
 
-        setJobs(response?.data?.data || []);
+        const allJobs = response?.data?.data || [];
+
+const availableJobs = allJobs.filter(
+  (job) => job.candidates < job.openings
+);
+
+setJobs(availableJobs);
       } catch (error) {
         console.error(
           "FAILED TO FETCH OPEN JOBS:",
