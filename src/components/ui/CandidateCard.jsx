@@ -9,7 +9,9 @@ function CandidateCard({
 
   const offerAlreadySent =
     candidate?.stage === "Offer Sent" ||
-    candidate?.offer?.status === "Sent";
+    candidate?.stage === "Hired" ||
+    candidate?.offer?.status === "Sent" ||
+    candidate?.offer?.status === "Accepted";
 
   const handleOfferClick = (e) => {
     e.stopPropagation();
@@ -61,6 +63,7 @@ function CandidateCard({
         >
           View Resume
         </button>
+
         <button
           type="button"
           onClick={handleOfferClick}
@@ -71,7 +74,9 @@ function CandidateCard({
               : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
-          {offerAlreadySent ? "Offer Sent" : "Move to Offer"}
+          {offerAlreadySent
+            ? "Offer Sent"
+            : "Move to Offer"}
         </button>
       </div>
     </div>
