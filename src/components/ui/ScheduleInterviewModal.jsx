@@ -1,4 +1,9 @@
-import { useEffect, useReducer, useState } from "react";
+import {
+  useEffect,
+  useReducer,
+  useState,
+} from "react";
+
 import toast from "react-hot-toast";
 
 import { getUsersLookup } from "../../lib/api/lookupApi";
@@ -22,13 +27,13 @@ const INITIAL_FORM = {
 
 // =====================================================
 // LOCAL DATE
-// IMPORTANT:
-// Do NOT use toISOString() for input date.
-// It can move date one day backward because of UTC.
 // =====================================================
 
-const getLocalDateString = (date = new Date()) => {
-  const year = date.getFullYear();
+const getLocalDateString = (
+  date = new Date()
+) => {
+  const year =
+    date.getFullYear();
 
   const month = String(
     date.getMonth() + 1
@@ -42,15 +47,16 @@ const getLocalDateString = (date = new Date()) => {
 };
 
 // =====================================================
-// NORMALIZE DATE FROM API
+// API DATE -> INPUT DATE
 // =====================================================
 
-const getInputDate = (dateValue) => {
+const getInputDate = (
+  dateValue
+) => {
   if (!dateValue) {
     return "";
   }
 
-  // YYYY-MM-DD
   if (
     typeof dateValue === "string" &&
     /^\d{4}-\d{2}-\d{2}$/.test(
@@ -60,19 +66,22 @@ const getInputDate = (dateValue) => {
     return dateValue;
   }
 
-  // ISO date
   if (
     typeof dateValue === "string" &&
     dateValue.includes("T")
   ) {
-    // Take the date portion directly.
-    // Do NOT convert to UTC.
     return dateValue.split("T")[0];
   }
 
-  const date = new Date(dateValue);
+  const date = new Date(
+    dateValue
+  );
 
-  if (Number.isNaN(date.getTime())) {
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
     return "";
   }
 
@@ -80,10 +89,13 @@ const getInputDate = (dateValue) => {
 };
 
 // =====================================================
-// FORM REDUCER
+// REDUCER
 // =====================================================
 
-function formReducer(form, action) {
+function formReducer(
+  form,
+  action
+) {
   switch (action.type) {
     case "reset":
       return {
@@ -93,7 +105,8 @@ function formReducer(form, action) {
     case "update":
       return {
         ...form,
-        [action.field]: action.value,
+        [action.field]:
+          action.value,
       };
 
     case "setForm":
@@ -172,79 +185,81 @@ function ScheduleInterviewModal({
 
   // =====================================================
   // LOAD CANDIDATES
-  // Only candidates who can reasonably be scheduled:
-  //
-  // Applied
-  // Screening
-  // Shortlisted
-  //
-  // Exclude:
-  // Interview
-  // Offer Sent
-  // Hired
-  // Rejected
+  // ONLY FOR NORMAL SCHEDULE
   // =====================================================
 
   useEffect(() => {
-    if (!isOpen || isReschedule) {
+    if (
+      !isOpen ||
+      isReschedule
+    ) {
       return;
     }
 
-    const loadCandidates = async () => {
-      try {
-        setLoadingCandidates(true);
-
-        const response =
-          await fetchAllCandidates();
-
-        const candidateData =
-          response?.data?.data ||
-          response?.data?.candidates ||
-          response?.data ||
-          [];
-
-        const allCandidates =
-          Array.isArray(candidateData)
-            ? candidateData
-            : [];
-
-        const eligibleCandidates =
-          allCandidates.filter(
-            (item) => {
-              const stage =
-                item?.stage;
-
-              return [
-                "Applied",
-                "Screening",
-                "Shortlisted",
-              ].includes(stage);
-            }
+    const loadCandidates =
+      async () => {
+        try {
+          setLoadingCandidates(
+            true
           );
 
-        setCandidates(
-          eligibleCandidates
-        );
-      } catch (error) {
-        console.error(
-          "GET CANDIDATES ERROR:",
-          error?.response?.data ||
-            error
-        );
+          const response =
+            await fetchAllCandidates();
 
-        setCandidates([]);
+          const candidateData =
+            response?.data?.data ||
+            response?.data?.candidates ||
+            response?.data ||
+            [];
 
-        toast.error(
-          error?.response?.data?.message ||
-            "Failed to load candidates."
-        );
-      } finally {
-        setLoadingCandidates(false);
-      }
-    };
+          const allCandidates =
+            Array.isArray(
+              candidateData
+            )
+              ? candidateData
+              : [];
+
+          const eligibleCandidates =
+            allCandidates.filter(
+              (item) =>
+                [
+                  "Applied",
+                  "Screening",
+                  "Shortlisted",
+                ].includes(
+                  item?.stage
+                )
+            );
+
+          setCandidates(
+            eligibleCandidates
+          );
+        } catch (error) {
+          console.error(
+            "GET CANDIDATES ERROR:",
+            error?.response?.data ||
+              error
+          );
+
+          setCandidates([]);
+
+          toast.error(
+            error?.response?.data
+              ?.message ||
+              "Failed to load candidates."
+          );
+        } finally {
+          setLoadingCandidates(
+            false
+          );
+        }
+      };
 
     loadCandidates();
-  }, [isOpen, isReschedule]);
+  }, [
+    isOpen,
+    isReschedule,
+  ]);
 
   // =====================================================
   // LOAD INTERVIEWERS
@@ -309,7 +324,8 @@ function ScheduleInterviewModal({
           setInterviewers([]);
 
           toast.error(
-            error?.response?.data?.message ||
+            error?.response?.data
+              ?.message ||
               "Failed to load interviewers."
           );
         } finally {
@@ -323,7 +339,7 @@ function ScheduleInterviewModal({
   }, [isOpen]);
 
   // =====================================================
-  // RESET / LOAD FORM
+  // LOAD FORM
   // =====================================================
 
   useEffect(() => {
@@ -342,8 +358,10 @@ function ScheduleInterviewModal({
       const interviewerId =
         typeof interview.interviewerId ===
         "object"
-          ? interview.interviewerId?._id ||
-            interview.interviewerId?.id
+          ? interview
+              .interviewerId?._id ||
+            interview
+              .interviewerId?.id
           : interview.interviewerId;
 
       const interviewCandidate =
@@ -358,7 +376,6 @@ function ScheduleInterviewModal({
 
       dispatchForm({
         type: "setForm",
-
         value: {
           candidateId:
             candidateId || "",
@@ -406,7 +423,6 @@ function ScheduleInterviewModal({
 
     dispatchForm({
       type: "setForm",
-
       value: {
         ...INITIAL_FORM,
 
@@ -422,10 +438,13 @@ function ScheduleInterviewModal({
     candidate,
     isReschedule,
     interview,
+    activeCandidate?._id,
+    activeCandidate?.id,
+    activeCandidate?.candidateId,
   ]);
 
   // =====================================================
-  // UPDATE FORM
+  // UPDATE
   // =====================================================
 
   const update = (
@@ -450,7 +469,9 @@ function ScheduleInterviewModal({
           item?._id ||
             item?.id
         ) ===
-        String(form.candidateId)
+        String(
+          form.candidateId
+        )
     ) ||
     activeCandidate;
 
@@ -466,10 +487,7 @@ function ScheduleInterviewModal({
         activeCandidate?.id ||
         activeCandidate?.candidateId;
 
-      // -------------------------------------------------
-      // CANDIDATE
-      // -------------------------------------------------
-
+      // Candidate
       if (!candidateId) {
         toast.error(
           "Please select a candidate."
@@ -477,10 +495,7 @@ function ScheduleInterviewModal({
         return;
       }
 
-      // -------------------------------------------------
-      // DATE
-      // -------------------------------------------------
-
+      // Date
       if (!form.date) {
         toast.error(
           "Please select interview date."
@@ -488,10 +503,7 @@ function ScheduleInterviewModal({
         return;
       }
 
-      // -------------------------------------------------
-      // TIME
-      // -------------------------------------------------
-
+      // Time
       if (!form.time) {
         toast.error(
           "Please select interview time."
@@ -499,10 +511,7 @@ function ScheduleInterviewModal({
         return;
       }
 
-      // -------------------------------------------------
-      // DURATION
-      // -------------------------------------------------
-
+      // Duration
       if (!form.duration) {
         toast.error(
           "Please select interview duration."
@@ -510,13 +519,34 @@ function ScheduleInterviewModal({
         return;
       }
 
-      // -------------------------------------------------
-      // INTERVIEWER
-      // -------------------------------------------------
-
+      // Interviewer
       if (!form.interviewerId) {
         toast.error(
           "Please select interviewer."
+        );
+        return;
+      }
+
+      // Completed protection
+      if (
+        isReschedule &&
+        interview?.status ===
+          "Completed"
+      ) {
+        toast.error(
+          "Completed interview cannot be rescheduled."
+        );
+        return;
+      }
+
+      // Cancelled protection
+      if (
+        isReschedule &&
+        interview?.status ===
+          "Cancelled"
+      ) {
+        toast.error(
+          "Cancelled interview cannot be rescheduled."
         );
         return;
       }
@@ -525,9 +555,10 @@ function ScheduleInterviewModal({
         setSubmitting(true);
 
         const candidatePayload = {
-          ...(selectedCandidate || {}),
+          ...(selectedCandidate ||
+            {}),
           _id: candidateId,
-          candidateId: candidateId,
+          candidateId,
         };
 
         const interviewPayload = {
@@ -582,7 +613,8 @@ function ScheduleInterviewModal({
     };
 
   // =====================================================
-  // CANCEL INTERVIEW FROM RESCHEDULE MODAL
+  // CANCEL INTERVIEW
+  // ONLY AVAILABLE IN RESCHEDULE MODAL
   // =====================================================
 
   const handleCancelInterview =
@@ -592,6 +624,28 @@ function ScheduleInterviewModal({
         !interview ||
         cancelling
       ) {
+        return;
+      }
+
+      // Completed cannot cancel
+      if (
+        interview.status ===
+        "Completed"
+      ) {
+        toast.error(
+          "Completed interview cannot be cancelled."
+        );
+        return;
+      }
+
+      // Already cancelled
+      if (
+        interview.status ===
+        "Cancelled"
+      ) {
+        toast.error(
+          "Interview is already cancelled."
+        );
         return;
       }
 
@@ -630,16 +684,27 @@ function ScheduleInterviewModal({
   }
 
   // =====================================================
+  // RESCHEDULE CANCEL ALLOWED
+  // =====================================================
+
+  const canCancel =
+    isReschedule &&
+    interview?.status ===
+      "Confirmed";
+
+  // =====================================================
   // UI
   // =====================================================
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 p-3">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-3">
+
       <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl bg-white shadow-xl">
 
         {/* HEADER */}
 
         <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4">
+
           <div>
             <h2 className="text-base font-bold text-slate-900">
               {isReschedule
@@ -665,15 +730,14 @@ function ScheduleInterviewModal({
           >
             ×
           </button>
+
         </div>
 
         {/* BODY */}
 
         <div className="space-y-4 px-5 py-4">
 
-          {/* ========================================= */}
           {/* CANDIDATE */}
-          {/* ========================================= */}
 
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">
@@ -707,9 +771,9 @@ function ScheduleInterviewModal({
                   {loadingCandidates
                     ? "Loading candidates..."
                     : candidates.length ===
-                      0
-                    ? "No eligible candidates found"
-                    : "Select candidate"}
+                        0
+                      ? "No eligible candidates found"
+                      : "Select candidate"}
                 </option>
 
                 {candidates.map(
@@ -726,6 +790,7 @@ function ScheduleInterviewModal({
                         {item?.name ||
                           item?.fullName ||
                           "Unknown Candidate"}
+
                         {item?.role
                           ? ` — ${item.role}`
                           : ""}
@@ -737,9 +802,7 @@ function ScheduleInterviewModal({
             )}
           </div>
 
-          {/* ========================================= */}
           {/* ROUND + MODE */}
-          {/* ========================================= */}
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 
@@ -804,11 +867,10 @@ function ScheduleInterviewModal({
                 </option>
               </select>
             </div>
+
           </div>
 
-          {/* ========================================= */}
           {/* DATE + TIME */}
-          {/* ========================================= */}
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 
@@ -820,15 +882,19 @@ function ScheduleInterviewModal({
               <input
                 type="date"
                 value={form.date}
-                min={getLocalDateString()}
+                min={
+                  getLocalDateString()
+                }
                 onChange={(e) =>
                   update(
                     "date",
                     e.target.value
                   )
                 }
-                disabled={submitting}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500"
+                disabled={
+                  submitting
+                }
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500 disabled:bg-slate-100"
               />
             </div>
 
@@ -846,16 +912,16 @@ function ScheduleInterviewModal({
                     e.target.value
                   )
                 }
-                disabled={submitting}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500"
+                disabled={
+                  submitting
+                }
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500 disabled:bg-slate-100"
               />
             </div>
 
           </div>
 
-          {/* ========================================= */}
           {/* DURATION + INTERVIEWER */}
-          {/* ========================================= */}
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 
@@ -865,7 +931,9 @@ function ScheduleInterviewModal({
               </label>
 
               <select
-                value={form.duration}
+                value={
+                  form.duration
+                }
                 onChange={(e) =>
                   update(
                     "duration",
@@ -926,9 +994,9 @@ function ScheduleInterviewModal({
                   {loadingInterviewers
                     ? "Loading interviewers..."
                     : interviewers.length ===
-                      0
-                    ? "No interviewers found"
-                    : "Select interviewer"}
+                        0
+                      ? "No interviewers found"
+                      : "Select interviewer"}
                 </option>
 
                 {interviewers.map(
@@ -942,7 +1010,9 @@ function ScheduleInterviewModal({
                         key={id}
                         value={id}
                       >
-                        {interviewer.name}
+                        {
+                          interviewer.name
+                        }
                       </option>
                     );
                   }
@@ -952,9 +1022,7 @@ function ScheduleInterviewModal({
 
           </div>
 
-          {/* ========================================= */}
           {/* LOCATION */}
-          {/* ========================================= */}
 
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">
@@ -963,7 +1031,9 @@ function ScheduleInterviewModal({
 
             <input
               type="text"
-              value={form.location}
+              value={
+                form.location
+              }
               onChange={(e) =>
                 update(
                   "location",
@@ -979,9 +1049,7 @@ function ScheduleInterviewModal({
             />
           </div>
 
-          {/* ========================================= */}
           {/* NOTES */}
-          {/* ========================================= */}
 
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">
@@ -989,7 +1057,9 @@ function ScheduleInterviewModal({
             </label>
 
             <textarea
-              value={form.notes}
+              value={
+                form.notes
+              }
               onChange={(e) =>
                 update(
                   "notes",
@@ -1012,10 +1082,12 @@ function ScheduleInterviewModal({
 
         <div className="flex items-center justify-between border-t border-slate-200 px-5 py-4">
 
-          {/* CANCEL INTERVIEW ONLY IN RESCHEDULE */}
+          {/* =============================================
+              CANCEL ONLY HERE
+              ============================================= */}
 
           <div>
-            {isReschedule && (
+            {canCancel && (
               <button
                 type="button"
                 onClick={
@@ -1025,7 +1097,7 @@ function ScheduleInterviewModal({
                   submitting ||
                   cancelling
                 }
-                className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {cancelling
                   ? "Cancelling..."
@@ -1034,11 +1106,15 @@ function ScheduleInterviewModal({
             )}
           </div>
 
+          {/* RIGHT */}
+
           <div className="flex gap-2">
 
             <button
               type="button"
-              onClick={onClose}
+              onClick={
+                onClose
+              }
               disabled={
                 submitting ||
                 cancelling

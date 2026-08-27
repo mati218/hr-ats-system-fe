@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -13,6 +14,7 @@ import {
 } from "../../lib/api/interviewApi";
 
 import { getRequisitions } from "../../lib/api/requisitionApi";
+
 import { useAuth } from "../../context/useAuth";
 
 import CandidateCard from "./CandidateCard";
@@ -35,25 +37,14 @@ const SHOW_ALL = "ALL";
 function CandidatePipeline() {
   const { token } = useAuth();
 
-  // =====================================================
-  // CANDIDATES
-  // =====================================================
+  const [candidates, setCandidates] =
+    useState([]);
 
-  const [candidates, setCandidates] = useState([]);
+  const [requisitions, setRequisitions] =
+    useState([]);
 
-  // =====================================================
-  // REQUISITIONS / JOBS
-  // =====================================================
-
-  const [requisitions, setRequisitions] = useState([]);
-
-  // ALL is the default selection
   const [selectedRequisitionId, setSelectedRequisitionId] =
     useState(SHOW_ALL);
-
-  // =====================================================
-  // UI STATES
-  // =====================================================
 
   const [viewingCandidate, setViewingCandidate] =
     useState(null);
@@ -64,7 +55,8 @@ function CandidatePipeline() {
   const [offerCandidate, setOfferCandidate] =
     useState(null);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
   const [profileLoading, setProfileLoading] =
     useState(false);
@@ -73,131 +65,138 @@ function CandidatePipeline() {
   // LOAD REQUISITIONS
   // =====================================================
 
-  const loadRequisitions = useCallback(async () => {
-    try {
-      const response = await getRequisitions("All");
+  const loadRequisitions =
+    useCallback(async () => {
+      try {
+        const response =
+          await getRequisitions("All");
 
-      const requisitionData =
-        response?.data?.data ||
-        response?.data?.requisitions ||
-        response?.data ||
-        [];
+        const data =
+          response?.data?.data ||
+          response?.data?.requisitions ||
+          response?.data ||
+          [];
 
-      const normalizedRequisitions =
-        Array.isArray(requisitionData)
-          ? requisitionData
-          : [];
+        const normalized =
+          Array.isArray(data)
+            ? data
+            : [];
 
-      setRequisitions(normalizedRequisitions);
+        setRequisitions(normalized);
 
-      return normalizedRequisitions;
-    } catch (error) {
-      console.error(
-        "GET REQUISITIONS ERROR:",
-        error?.response?.data || error
-      );
+        return normalized;
+      } catch (error) {
+        console.error(
+          "GET REQUISITIONS ERROR:",
+          error?.response?.data || error
+        );
 
-      setRequisitions([]);
+        setRequisitions([]);
 
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to load jobs."
-      );
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to load jobs."
+        );
 
-      return [];
-    }
-  }, []);
-
-  // =====================================================
-  // LOAD ALL CANDIDATES
-  // =====================================================
-
-  const loadCandidates = useCallback(async () => {
-    try {
-      const response = await fetchAllCandidates();
-
-      const candidateData =
-        response?.data?.data || [];
-
-      const normalizedCandidates =
-        Array.isArray(candidateData)
-          ? candidateData
-          : [];
-
-      return normalizedCandidates;
-    } catch (error) {
-      console.error(
-        "GET CANDIDATES ERROR:",
-        error?.response?.data || error
-      );
-
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to load candidates."
-      );
-
-      return [];
-    }
-  }, []);
+        return [];
+      }
+    }, []);
 
   // =====================================================
-  // LOAD CANDIDATES FOR SELECTED JOB
+  // LOAD CANDIDATES
   // =====================================================
 
-  const loadCandidatesForSelectedJob =
+  const loadCandidates =
     useCallback(async () => {
       try {
         const response =
           await fetchAllCandidates();
 
-        const candidateData =
-          response?.data?.data || [];
+        const data =
+          response?.data?.data ||
+          response?.data?.candidates ||
+          response?.data ||
+          [];
 
-        const allCandidates =
-          Array.isArray(candidateData)
-            ? candidateData
-            : [];
-
-        // ===============================================
-        // SHOW ALL
-        // ===============================================
-
-        if (
-          selectedRequisitionId === SHOW_ALL ||
-          !selectedRequisitionId
-        ) {
-          setCandidates(allCandidates);
-          return allCandidates;
-        }
-
-        // ===============================================
-        // SELECTED JOB
-        // ===============================================
-
-        const filteredCandidates =
-          allCandidates.filter(
-            (candidate) =>
-              String(candidate?.requisitionId) ===
-              String(selectedRequisitionId)
-          );
-
-        setCandidates(filteredCandidates);
-
-        return filteredCandidates;
+        return Array.isArray(data)
+          ? data
+          : [];
       } catch (error) {
         console.error(
-          "RELOAD CANDIDATES ERROR:",
+          "GET CANDIDATES ERROR:",
           error?.response?.data || error
         );
 
         toast.error(
           error?.response?.data?.message ||
-            "Failed to refresh candidates."
+            "Failed to load candidates."
         );
 
         return [];
       }
-    }, [selectedRequisitionId]);
+    }, []);
+
+  // =====================================================
+  // FILTER CANDIDATES
+  // =====================================================
+
+  const applyCandidateFilter =
+    useCallback(
+      (
+        allCandidates,
+        requisitionId
+      ) => {
+        if (
+          requisitionId === SHOW_ALL ||
+          !requisitionId
+        ) {
+          return allCandidates;
+        }
+
+        return allCandidates.filter(
+          (candidate) =>
+            String(
+              candidate?.requisitionId?._id ||
+              candidate?.requisitionId
+            ) ===
+            String(requisitionId)
+        );
+      },
+      []
+    );
+
+  // =====================================================
+  // REFRESH CANDIDATES
+  // =====================================================
+
+  const loadCandidatesForSelectedJob =
+    useCallback(async () => {
+      try {
+        const allCandidates =
+          await loadCandidates();
+
+        const filtered =
+          applyCandidateFilter(
+            allCandidates,
+            selectedRequisitionId
+          );
+
+        setCandidates(filtered);
+
+        return filtered;
+      } catch (error) {
+        console.error(
+          "RELOAD CANDIDATES ERROR:",
+          error
+        );
+
+        return [];
+      }
+    }, [
+      loadCandidates,
+      applyCandidateFilter,
+      selectedRequisitionId,
+    ]);
 
   // =====================================================
   // INITIAL LOAD
@@ -210,128 +209,94 @@ function CandidatePipeline() {
       return;
     }
 
-    const initializePipeline = async () => {
+    const initializePipeline =
+      async () => {
+        try {
+          setLoading(true);
+
+          const [
+            loadedRequisitions,
+            loadedCandidates,
+          ] = await Promise.all([
+            loadRequisitions(),
+            loadCandidates(),
+          ]);
+
+          setRequisitions(
+            loadedRequisitions
+          );
+
+          setSelectedRequisitionId(
+            SHOW_ALL
+          );
+
+          setCandidates(
+            loadedCandidates
+          );
+        } catch (error) {
+          console.error(
+            "INITIAL PIPELINE LOAD ERROR:",
+            error
+          );
+
+          setCandidates([]);
+          setRequisitions([]);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+    initializePipeline();
+  }, [
+    token,
+    loadCandidates,
+    loadRequisitions,
+  ]);
+
+  // =====================================================
+  // JOB FILTER
+  // =====================================================
+
+  const handleRequisitionChange =
+    async (event) => {
+      const requisitionId =
+        event.target.value;
+
+      setSelectedRequisitionId(
+        requisitionId
+      );
+
       try {
         setLoading(true);
 
-        const [
-          loadedRequisitions,
-          loadedCandidates,
-        ] = await Promise.all([
-          loadRequisitions(),
-          loadCandidates(),
-        ]);
+        const allCandidates =
+          await loadCandidates();
 
-        setRequisitions(
-          loadedRequisitions
-        );
+        const filtered =
+          applyCandidateFilter(
+            allCandidates,
+            requisitionId
+          );
 
-        // ===============================================
-        // DEFAULT = SHOW ALL
-        // ===============================================
-
-        setSelectedRequisitionId(
-          SHOW_ALL
-        );
-
-        setCandidates(
-          loadedCandidates
-        );
+        setCandidates(filtered);
       } catch (error) {
         console.error(
-          "INITIAL PIPELINE LOAD ERROR:",
+          "FILTER CANDIDATES ERROR:",
           error
         );
 
         setCandidates([]);
-        setRequisitions([]);
+
+        toast.error(
+          "Failed to load candidates for this job."
+        );
       } finally {
         setLoading(false);
       }
     };
 
-    initializePipeline();
-  }, [
-    loadCandidates,
-    loadRequisitions,
-    token,
-  ]);
-
   // =====================================================
-  // CHANGE JOB / SHOW ALL
-  // =====================================================
-
-  const handleRequisitionChange = async (
-    event
-  ) => {
-    const requisitionId =
-      event.target.value;
-
-    setSelectedRequisitionId(
-      requisitionId
-    );
-
-    try {
-      setLoading(true);
-
-      const response =
-        await fetchAllCandidates();
-
-      const candidateData =
-        response?.data?.data || [];
-
-      const allCandidates =
-        Array.isArray(candidateData)
-          ? candidateData
-          : [];
-
-      // ===============================================
-      // SHOW ALL
-      // ===============================================
-
-      if (
-        requisitionId === SHOW_ALL
-      ) {
-        setCandidates(
-          allCandidates
-        );
-
-        return;
-      }
-
-      // ===============================================
-      // SELECTED JOB
-      // ===============================================
-
-      const filteredCandidates =
-        allCandidates.filter(
-          (candidate) =>
-            String(candidate?.requisitionId) ===
-            String(requisitionId)
-        );
-
-      setCandidates(
-        filteredCandidates
-      );
-    } catch (error) {
-      console.error(
-        "FILTER CANDIDATES ERROR:",
-        error?.response?.data || error
-      );
-
-      setCandidates([]);
-
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to load candidates for this job."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // =====================================================
-  // GET SELECTED REQUISITION
+  // SELECTED REQUISITION
   // =====================================================
 
   const selectedRequisition =
@@ -342,407 +307,405 @@ function CandidatePipeline() {
     );
 
   // =====================================================
-  // OPEN CANDIDATE PROFILE
+  // OPEN PROFILE
   // =====================================================
 
-  const handleCandidateClick = async (
-    candidate
-  ) => {
-    const candidateId =
-      candidate?._id ||
-      candidate?.id ||
-      candidate?.candidateId;
+  const handleCandidateClick =
+    async (candidate) => {
+      const candidateId =
+        candidate?._id ||
+        candidate?.id ||
+        candidate?.candidateId;
 
-    if (!candidateId) {
-      toast.error(
-        "Candidate ID not found."
-      );
-      return;
-    }
-
-    try {
-      setProfileLoading(true);
-
-      const response =
-        await getCandidate(candidateId);
-
-      const fullCandidate =
-        response?.data?.data ||
-        response?.data?.candidate ||
-        response?.data;
-
-      if (!fullCandidate) {
-        throw new Error(
-          "Candidate data not found."
+      if (!candidateId) {
+        toast.error(
+          "Candidate ID not found."
         );
+        return;
       }
 
-      setViewingCandidate(
-        fullCandidate
-      );
-    } catch (error) {
-      console.error(
-        "GET CANDIDATE ERROR:",
-        error?.response?.data || error
-      );
+      try {
+        setProfileLoading(true);
 
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to load candidate profile."
-      );
-    } finally {
-      setProfileLoading(false);
-    }
-  };
+        const response =
+          await getCandidate(
+            candidateId
+          );
+
+        const fullCandidate =
+          response?.data?.data ||
+          response?.data?.candidate ||
+          response?.data;
+
+        if (!fullCandidate) {
+          throw new Error(
+            "Candidate data not found."
+          );
+        }
+
+        /*
+         * IMPORTANT:
+         *
+         * Always use the complete backend
+         * candidate here.
+         *
+         * This ensures interviewStatus is
+         * current when profile is reopened.
+         */
+
+        setViewingCandidate(
+          fullCandidate
+        );
+      } catch (error) {
+        console.error(
+          "GET CANDIDATE ERROR:",
+          error?.response?.data || error
+        );
+
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to load candidate profile."
+        );
+      } finally {
+        setProfileLoading(false);
+      }
+    };
 
   // =====================================================
-  // REJECT CANDIDATE
+  // REJECT
   // =====================================================
 
-  const handleProfileReject = (
-    updatedCandidate
-  ) => {
-    const updatedCandidateId =
-      updatedCandidate?._id ||
-      updatedCandidate?.id ||
-      updatedCandidate?.candidateId;
+  const handleProfileReject =
+    async (updatedCandidate) => {
+      const id =
+        updatedCandidate?._id ||
+        updatedCandidate?.id ||
+        updatedCandidate?.candidateId;
 
-    if (!updatedCandidateId) {
-      toast.error(
-        "Candidate ID not found."
+      if (!id) {
+        toast.error(
+          "Candidate ID not found."
+        );
+        return;
+      }
+
+      setCandidates((prev) =>
+        prev.map((item) =>
+          String(item._id) ===
+          String(id)
+            ? {
+                ...item,
+                ...updatedCandidate,
+                stage: "Rejected",
+              }
+            : item
+        )
       );
-      return;
-    }
 
-    setCandidates((prev) =>
-      prev.map((item) =>
-        String(item._id) ===
-        String(updatedCandidateId)
-          ? {
-              ...item,
-              ...updatedCandidate,
-              stage: "Rejected",
-            }
-          : item
-      )
-    );
+      setViewingCandidate(null);
 
-    setViewingCandidate(null);
-
-    toast.success(
-      "Candidate rejected successfully."
-    );
-  };
+      await loadCandidatesForSelectedJob();
+    };
 
   // =====================================================
   // ACCEPT OFFER
   // =====================================================
 
-  const handleAcceptOffer = async (
-    candidate
-  ) => {
-    const candidateId =
-      candidate?._id ||
-      candidate?.id ||
-      candidate?.candidateId;
+  const handleAcceptOffer =
+    async (candidate) => {
+      const candidateId =
+        candidate?._id ||
+        candidate?.id ||
+        candidate?.candidateId;
 
-    if (!candidateId) {
-      toast.error(
-        "Candidate ID not found."
-      );
-      return;
-    }
+      if (!candidateId) {
+        toast.error(
+          "Candidate ID not found."
+        );
+        return;
+      }
 
-    try {
-      setProfileLoading(true);
+      try {
+        setProfileLoading(true);
 
-      await updateOfferStatus(
-        candidateId,
-        "Accepted"
-      );
+        await updateOfferStatus(
+          candidateId,
+          "Accepted"
+        );
 
-      // ===============================================
-      // LOCAL UPDATE
-      // ===============================================
+        await loadCandidatesForSelectedJob();
 
-      setCandidates((prev) =>
-        prev.map((item) =>
-          String(item._id) ===
-          String(candidateId)
-            ? {
-                ...item,
-                stage: "Hired",
-                offer: {
-                  ...(item.offer || {}),
-                  status: "Accepted",
-                },
-              }
-            : item
-        )
-      );
+        setViewingCandidate(null);
 
-      setViewingCandidate(null);
+        toast.success(
+          "Offer accepted! Candidate moved to Hired."
+        );
+      } catch (error) {
+        console.error(
+          "ACCEPT OFFER ERROR:",
+          error?.response?.data || error
+        );
 
-      // ===============================================
-      // DATABASE REFRESH
-      // ===============================================
-
-      await loadCandidatesForSelectedJob();
-
-      toast.success(
-        "Offer accepted! Candidate moved to Hired."
-      );
-    } catch (error) {
-      console.error(
-        "ACCEPT OFFER ERROR:",
-        error?.response?.data || error
-      );
-
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to accept offer. Please try again."
-      );
-    } finally {
-      setProfileLoading(false);
-    }
-  };
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to accept offer."
+        );
+      } finally {
+        setProfileLoading(false);
+      }
+    };
 
   // =====================================================
   // OPEN OFFER MODAL
   // =====================================================
 
-  const handleOpenOfferModal = (
-    candidate
-  ) => {
-    setViewingCandidate(null);
-    setOfferCandidate(candidate);
-  };
+  const handleOpenOfferModal =
+    (candidate) => {
+      /*
+       * Close profile first.
+       * Then open OfferLetter.
+       */
+
+      setViewingCandidate(null);
+
+      setOfferCandidate(candidate);
+    };
 
   // =====================================================
   // SEND OFFER
   // =====================================================
 
-  const handleSendOfferSubmit = async (
-    candidate,
-    offerData
-  ) => {
-    const candidateId =
-      candidate?._id ||
-      candidate?.id ||
-      candidate?.candidateId;
+  const handleSendOfferSubmit =
+    async (
+      candidate,
+      offerData
+    ) => {
+      const candidateId =
+        candidate?._id ||
+        candidate?.id ||
+        candidate?.candidateId;
 
-    if (!candidateId) {
-      toast.error(
-        "Candidate ID not found."
-      );
-      return;
-    }
+      if (!candidateId) {
+        toast.error(
+          "Candidate ID not found."
+        );
+        return;
+      }
 
-    try {
-      // ===============================================
-      // STEP 1: SEND OFFER
-      // ===============================================
+      try {
+        /*
+         * Backend should verify:
+         *
+         * candidate.stage === Interview
+         * candidate.interviewStatus === Passed
+         */
 
-      await sendOffer(
-        candidateId,
-        offerData
-      );
+        await sendOffer(
+          candidateId,
+          offerData
+        );
 
-      // ===============================================
-      // STEP 2: LOCAL UPDATE
-      // ===============================================
+        setCandidates((prev) =>
+          prev.map((item) =>
+            String(item._id) ===
+            String(candidateId)
+              ? {
+                  ...item,
+                  stage: "Offer Sent",
+                  offer: {
+                    ...(item.offer || {}),
+                    ...offerData,
+                    status: "Sent",
+                  },
+                }
+              : item
+          )
+        );
 
-      setCandidates((prev) =>
-        prev.map((item) =>
-          String(item._id) ===
-          String(candidateId)
-            ? {
-                ...item,
-                stage: "Offer Sent",
-                offer: {
-                  ...(item.offer || {}),
-                  ...offerData,
-                  status: "Sent",
-                },
-              }
-            : item
-        )
-      );
+        setOfferCandidate(null);
+        setViewingCandidate(null);
 
-      // ===============================================
-      // STEP 3: CLOSE MODALS
-      // ===============================================
+        await loadCandidatesForSelectedJob();
 
-      setOfferCandidate(null);
+        toast.success(
+          "Offer sent successfully. Candidate moved to Offer Sent."
+        );
+      } catch (error) {
+        console.error(
+          "SEND OFFER ERROR:",
+          error?.response?.data || error
+        );
+
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to send offer."
+        );
+
+        throw error;
+      }
+    };
+
+  // =====================================================
+  // OPEN SCHEDULE
+  // =====================================================
+
+  const handleOpenSchedule =
+    (candidate) => {
+      if (!candidate) {
+        toast.error(
+          "Candidate not found."
+        );
+        return;
+      }
+
+      if (
+        candidate.stage ===
+        "Rejected"
+      ) {
+        toast.error(
+          "Rejected candidate cannot be scheduled."
+        );
+        return;
+      }
+
+      if (
+        candidate.interviewStatus ===
+        "Scheduled"
+      ) {
+        toast.error(
+          "Interview is already scheduled. Use Reschedule."
+        );
+        return;
+      }
+
+      if (
+        candidate.interviewStatus ===
+          "Passed" ||
+        candidate.interviewStatus ===
+          "Completed"
+      ) {
+        toast.error(
+          "Completed interview cannot be scheduled again."
+        );
+        return;
+      }
+
+      if (
+        candidate.stage ===
+          "Offer Sent" ||
+        candidate.stage === "Hired"
+      ) {
+        toast.error(
+          "Interview cannot be scheduled at this stage."
+        );
+        return;
+      }
+
       setViewingCandidate(null);
 
-      // ===============================================
-      // STEP 4: REFRESH
-      // ===============================================
-
-      await loadCandidatesForSelectedJob();
-
-      toast.success(
-        "Offer sent successfully. Candidate moved to Offer Sent."
+      setSchedulingCandidate(
+        candidate
       );
-    } catch (error) {
-      console.error(
-        "SEND OFFER ERROR:",
-        error?.response?.data || error
-      );
-
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to send offer."
-      );
-
-      throw error;
-    }
-  };
-
-  // =====================================================
-  // OPEN SCHEDULE INTERVIEW
-  // =====================================================
-
-  const handleOpenSchedule = (
-    candidate
-  ) => {
-    if (!candidate) {
-      toast.error(
-        "Candidate not found."
-      );
-      return;
-    }
-
-    const currentStage =
-      candidate.stage;
-
-    if (
-      currentStage === "Rejected"
-    ) {
-      toast.error(
-        "Rejected candidate cannot be scheduled for an interview."
-      );
-      return;
-    }
-
-    if (
-      currentStage === "Interview" ||
-      currentStage === "Offer Sent" ||
-      currentStage === "Hired"
-    ) {
-      toast.error(
-        "Interview has already been scheduled for this candidate."
-      );
-      return;
-    }
-
-    setViewingCandidate(null);
-
-    setSchedulingCandidate(
-      candidate
-    );
-  };
+    };
 
   // =====================================================
   // SCHEDULE INTERVIEW
- const handleScheduleSubmit = async (
-  candidate,
-  form
-) => {
-  const candidateId =
-    candidate?._id ||
-    candidate?.id ||
-    candidate?.candidateId;
+  // =====================================================
 
-  if (!candidateId) {
-    toast.error("Candidate ID not found.");
-    return;
-  }
+  const handleScheduleSubmit =
+    async (
+      candidate,
+      form
+    ) => {
+      const candidateId =
+        candidate?._id ||
+        candidate?.id ||
+        candidate?.candidateId;
 
-  if (
-    candidate.stage === "Rejected" ||
-    candidate.stage === "Interview" ||
-    candidate.stage === "Offer Sent" ||
-    candidate.stage === "Hired"
-  ) {
-    toast.error(
-      "Interview cannot be scheduled for this candidate."
-    );
-    return;
-  }
+      if (!candidateId) {
+        toast.error(
+          "Candidate ID not found."
+        );
+        return;
+      }
 
-  try {
-    const response = await scheduleInterview({
-      candidateId,
+      if (
+        candidate?.interviewStatus ===
+        "Scheduled"
+      ) {
+        toast.error(
+          "Interview is already scheduled."
+        );
+        return;
+      }
 
-      round: form.round,
+      if (
+        candidate?.interviewStatus ===
+          "Passed" ||
+        candidate?.interviewStatus ===
+          "Completed"
+      ) {
+        toast.error(
+          "Completed interview cannot be scheduled again."
+        );
+        return;
+      }
 
-      mode: form.mode,
+      try {
+        const response =
+          await scheduleInterview({
+            candidateId,
 
-      date: form.date,
+            round: form?.round,
 
-      time: form.time,
+            mode: form?.mode,
 
-      duration: Number(form.duration),
+            date: form?.date,
 
-      interviewerId: form.interviewerId,
+            time: form?.time,
 
-      location: form.location,
+            duration:
+              Number(form?.duration) || 0,
 
-      notes: form.notes,
-    });
+            interviewerId:
+              form?.interviewerId,
 
-    console.log(
-      "SCHEDULE INTERVIEW RESPONSE:",
-      response
-    );
+            location:
+              form?.location || "",
 
-    // ===============================================
-    // LOCAL PIPELINE UPDATE
-    // ===============================================
+            notes:
+              form?.notes || "",
+          });
 
-    setCandidates((prev) =>
-      prev.map((item) =>
-        String(item._id) ===
-        String(candidateId)
-          ? {
-              ...item,
-              stage: "Interview",
-            }
-          : item
-      )
-    );
+        console.log(
+          "SCHEDULE INTERVIEW RESPONSE:",
+          response
+        );
 
-    // ===============================================
-    // CLOSE MODAL
-    // ===============================================
+        setSchedulingCandidate(
+          null
+        );
 
-    setSchedulingCandidate(null);
+        await loadCandidatesForSelectedJob();
 
-    toast.success(
-      "Interview scheduled successfully."
-    );
+        toast.success(
+          "Interview scheduled successfully."
+        );
+      } catch (error) {
+        console.error(
+          "SCHEDULE INTERVIEW ERROR:",
+          error?.response?.data || error
+        );
 
-    // ===============================================
-    // REFRESH
-    // ===============================================
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to schedule interview."
+        );
 
-    await loadCandidatesForSelectedJob();
-  } catch (error) {
-    console.error(
-      "SCHEDULE INTERVIEW ERROR:",
-      error?.response?.data || error
-    );
+        throw error;
+      }
+    };
 
-    toast.error(
-      error?.response?.data?.message ||
-        "Failed to schedule interview."
-    );
-
-    throw error;
-  }
-};
   // =====================================================
   // LOADING
   // =====================================================
@@ -774,14 +737,13 @@ function CandidatePipeline() {
           </h1>
 
           <p className="text-[13px] text-slate-500">
-            {selectedRequisitionId === SHOW_ALL
+            {selectedRequisitionId ===
+            SHOW_ALL
               ? "All Jobs"
               : selectedRequisition?.role ||
                 "Select a Job"}
           </p>
         </div>
-
-        {/* JOB DROPDOWN */}
 
         <select
           value={
@@ -795,121 +757,83 @@ function CandidatePipeline() {
           }
           className="h-10 min-w-47 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-semibold"
         >
-          {requisitions.length === 0 ? (
-            <option value={SHOW_ALL}>
-              Show All
-            </option>
-          ) : (
-            <>
-              <option value={SHOW_ALL}>
-                Show All
-              </option>
+          <option value={SHOW_ALL}>
+            Show All
+          </option>
 
-              {requisitions.map(
-                (requisition) => (
-                  <option
-                    key={
-                      requisition._id
-                    }
-                    value={
-                      requisition._id
-                    }
-                  >
-                    {requisition.role}
-                  </option>
-                )
-              )}
-            </>
+          {requisitions.map(
+            (requisition) => (
+              <option
+                key={requisition._id}
+                value={requisition._id}
+              >
+                {requisition.role}
+              </option>
+            )
           )}
         </select>
       </div>
 
-      {/* NO JOB */}
-
-      {!selectedRequisitionId && (
-        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
-
-          <p className="text-sm font-semibold text-slate-600">
-            No job selected.
-          </p>
-
-          <p className="mt-1 text-xs text-slate-400">
-            Please create or select a job requisition.
-          </p>
-
-        </div>
-      )}
-
       {/* PIPELINE */}
 
-      {selectedRequisitionId && (
-        <div className="overflow-x-auto">
+      <div className="overflow-x-auto">
 
-          <div className="flex min-w-47 gap-3">
+        <div className="flex min-w-47 gap-3">
 
-            {STAGES.map(
-              (stage) => {
+          {STAGES.map((stage) => {
 
-                const stageCandidates =
-                  candidates.filter(
-                    (candidate) =>
-                      candidate.stage ===
-                      stage
-                  );
+            const stageCandidates =
+              candidates.filter(
+                (candidate) =>
+                  candidate.stage ===
+                  stage
+              );
 
-                return (
-                  <div
-                    key={stage}
-                    className="w-55 shrink-0"
-                  >
+            return (
+              <div
+                key={stage}
+                className="w-55 shrink-0"
+              >
 
-                    {/* STAGE HEADER */}
+                <div className="mb-2 flex justify-between px-1">
 
-                    <div className="mb-2 flex justify-between px-1">
+                  <h2 className="text-[11px] font-bold uppercase text-slate-500">
+                    {stage}
+                  </h2>
 
-                      <h2 className="text-[11px] font-bold uppercase text-slate-500">
-                        {stage}
-                      </h2>
+                  <span className="text-[11px] font-bold text-slate-500">
+                    {stageCandidates.length}
+                  </span>
 
-                      <span className="text-[11px] font-bold text-slate-500">
-                        {
-                          stageCandidates.length
+                </div>
+
+                <div className="flex flex-col gap-2">
+
+                  {stageCandidates.map(
+                    (candidate) => (
+                      <CandidateCard
+                        key={
+                          candidate._id
                         }
-                      </span>
+                        candidate={
+                          candidate
+                        }
+                        onClick={
+                          handleCandidateClick
+                        }
+                      />
+                    )
+                  )}
 
-                    </div>
+                </div>
 
-                    {/* CANDIDATES */}
-
-                    <div className="flex flex-col gap-2">
-
-                      {stageCandidates.map(
-                        (candidate) => (
-                          <CandidateCard
-                            key={
-                              candidate._id
-                            }
-                            candidate={
-                              candidate
-                            }
-                            onClick={
-                              handleCandidateClick
-                            }
-                          />
-                        )
-                      )}
-
-                    </div>
-
-                  </div>
-                );
-              }
-            )}
-
-          </div>
+              </div>
+            );
+          })}
 
         </div>
-      )}
+
+      </div>
 
       {/* PROFILE LOADING */}
 
