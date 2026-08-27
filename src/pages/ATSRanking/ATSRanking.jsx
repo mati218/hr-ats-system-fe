@@ -379,6 +379,7 @@ function ATSRanking() {
       return;
     }
 
+    // Check if offer has already been sent
     const offerAlreadySent =
       candidate?.stage === "Offer Sent" ||
       candidate?.offer?.status === "Sent";
@@ -434,6 +435,18 @@ function ATSRanking() {
       if (!offerData) {
         toast.error(
           "Offer details not found."
+        );
+        return;
+      }
+
+      // Prevent sending another offer
+      const offerAlreadySent =
+        candidate?.stage === "Offer Sent" ||
+        candidate?.offer?.status === "Sent";
+
+      if (offerAlreadySent) {
+        toast.error(
+          "Offer letter has already been sent to this candidate."
         );
         return;
       }
@@ -568,74 +581,91 @@ function ATSRanking() {
           !error &&
           candidates.length > 0 &&
           candidates.map(
-            (candidate, index) => (
-              <CandidateCard
-                key={
-                  candidate?.candidateId ||
-                  candidate?._id ||
-                  index
-                }
-                candidate={{
-                  id:
+            (candidate, index) => {
+              // Check whether offer was already sent
+              const offerAlreadySent =
+                candidate?.stage === "Offer Sent" ||
+                candidate?.offer?.status === "Sent";
+
+              return (
+                <CandidateCard
+                  key={
                     candidate?.candidateId ||
-                    candidate?._id,
+                    candidate?._id ||
+                    index
+                  }
+                  candidate={{
+                    id:
+                      candidate?.candidateId ||
+                      candidate?._id,
 
-                  rank: String(
-                    candidate?.rank ||
-                      index + 1
-                  ).padStart(2, "0"),
+                    rank: String(
+                      candidate?.rank ||
+                        index + 1
+                    ).padStart(2, "0"),
 
-                  score:
-                    candidate?.score || 0,
+                    score:
+                      candidate?.score || 0,
 
-                  color:
-                    candidate?.score >= 90
-                      ? "green"
-                      : candidate?.score >= 75
-                      ? "yellow"
-                      : "red",
+                    color:
+                      candidate?.score >= 90
+                        ? "green"
+                        : candidate?.score >= 75
+                        ? "yellow"
+                        : "red",
 
-                  name:
-                    candidate?.name,
+                    name:
+                      candidate?.name,
 
-                  experience:
-                    candidate?.experienceMatch
-                      ? "Experience matches"
-                      : "Experience does not match",
+                    experience:
+                      candidate?.experienceMatch
+                        ? "Experience matches"
+                        : "Experience does not match",
 
-                  role:
-                    candidate?.role,
+                    role:
+                      candidate?.role,
 
-                  skills:
-                    candidate?.matchedSkills ||
-                    [],
+                    skills:
+                      candidate?.matchedSkills ||
+                      [],
 
-                  stage:
-                    candidate?.stage,
+                    stage:
+                      candidate?.stage,
 
-                  offer:
-                    candidate?.offer,
-                }}
-                onViewResume={() => {
-                  setOfferCandidate(null);
-                  setOpenModal(false);
+                    offer:
+                      candidate?.offer,
 
-                  handleViewCandidate(
-                    candidate
-                  );
-                }}
-                onMoveOffer={() => {
-                  handleOpenOffer(
-                    candidate
-                  );
-                }}
-                onReject={() => {
-                  handleRejectCandidate(
-                    candidate
-                  );
-                }}
-              />
-            )
+                    // Offer status for CandidateCard
+                    offerAlreadySent,
+                  }}
+                  onViewResume={() => {
+                    setOfferCandidate(null);
+                    setOpenModal(false);
+
+                    handleViewCandidate(
+                      candidate
+                    );
+                  }}
+                  onMoveOffer={() => {
+                    if (offerAlreadySent) {
+                      toast.error(
+                        "Offer letter has already been sent to this candidate."
+                      );
+                      return;
+                    }
+
+                    handleOpenOffer(
+                      candidate
+                    );
+                  }}
+                  onReject={() => {
+                    handleRejectCandidate(
+                      candidate
+                    );
+                  }}
+                />
+              );
+            }
           )}
       </div>
 
