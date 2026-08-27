@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import ApplyModal from "./ApplyModal";
@@ -9,7 +8,6 @@ import { getRequisitions } from "../../lib/api/requisitionApi";
 import { applyNow } from "../../lib/api/candidateApi";
 
 const CareerPortal = () => {
-  const navigate = useNavigate();
 
   const [selectedJob, setSelectedJob] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
