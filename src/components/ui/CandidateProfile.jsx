@@ -1,14 +1,22 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import ScoreCircle from "./ScoreCircle";
-import {rejectCandidate, updateOfferStatus, completeScreening, passInterview,} from "../../lib/api/candidateApi";
+import {
+  rejectCandidate,
+  updateOfferStatus,
+  completeScreening,
+  passInterview,
+} from "../../lib/api/candidateApi";
+
 const PIPELINE_STAGES = [
   "Applied",
   "Screening",
   "Shortlisted",
   "Interview",
   "Offer Sent",
-  "Hired", ];
+  "Hired",
+];
+
 function CandidateProfile({
   isOpen,
   candidate,
@@ -17,7 +25,8 @@ function CandidateProfile({
   onReject,
   onRefresh,
   onAcceptOffer,
-  onOpenOfferModal, }) {
+  onOpenOfferModal,
+}) {
   const [rejecting, setRejecting] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [decisionLoading, setDecisionLoading] = useState(false);
@@ -34,19 +43,17 @@ function CandidateProfile({
   const isRejected = candidate.stage === "Rejected";
   const interviewStatus = candidate?.interviewStatus;
 
-  const interviewPassed =interviewStatus === "Passed";
-
+  const interviewPassed = interviewStatus === "Passed";
   const interviewScheduled = interviewStatus === "Scheduled";
 
-  const interviewCompleted = interviewStatus === "Completed" ||interviewPassed;
+  const interviewCompleted =
+    interviewStatus === "Completed" || interviewPassed;
 
-  const currentStageIndex =PIPELINE_STAGES.indexOf(candidate.stage);
+  const currentStageIndex = PIPELINE_STAGES.indexOf(candidate.stage);
 
   const progressPercent =
     currentStageIndex >= 0
-      ? (currentStageIndex /
-          (PIPELINE_STAGES.length - 1)) *
-        100
+      ? (currentStageIndex / (PIPELINE_STAGES.length - 1)) * 100
       : 0;
 
   const initials =
@@ -73,9 +80,7 @@ function CandidateProfile({
     !isRejected &&
     !interviewScheduled &&
     !interviewCompleted &&
-    !["Offer Sent", "Hired"].includes(
-      candidate.stage
-    );
+    !["Offer Sent", "Hired"].includes(candidate.stage);
 
   const canPassInterview =
     candidate.stage === "Interview" &&
@@ -85,8 +90,7 @@ function CandidateProfile({
     candidate.stage === "Interview" &&
     interviewPassed;
 
-  const canAcceptOffer =
-    candidate.stage === "Offer Sent";
+  const canAcceptOffer = candidate.stage === "Offer Sent";
 
   const handleDownloadResume = async () => {
     if (!resumeUrl || downloading) {
@@ -99,18 +103,13 @@ function CandidateProfile({
       const response = await fetch(resumeUrl);
 
       if (!response.ok) {
-        throw new Error(
-          `Status: ${response.status}`
-        );
+        throw new Error(`Status: ${response.status}`);
       }
 
       const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
 
-      const blobUrl =
-        window.URL.createObjectURL(blob);
-
-      const link =
-        document.createElement("a");
+      const link = document.createElement("a");
 
       link.href = blobUrl;
       link.download = resumeName;
@@ -121,14 +120,8 @@ function CandidateProfile({
 
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      console.error(
-        "RESUME DOWNLOAD ERROR:",
-        error
-      );
-
-      toast.error(
-        "Unable to download resume."
-      );
+      console.error("RESUME DOWNLOAD ERROR:", error);
+      toast.error("Unable to download resume.");
     } finally {
       setDownloading(false);
     }
@@ -147,8 +140,7 @@ function CandidateProfile({
     try {
       setRejecting(true);
 
-      const response =
-        await rejectCandidate(candidateId);
+      const response = await rejectCandidate(candidateId);
 
       const updatedCandidate =
         response?.data?.data || {
@@ -159,10 +151,7 @@ function CandidateProfile({
       onReject?.(updatedCandidate);
       await onRefresh?.();
 
-      toast.success(
-        "Candidate rejected successfully."
-      );
-
+      toast.success("Candidate rejected successfully.");
       onClose?.();
     } catch (error) {
       console.error(
@@ -186,9 +175,7 @@ function CandidateProfile({
     }
 
     if (isRejected) {
-      toast.error(
-        "Rejected candidate cannot be scheduled."
-      );
+      toast.error("Rejected candidate cannot be scheduled.");
       return;
     }
 
@@ -206,23 +193,15 @@ function CandidateProfile({
       return;
     }
 
-    if (
-      ["Offer Sent", "Hired"].includes(
-        candidate.stage
-      )
-    ) {
-      toast.error(
-        "Interview cannot be scheduled at this stage."
-      );
+    if (["Offer Sent", "Hired"].includes(candidate.stage)) {
+      toast.error("Interview cannot be scheduled at this stage.");
       return;
     }
 
     onScheduleInterview?.(candidate);
   };
 
-  const handleScreeningDecision = async (
-    status
-  ) => {
+  const handleScreeningDecision = async (status) => {
     if (!candidateId) {
       toast.error("Candidate ID not found.");
       return;
@@ -231,10 +210,7 @@ function CandidateProfile({
     try {
       setDecisionLoading(true);
 
-      await completeScreening(
-        candidateId,
-        status
-      );
+      await completeScreening(candidateId, status);
 
       toast.success(
         status === "Passed"
@@ -315,18 +291,13 @@ function CandidateProfile({
     onOpenOfferModal?.(candidate);
   };
 
-  const handleOfferDecision = async (
-    status
-  ) => {
+  const handleOfferDecision = async (status) => {
     if (!candidateId) {
       toast.error("Candidate ID not found.");
       return;
     }
 
-    if (
-      status === "Accepted" &&
-      onAcceptOffer
-    ) {
+    if (status === "Accepted" && onAcceptOffer) {
       await onAcceptOffer(candidate);
       return;
     }
@@ -334,16 +305,13 @@ function CandidateProfile({
     try {
       setDecisionLoading(true);
 
-      await updateOfferStatus(
-        candidateId,
-        {
-          status,
-          rejectionReason:
-            status === "Rejected"
-              ? "Candidate declined offer"
-              : "",
-        }
-      );
+      await updateOfferStatus(candidateId, {
+        status,
+        rejectionReason:
+          status === "Rejected"
+            ? "Candidate declined offer"
+            : "",
+      });
 
       toast.success(
         `Offer ${status.toLowerCase()} successfully.`
@@ -369,7 +337,6 @@ function CandidateProfile({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-[840px] overflow-hidden rounded-2xl bg-white shadow-2xl">
-
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
           <h2 className="text-base font-bold text-slate-800">
             Candidate Profile
@@ -385,7 +352,6 @@ function CandidateProfile({
         </div>
 
         <div className="max-h-[65vh] overflow-y-auto">
-
           <div className="flex items-center justify-between px-6 py-5">
             <div className="flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-purple-600 text-base font-bold text-white">
@@ -398,63 +364,17 @@ function CandidateProfile({
                 </h3>
 
                 <p className="mt-0.5 text-sm text-slate-500">
-                  Applied for{" "}
-                  {candidate.role || "—"}
-                  {" · "}
-                  {candidate.experience ||
-                    "Experience not specified"}
+                  Applied for {candidate.role || "—"} ·{" "}
+                  {candidate.experience || "Experience not specified"}
                 </p>
               </div>
             </div>
 
             <ScoreCircle
               score={candidate.score || 0}
-              color={
-                isRejected
-                  ? "#c83b3b"
-                  : "#159570"
-              }
+              color={isRejected ? "#c83b3b" : "#159570"}
             />
           </div>
-
-          {candidate.stage ===
-            "Interview" && (
-            <div className="mx-6 mb-5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    Interview Status
-                  </p>
-
-                  <p className="mt-1 text-sm font-semibold text-slate-800">
-                    {interviewStatus ||
-                      "Not Scheduled"}
-                  </p>
-                </div>
-
-                <div>
-                  {interviewScheduled && (
-                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                      Confirmed
-                    </span>
-                  )}
-
-                  {interviewPassed && (
-                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                      Completed / Passed
-                    </span>
-                  )}
-
-                  {interviewStatus ===
-                    "Cancelled" && (
-                    <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
-                      Cancelled
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="px-6">
             <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
@@ -476,43 +396,38 @@ function CandidateProfile({
                   }}
                 />
 
-                {PIPELINE_STAGES.map(
-                  (stage, index) => {
-                    const isDone =
-                      index < currentStageIndex;
+                {PIPELINE_STAGES.map((stage, index) => {
+                  const isDone = index < currentStageIndex;
+                  const isCurrent = index === currentStageIndex;
 
-                    const isCurrent =
-                      index === currentStageIndex;
-
-                    return (
+                  return (
+                    <div
+                      key={stage}
+                      className="relative z-10 flex flex-col items-center"
+                    >
                       <div
-                        key={stage}
-                        className="relative z-10 flex flex-col items-center"
-                      >
-                        <div
-                          className={
-                            "flex h-[22px] w-[22px] items-center justify-center rounded-full text-[10px] font-bold " +
-                            (isDone
-                              ? "bg-emerald-500 text-white"
-                              : isCurrent
-                              ? "bg-blue-600 text-white"
-                              : "border-2 border-slate-200 bg-white text-slate-400")
-                          }
-                        >
-                          {isDone
-                            ? "✓"
+                        className={
+                          "flex h-[22px] w-[22px] items-center justify-center rounded-full text-[10px] font-bold " +
+                          (isDone
+                            ? "bg-emerald-500 text-white"
                             : isCurrent
-                            ? "•"
-                            : index + 1}
-                        </div>
-
-                        <span className="mt-1.5 text-[11px] font-medium text-slate-500">
-                          {stage}
-                        </span>
+                            ? "bg-blue-600 text-white"
+                            : "border-2 border-slate-200 bg-white text-slate-400")
+                        }
+                      >
+                        {isDone
+                          ? "✓"
+                          : isCurrent
+                          ? "•"
+                          : index + 1}
                       </div>
-                    );
-                  }
-                )}
+
+                      <span className="mt-1.5 text-[11px] font-medium text-slate-500">
+                        {stage}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -566,9 +481,7 @@ function CandidateProfile({
 
                   <button
                     type="button"
-                    onClick={
-                      handleDownloadResume
-                    }
+                    onClick={handleDownloadResume}
                     disabled={downloading}
                     className="shrink-0 rounded-lg bg-blue-600 px-3 py-2.5 text-xs font-semibold text-white disabled:opacity-60"
                   >
@@ -592,16 +505,14 @@ function CandidateProfile({
 
             <div className="flex flex-wrap gap-2">
               {candidate.skills?.length ? (
-                candidate.skills.map(
-                  (skill, index) => (
-                    <span
-                      key={`${skill}-${index}`}
-                      className="rounded-md bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600"
-                    >
-                      {skill}
-                    </span>
-                  )
-                )
+                candidate.skills.map((skill, index) => (
+                  <span
+                    key={`${skill}-${index}`}
+                    className="rounded-md bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600"
+                  >
+                    {skill}
+                  </span>
+                ))
               ) : (
                 <span className="text-xs text-slate-400">
                   No skills recorded
@@ -617,24 +528,17 @@ function CandidateProfile({
 
             {candidate.notes?.length ? (
               <div className="space-y-2">
-                {candidate.notes.map(
-                  (note, index) => (
-                    <div
-                      key={
-                        note._id || index
-                      }
-                      className="rounded-xl bg-slate-100 px-3.5 py-3 text-sm text-slate-500"
-                    >
-                      <span className="font-semibold text-slate-800">
-                        {note.author}
-                      </span>
-
-                      {" — "}
-
-                      {note.text}
-                    </div>
-                  )
-                )}
+                {candidate.notes.map((note, index) => (
+                  <div
+                    key={note._id || index}
+                    className="rounded-xl bg-slate-100 px-3.5 py-3 text-sm text-slate-500"
+                  >
+                    <span className="font-semibold text-slate-800">
+                      {note.author}
+                    </span>{" "}
+                    — {note.text}
+                  </div>
+                ))}
               </div>
             ) : (
               <p className="text-xs text-slate-400">
@@ -645,71 +549,45 @@ function CandidateProfile({
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white px-6 py-4">
-
           <div className="flex flex-wrap items-center gap-2">
-
             {!isRejected && (
               <button
                 type="button"
                 onClick={handleReject}
-                disabled={
-                  rejecting ||
-                  decisionLoading
-                }
+                disabled={rejecting || decisionLoading}
                 className="rounded-lg bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50"
               >
-                {rejecting
-                  ? "Rejecting..."
-                  : "Reject Candidate"}
+                {rejecting ? "Rejecting..." : "Reject Candidate"}
               </button>
             )}
 
-            {candidate.stage ===
-              "Screening" && (
+            {candidate.stage === "Screening" && (
               <button
                 type="button"
-                disabled={
-                  decisionLoading
-                }
-                onClick={() =>
-                  handleScreeningDecision(
-                    "Passed"
-                  )
-                }
+                disabled={decisionLoading}
+                onClick={() => handleScreeningDecision("Passed")}
                 className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
               >
-                {decisionLoading
-                  ? "Processing..."
-                  : "Pass Screening"}
+                {decisionLoading ? "Processing..." : "Pass Screening"}
               </button>
             )}
 
             {canPassInterview && (
               <button
                 type="button"
-                disabled={
-                  decisionLoading
-                }
-                onClick={
-                  handlePassInterview
-                }
+                disabled={decisionLoading}
+                onClick={handlePassInterview}
                 className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
               >
-                {decisionLoading
-                  ? "Processing..."
-                  : "Pass Interview"}
+                {decisionLoading ? "Processing..." : "Pass Interview"}
               </button>
             )}
 
             {canMoveToOffer && (
               <button
                 type="button"
-                disabled={
-                  decisionLoading
-                }
-                onClick={
-                  handleMoveToOffer
-                }
+                disabled={decisionLoading}
+                onClick={handleMoveToOffer}
                 className="rounded-lg bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
               >
                 Move to Offer Letter
@@ -719,14 +597,8 @@ function CandidateProfile({
             {canAcceptOffer && (
               <button
                 type="button"
-                disabled={
-                  decisionLoading
-                }
-                onClick={() =>
-                  handleOfferDecision(
-                    "Accepted"
-                  )
-                }
+                disabled={decisionLoading}
+                onClick={() => handleOfferDecision("Accepted")}
                 className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
               >
                 Accept Offer
@@ -746,30 +618,19 @@ function CandidateProfile({
             {canScheduleInterview && (
               <button
                 type="button"
-                onClick={
-                  handleScheduleInterview
-                }
+                onClick={handleScheduleInterview}
                 className="rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700"
               >
                 Schedule Interview
               </button>
             )}
 
-            {candidate.stage ===
-              "Interview" &&
+            {candidate.stage === "Interview" &&
               interviewScheduled && (
-              <span className="rounded-lg bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-700">
-                Interview Scheduled
-              </span>
-            )}
-
-            {candidate.stage ===
-              "Interview" &&
-              interviewCompleted && (
-              <span className="rounded-lg bg-blue-50 px-4 py-2.5 text-xs font-semibold text-blue-700">
-                Interview Completed
-              </span>
-            )}
+                <span className="rounded-lg bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-700">
+                  Interview Scheduled
+                </span>
+              )}
           </div>
         </div>
       </div>

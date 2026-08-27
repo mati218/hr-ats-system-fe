@@ -113,10 +113,10 @@ const Sidebar = () => {
     },
 
     {
-      name: "Reports",
+      name: "Report",
       icon: <FaClock />,
-      path: "/reports",
-      module: "reports",
+      path: "/report",
+      module: "report",
     },
   ];
 
