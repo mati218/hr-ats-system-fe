@@ -19,13 +19,17 @@ const ProtectedRoutes = () => {
     <Route element={<PrivateRoute />}>
       <Route element={<MainLayout />}>
 
-        {/* Dashboard */}
         <Route
-          path="/dashboard"
-          element={<Dashboard />}
-        />
+          element={
+            <PrivateRoute module="dashboard" />
+          }
+        >
+          <Route
+            path="/dashboard"
+            element={<Dashboard />}
+          />
+        </Route>
 
-        {/* Users */}
         <Route
           element={
             <PrivateRoute module="users" />
@@ -37,7 +41,6 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
-        {/* Roles & Permissions */}
         <Route
           element={
             <PrivateRoute module="roles" />
@@ -49,7 +52,6 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
-        {/* Old roles URL */}
         <Route
           path="/roles"
           element={
@@ -60,7 +62,6 @@ const ProtectedRoutes = () => {
           }
         />
 
-        {/* Departments */}
         <Route
           element={
             <PrivateRoute module="departments" />
@@ -72,7 +73,6 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
-        {/* Audit Log */}
         <Route
           element={
             <PrivateRoute module="auditLogs" />
@@ -84,7 +84,6 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
-        {/* ATS Ranking */}
         <Route
           element={
             <PrivateRoute
@@ -99,7 +98,6 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
-        {/* Job Requisitions */}
         <Route
           element={
             <PrivateRoute module="jobRequisitions" />
@@ -111,7 +109,6 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
-        {/* Candidate Pipeline */}
         <Route
           element={
             <PrivateRoute module="candidates" />
@@ -123,7 +120,6 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
-        {/* Interviews */}
         <Route
           element={
             <PrivateRoute module="interviews" />
@@ -135,7 +131,6 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
-        {/* Offer Letters */}
         <Route
           element={
             <PrivateRoute module="offerLetters" />
@@ -147,7 +142,6 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
-        
       </Route>
     </Route>
   );
