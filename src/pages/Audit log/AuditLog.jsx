@@ -7,22 +7,22 @@ function AuditLog() {
   const [loading, setLoading] = useState(true);
 
   const fetchAuditLogs = async () => {
-  try {
-    const response = await getAuditLogs({
-      page: 1,
-      limit: 10,
-    });
+    try {
+      const response = await getAuditLogs({
+        page: 1,
+        limit: 20,
+      });
 
-    if (response.success) {
-      setAuditLogs(response.data);
+      if (response.success) {
+        setAuditLogs(response.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch audit logs:", error);
+      toast.error("Failed to load audit logs");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Failed to fetch audit logs:", error);
-    toast.error("Failed to load audit logs");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleExport = async () => {
     try {
@@ -51,7 +51,7 @@ function AuditLog() {
     }
   };
 
-   useEffect(() => {
+  useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAuditLogs();
   }, []);
@@ -133,8 +133,8 @@ function AuditLog() {
                   </td>
 
                   <td className="px-3 py-3 text-sm text-slate-900">
-  {log.description || log.action}
-</td>
+                    {log.description || log.action}
+                  </td>
 
                   <td className="px-3 py-3 text-sm text-slate-900 whitespace-nowrap">
                     {log.module}
@@ -142,11 +142,11 @@ function AuditLog() {
 
                   <td className="px-3 py-3 text-sm font-mono font-medium text-slate-900 whitespace-nowrap">
                     {new Date(log.createdAt).toLocaleString("en-US", {
-  month: "short",
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-})}
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </td>
 
                   <td className="px-3 py-3 text-sm font-mono font-medium text-slate-900 whitespace-nowrap">
