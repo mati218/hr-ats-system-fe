@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import StatCard from "../../components/ui/StatCard";
 import HiringFunnel from "../../components/ui/HiringFunnel";
 import RecentApplications from "../../components/ui/RecentApplications";
-
+import DateRangePicker from "../../components/ui/DateRangePicker";
 import { getDashboard } from "../../lib/api/dashboardApi";
 
 function Dashboard() {
@@ -17,12 +17,32 @@ function Dashboard() {
     return `${year}-${month}-${day}`;
   };
 
-  const [selectedDate, setSelectedDate] = useState(getToday());
+  const [startDate, setStartDate] = useState(
+    () =>
+      sessionStorage.getItem("dashboardStartDate") ||
+      getToday()
+  );
+
+  const [endDate, setEndDate] = useState(
+    () =>
+      sessionStorage.getItem("dashboardEndDate") ||
+      getToday()
+  );
+
+  useEffect(() => {
+    sessionStorage.setItem(
+      "dashboardStartDate",
+      startDate
+    );
+
+    sessionStorage.setItem(
+      "dashboardEndDate",
+      endDate
+    );
+  }, [startDate, endDate]);
 
   const [dashboard, setDashboard] = useState(null);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -31,7 +51,10 @@ function Dashboard() {
         setLoading(true);
         setError("");
 
-        const response = await getDashboard(selectedDate);
+        const response = await getDashboard(
+          startDate,
+          endDate
+        );
 
         setDashboard(response.data.data);
       } catch (err) {
@@ -47,17 +70,15 @@ function Dashboard() {
     };
 
     loadDashboard();
-  }, [selectedDate]);
+  }, [startDate, endDate]);
 
   const stats = dashboard?.stats || {};
-
   const funnel = dashboard?.funnel || {};
-
-  const applications = dashboard?.recentApplications || [];
+  const applications =
+    dashboard?.recentApplications || [];
 
   return (
     <div className="min-h-screen bg-slate-50 px-10 py-8">
-     
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
@@ -69,18 +90,14 @@ function Dashboard() {
           </p>
         </div>
 
-        <div>
-          <input
-            type="date"
-            value={selectedDate}
-            max={getToday()}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
-          />
-        </div>
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          onStartChange={setStartDate}
+          onEndChange={setEndDate}
+        />
       </div>
 
-     
       {loading && (
         <div className="rounded-xl bg-white p-6 text-center text-sm text-slate-500">
           Loading dashboard...
