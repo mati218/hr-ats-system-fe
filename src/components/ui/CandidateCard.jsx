@@ -4,6 +4,7 @@ function CandidateCard({
   candidate,
   onMoveOffer,
   onViewResume,
+  onViewCandidate,
 }) {
   const skills = candidate.skills || [];
 
@@ -18,8 +19,18 @@ function CandidateCard({
     onMoveOffer();
   };
 
+  const handleViewCandidateClick = (e) => {
+    e.stopPropagation();
+
+    if (onViewCandidate) {
+      onViewCandidate(candidate);
+    }
+  };
+
   return (
     <div className="flex items-center justify-between border-b border-slate-200 px-10 py-5">
+      
+      {/* LEFT SIDE */}
       <div className="flex items-center gap-8">
         <h2 className="w-3 font-bold text-slate-400">
           {candidate.rank}
@@ -52,7 +63,19 @@ function CandidateCard({
         </div>
       </div>
 
+      {/* RIGHT SIDE */}
       <div className="flex gap-4">
+
+        {/* VIEW CANDIDATE */}
+        <button
+          type="button"
+          onClick={handleViewCandidateClick}
+          className="rounded-xl border border-slate-300 bg-white px-3 py-2 font-bold text-slate-700 hover:bg-slate-50"
+        >
+          View Candidate
+        </button>
+
+        {/* VIEW RESUME */}
         <button
           type="button"
           onClick={(e) => {
@@ -64,6 +87,7 @@ function CandidateCard({
           View Resume
         </button>
 
+        {/* MOVE TO OFFER */}
         <button
           type="button"
           onClick={handleOfferClick}

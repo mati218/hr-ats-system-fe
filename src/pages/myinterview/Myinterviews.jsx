@@ -7,11 +7,14 @@ import {
   submitInterviewFeedback,
 } from "../../lib/api/myinterviewApi";
 
-import { getCandidate } from "../../lib/api/candidateApi";
+import { useAuth } from "../../context/useAuth";
 
 import SubmitFeedbackModal from "./SubmitFeedbackModal";
 import CandidateProfile from "../../components/ui/CandidateProfile";
 
+// =====================================================
+// STATUS BADGE
+// =====================================================
 
 const getStatusBadgeClasses = (status) => {
   switch (status) {
@@ -24,20 +27,26 @@ const getStatusBadgeClasses = (status) => {
     case "Cancelled":
       return "rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700";
 
+    case "Pending":
+      return "rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600";
+
     default:
       return "rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600";
   }
 };
 
 // =====================================================
-// MODE BADGE
+// MODE LABEL
 // =====================================================
 
 const getModeLabel = (mode) => {
-  if (!mode) return "";
+  if (!mode) return "N/A";
 
   switch (mode) {
     case "Video Call":
+      return "Video";
+
+    case "Video":
       return "Video";
 
     case "Onsite":
@@ -46,13 +55,16 @@ const getModeLabel = (mode) => {
     case "Phone":
       return "Phone";
 
+    case "Phone Call":
+      return "Phone";
+
     default:
       return mode;
   }
 };
 
 // =====================================================
-// DATE FORMAT
+// INTERVIEW DATE FORMAT
 // =====================================================
 
 const formatInterviewDate = (dateStr) => {
@@ -60,7 +72,6 @@ const formatInterviewDate = (dateStr) => {
     return "N/A";
   }
 
-  // YYYY-MM-DD
   if (
     typeof dateStr === "string" &&
     /^\d{4}-\d{2}-\d{2}$/.test(dateStr)
@@ -82,11 +93,10 @@ const formatInterviewDate = (dateStr) => {
     });
   }
 
-  // ISO date
   const date = new Date(dateStr);
 
   if (Number.isNaN(date.getTime())) {
-    return dateStr;
+    return "N/A";
   }
 
   return date.toLocaleDateString("en-US", {
@@ -97,7 +107,7 @@ const formatInterviewDate = (dateStr) => {
 };
 
 // =====================================================
-// FEEDBACK SUBMITTED DATE
+// SUBMITTED DATE FORMAT
 // =====================================================
 
 const formatSubmittedDate = (dateStr) => {
@@ -117,7 +127,9 @@ const formatSubmittedDate = (dateStr) => {
     })
     .toUpperCase();
 
-  const day = String(date.getDate()).padStart(2, "0");
+  const day = String(
+    date.getDate()
+  ).padStart(2, "0");
 
   return `${month} ${day}`;
 };
@@ -129,29 +141,36 @@ const formatSubmittedDate = (dateStr) => {
 const getRecommendationBadgeClasses = (
   recommendation
 ) => {
-  if (recommendation === "Hire") {
-    return "rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700";
-  }
+  switch (recommendation) {
+    case "Strong Hire":
+      return "rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700";
 
-  if (recommendation === "No Hire") {
-    return "rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700";
-  }
+    case "Hire":
+      return "rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700";
 
-  return "rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600";
+    case "No Hire":
+      return "rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700";
+
+    case "Strong No Hire":
+      return "rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700";
+
+    default:
+      return "rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600";
+  }
 };
 
 // =====================================================
-// COMPONENT
+// MY INTERVIEWS
 // =====================================================
 
 function MyInterviews() {
-  const [interviews, setInterviews] = useState([]);
+  const { user } = useAuth();
 
+  const [interviews, setInterviews] = useState([]);
   const [feedbackHistory, setFeedbackHistory] =
     useState([]);
 
   const [loading, setLoading] = useState(true);
-
   const [accessDenied, setAccessDenied] =
     useState(false);
 
@@ -166,26 +185,32 @@ function MyInterviews() {
     useState(false);
 
   // ===================================================
-  // CANDIDATE PROFILE
+  // CANDIDATE PROFILE MODAL
   // ===================================================
 
   const [viewCandidate, setViewCandidate] =
     useState(null);
 
-  const [showCandidateProfile, setShowCandidateProfile] =
-    useState(false);
+  const [
+    showCandidateProfile,
+    setShowCandidateProfile,
+  ] = useState(false);
 
-  const [loadingCandidate, setLoadingCandidate] =
-    useState(false);
-
-  // =====================================================
+  // ===================================================
   // LOAD MY INTERVIEWS + FEEDBACK
-  // =====================================================
+  // ===================================================
 
   const loadData = async () => {
     try {
       setLoading(true);
       setAccessDenied(false);
+
+      /*
+       * Backend req.user se logged-in interviewer
+       * identify karega.
+       *
+       * Yahan interviewerId send nahi karna.
+       */
 
       const [
         interviewsResponse,
@@ -195,28 +220,11 @@ function MyInterviews() {
         getMyFeedbackSubmitted(7),
       ]);
 
-      // ================================================
-      // INTERVIEWS RESPONSE
-      // Expected:
-      // {
-      //   success: true,
-      //   data: [...]
-      // }
-      // ================================================
-
       const interviewsData =
-        interviewsResponse?.data?.data ||
-        interviewsResponse?.data?.interviews ||
-        [];
-
-      // ================================================
-      // FEEDBACK RESPONSE
-      // ================================================
+        interviewsResponse?.data?.data || [];
 
       const feedbackData =
-        feedbackResponse?.data?.data ||
-        feedbackResponse?.data?.interviews ||
-        [];
+        feedbackResponse?.data?.data || [];
 
       setInterviews(
         Array.isArray(interviewsData)
@@ -235,8 +243,9 @@ function MyInterviews() {
         error?.response?.data || error
       );
 
-
-      if (error?.response?.status === 403) {
+      if (
+        error?.response?.status === 403
+      ) {
         setAccessDenied(true);
         return;
       }
@@ -250,40 +259,50 @@ function MyInterviews() {
     }
   };
 
+  // ===================================================
+  // LOAD WHEN USER IS AVAILABLE
+  // ===================================================
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (user) {
+      loadData();
+    }
+  }, [user]);
 
-  // =====================================================
+  // ===================================================
   // OPEN FEEDBACK MODAL
-  // =====================================================
+  // ===================================================
 
   const openFeedbackModal = (interview) => {
     setFeedbackTarget(interview);
     setShowFeedbackModal(true);
   };
 
-  // =====================================================
+  // ===================================================
   // CLOSE FEEDBACK MODAL
-  // =====================================================
+  // ===================================================
 
   const closeFeedbackModal = () => {
     setShowFeedbackModal(false);
     setFeedbackTarget(null);
   };
 
-  // =====================================================
+  // ===================================================
   // SUBMIT FEEDBACK
-  // =====================================================
+  // ===================================================
 
   const handleSubmitFeedback = async (
     interviewId,
     payload
   ) => {
     if (!interviewId) {
-      toast.error("Interview ID not found.");
-      throw new Error("Interview ID not found.");
+      toast.error(
+        "Interview ID not found."
+      );
+
+      throw new Error(
+        "Interview ID not found."
+      );
     }
 
     try {
@@ -305,7 +324,11 @@ function MyInterviews() {
         }
       );
 
-      // Reload interviews and feedback history
+      /*
+       * Feedback submit hone ke baad
+       * fresh data load hoga.
+       */
+
       await loadData();
     } catch (error) {
       console.error(
@@ -317,60 +340,46 @@ function MyInterviews() {
     }
   };
 
-  const handleViewCandidate = async (
-    candidate
-  ) => {
-    const candidateId =
-      candidate?._id ||
-      candidate?.id ||
-      candidate?.candidateId;
+  // ===================================================
+  // VIEW CANDIDATE
+  // ===================================================
 
-    if (!candidateId) {
-      toast.error("Candidate ID not found.");
+  /*
+   * IMPORTANT:
+   *
+   * Yahan getCandidate() API call nahi ho rahi.
+   *
+   * interview.candidateId already backend se
+   * populated aa raha hai.
+   *
+   * Isliye directly CandidateProfile modal open
+   * kar rahe hain.
+   */
+
+  const handleViewCandidate = (candidate) => {
+    if (!candidate) {
+      toast.error(
+        "Candidate information not found."
+      );
       return;
     }
 
-    try {
-      setLoadingCandidate(true);
-
-      const response =
-        await getCandidate(candidateId);
-
-      const fullCandidate =
-        response?.data?.data ||
-        response?.data?.candidate ||
-        null;
-
-      if (!fullCandidate) {
-        toast.error(
-          "Candidate profile not found."
-        );
-        return;
-      }
-
-      setViewCandidate(fullCandidate);
-      setShowCandidateProfile(true);
-    } catch (error) {
-      console.error(
-        "GET CANDIDATE ERROR:",
-        error?.response?.data || error
-      );
-
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to load candidate profile."
-      );
-    } finally {
-      setLoadingCandidate(false);
-    }
+    setViewCandidate(candidate);
+    setShowCandidateProfile(true);
   };
 
+  // ===================================================
+  // CLOSE CANDIDATE PROFILE
+  // ===================================================
 
   const closeCandidateProfile = () => {
     setShowCandidateProfile(false);
     setViewCandidate(null);
   };
 
+  // ===================================================
+  // ACCESS DENIED
+  // ===================================================
 
   if (accessDenied) {
     return (
@@ -393,6 +402,9 @@ function MyInterviews() {
     );
   }
 
+  // ===================================================
+  // LOADING
+  // ===================================================
 
   if (loading) {
     return (
@@ -406,8 +418,17 @@ function MyInterviews() {
     );
   }
 
+  // ===================================================
+  // UI
+  // ===================================================
+
   return (
     <div className="min-h-screen space-y-6 bg-slate-50/50 p-8">
+
+      {/* ============================================= */}
+      {/* HEADER */}
+      {/* ============================================= */}
+
       <div>
         <h1 className="text-2xl font-semibold text-slate-800">
           My Interviews
@@ -417,15 +438,20 @@ function MyInterviews() {
           Interviews assigned to you
         </p>
       </div>
+
+      {/* ============================================= */}
+      {/* INTERVIEWS */}
+      {/* ============================================= */}
+
       {interviews.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-          <p className="mt-4 text-base font-semibold text-slate-700">
+          <p className="text-base font-semibold text-slate-700">
             No interviews assigned
           </p>
 
           <p className="mt-1 text-sm text-slate-500">
-            You currently have no interviews assigned
-            to you.
+            You currently have no interviews
+            assigned to you.
           </p>
         </div>
       ) : (
@@ -442,11 +468,21 @@ function MyInterviews() {
               interview?._id ||
               interview?.id;
 
+            const hasFeedback =
+              Boolean(
+                interview?.feedback
+                  ?.submittedAt
+              );
+
             return (
               <div
                 key={interviewId}
                 className="flex flex-col gap-4 p-4 transition hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
               >
+
+                {/* ================================= */}
+                {/* LEFT */}
+                {/* ================================= */}
 
                 <div className="flex items-center gap-3">
 
@@ -465,9 +501,8 @@ function MyInterviews() {
 
                   </div>
 
-                  {/* CANDIDATE */}
-
                   <div>
+
                     <h2 className="text-base font-bold text-slate-900">
                       {candidate?.name ||
                         "Unknown Candidate"}
@@ -477,19 +512,28 @@ function MyInterviews() {
                       {candidate?.role ||
                         "No role"}
 
-                      {interview?.round && (
+                      {(candidate?.stage ||
+                        interview?.stage) && (
                         <>
                           {" · "}
-                          Round{" "}
-                          {interview.round}
+                          Stage{" "}
+                          {candidate?.stage ||
+                            interview?.stage}
                         </>
                       )}
                     </p>
+
                   </div>
 
                 </div>
 
+                {/* ================================= */}
+                {/* RIGHT */}
+                {/* ================================= */}
+
                 <div className="flex flex-wrap items-center gap-2">
+
+                  {/* MODE */}
 
                   {interview?.mode && (
                     <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">
@@ -499,16 +543,19 @@ function MyInterviews() {
                     </span>
                   )}
 
+                  {/* STATUS */}
+
                   <span
                     className={getStatusBadgeClasses(
                       status
                     )}
                   >
-                    {status ||
-                      "Unknown"}
+                    {status || "Unknown"}
                   </span>
 
+                  {/* ================================= */}
                   {/* VIEW CANDIDATE */}
+                  {/* ================================= */}
 
                   <button
                     type="button"
@@ -517,17 +564,14 @@ function MyInterviews() {
                         candidate
                       )
                     }
-                    disabled={
-                      loadingCandidate
-                    }
-                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
                   >
-                    {loadingCandidate
-                      ? "Loading..."
-                      : "View Candidate"}
+                    View Candidate
                   </button>
 
+                  {/* ================================= */}
                   {/* FEEDBACK */}
+                  {/* ================================= */}
 
                   <button
                     type="button"
@@ -538,8 +582,8 @@ function MyInterviews() {
                     }
                     className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-700"
                   >
-                    {interview?.feedback
-                      ? "View / Update Feedback"
+                    {hasFeedback
+                      ? "View Feedback"
                       : "Submit Feedback"}
                   </button>
 
@@ -551,22 +595,26 @@ function MyInterviews() {
         </div>
       )}
 
+      {/* ============================================= */}
+      {/* FEEDBACK HISTORY */}
+      {/* ============================================= */}
+
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-bold text-slate-800">
-              Feedback Submitted (last 7 days)
-            </h2>
-          </div>
+        <div>
+          <h2 className="text-sm font-bold text-slate-800">
+            Feedback Submitted (last 7 days)
+          </h2>
         </div>
 
         {feedbackHistory.length === 0 ? (
           <div className="mt-6 rounded-xl bg-slate-50 p-6 text-center">
+
             <p className="text-sm text-slate-500">
-              You haven't submitted any feedback
-              in the last 7 days.
+              You haven't submitted any
+              feedback in the last 7 days.
             </p>
+
           </div>
         ) : (
           <div className="mt-4 overflow-x-auto">
@@ -618,21 +666,15 @@ function MyInterviews() {
                         className="border-b border-slate-50 last:border-b-0"
                       >
 
-                        {/* CANDIDATE */}
-
                         <td className="py-3 pr-4 font-medium text-slate-800">
                           {candidate?.name ||
                             "Unknown Candidate"}
                         </td>
 
-                        {/* ROLE */}
-
                         <td className="py-3 pr-4 text-slate-600">
                           {candidate?.role ||
                             "N/A"}
                         </td>
-
-                        {/* RECOMMENDATION */}
 
                         <td className="py-3 pr-4">
 
@@ -647,15 +689,11 @@ function MyInterviews() {
 
                         </td>
 
-                        {/* RATING */}
-
                         <td className="py-3 pr-4 text-slate-600">
                           {feedback?.overallRating
                             ? `${feedback.overallRating}/5`
                             : "N/A"}
                         </td>
-
-                        {/* DATE */}
 
                         <td className="py-3 pr-4 font-mono text-xs uppercase text-slate-500">
                           {formatSubmittedDate(
@@ -677,6 +715,10 @@ function MyInterviews() {
 
       </div>
 
+      {/* ============================================= */}
+      {/* FEEDBACK MODAL */}
+      {/* ============================================= */}
+
       <SubmitFeedbackModal
         isOpen={
           showFeedbackModal
@@ -691,6 +733,10 @@ function MyInterviews() {
           handleSubmitFeedback
         }
       />
+
+      {/* ============================================= */}
+      {/* CANDIDATE PROFILE MODAL */}
+      {/* ============================================= */}
 
       <CandidateProfile
         isOpen={
