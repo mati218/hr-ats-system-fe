@@ -1,9 +1,10 @@
 import api from "./axios";
 
-export const getDashboard = (date) => {
+export const getDashboard = (startDate, endDate) => {
   return api.get("/dashboard", {
     params: {
-      date,
+      startDate,
+      endDate,
     },
   });
 };
