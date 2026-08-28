@@ -18,35 +18,39 @@ const ForgotPassword = () => {
   } = useForm();
 
   const onSubmit = async (data) => {
-    try {
-      const response = await ForgotPasswordApi(data);
+  // Prevent multiple API requests
+  if (isSubmitting || emailSent) return;
 
-      console.log(
-        "Forgot Password Response:",
-        response.data
+  try {
+    const response = await ForgotPasswordApi(data);
+
+    console.log(
+      "Forgot Password Response:",
+      response.data
+    );
+
+    if (response.data.success) {
+      // Mark as sent immediately
+      setEmailSent(true);
+
+      toast.success(
+        response.data.message ||
+          "Password reset link sent. Please check your email."
       );
 
-      if (response.data.success) {
-        toast.success(
-          response.data.message ||
-            "Password reset link sent. Please check your email."
-        );
-
-        setEmailSent(true);
-        reset();
-      }
-    } catch (error) {
-      console.error(
-        error.response?.data || error.message
-      );
-
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to send reset link"
-      );
+      reset();
     }
-  };
+  } catch (error) {
+    console.error(
+      error.response?.data || error.message
+    );
 
+    toast.error(
+      error.response?.data?.message ||
+        "Failed to send reset link"
+    );
+  }
+};
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
