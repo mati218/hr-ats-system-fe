@@ -9,6 +9,11 @@ import { isSuperAdmin } from "../utils/permissions";
 
 const modules = [
   {
+    label: "Dashboard",
+    key: "dashboard",
+
+  },
+  {
     label: "Job Requisitions",
     key: "jobRequisitions",
   },

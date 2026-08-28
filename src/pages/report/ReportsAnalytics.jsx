@@ -1,455 +1,205 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
 import {
   getRecruiterPerformance,
   exportReport,
 } from "../../lib/api/reportsApi";
 
-const EXPORT_OPTIONS = [
-  {
-    label: "Export PDF",
-    format: "pdf",
-    extension: "pdf",
-  },
-  {
-    label: "Export Excel",
-    format: "excel",
-    extension: "xlsx",
-  },
-  {
-    label: "Export CSV",
-    format: "csv",
-    extension: "csv",
-  },
+const EXPORTS = [
+  ["pdf", "pdf", "Export PDF"],
+  ["excel", "xlsx", "Export Excel"],
+  ["csv", "csv", "Export CSV"],
 ];
 
 function ReportsAnalytics() {
-  // =====================================================
-  // FILTER INPUT STATE
-  // =====================================================
-
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-
-  // =====================================================
-  // ACTUALLY APPLIED FILTERS
-  // Export bhi isi state ko use karega
-  // =====================================================
-
-  const [appliedFilters, setAppliedFilters] = useState({
-    startDate: "",
-    endDate: "",
-  });
-
-  // =====================================================
-  // REPORT DATA
-  // =====================================================
-
+  const [filters, setFilters] = useState({ startDate: "", endDate: "" });
   const [rows, setRows] = useState([]);
-
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState("");
 
-  const [exportingFormat, setExportingFormat] =
-    useState(null);
-
-  // =====================================================
-  // LOAD REPORT
-  // =====================================================
-
-  const loadReport = async (filters = {}) => {
+  const loadReport = async (start = "", end = "") => {
     try {
       setLoading(true);
-
-      const response =
-        await getRecruiterPerformance(
-          filters.startDate || "",
-          filters.endDate || ""
-        );
-
-      const data =
-        response?.data?.data || [];
-
-      setRows(
-        Array.isArray(data)
-          ? data
-          : []
-      );
-    } catch (error) {
-      console.error(
-        "GET RECRUITER PERFORMANCE ERROR:",
-        error?.response?.data || error
-      );
-
+      const res = await getRecruiterPerformance(start, end);
+      setRows(Array.isArray(res?.data?.data) ? res.data.data : []);
+    } catch (err) {
+      console.error(err);
       toast.error(
-        error?.response?.data?.message ||
-          "Failed to load recruiter performance report."
+        err?.response?.data?.message || "Failed to load report."
       );
-
       setRows([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // =====================================================
-  // INITIAL LOAD
-  // =====================================================
-
   useEffect(() => {
-    loadReport({
-      startDate: "",
-      endDate: "",
-    });
+    loadReport();
   }, []);
 
-  // =====================================================
-  // APPLY FILTERS
-  // =====================================================
-
-  const handleApplyFilters = async () => {
-    if (
-      startDate &&
-      endDate &&
-      startDate > endDate
-    ) {
-      toast.error(
-        "Start date cannot be after end date."
-      );
-
-      return;
+  const applyFilters = () => {
+    if (startDate && endDate && startDate > endDate) {
+      return toast.error("Start date cannot be after end date.");
     }
 
-    const filters = {
-      startDate,
-      endDate,
-    };
-
-    setAppliedFilters(filters);
-
-    await loadReport(filters);
+    const newFilters = { startDate, endDate };
+    setFilters(newFilters);
+    loadReport(startDate, endDate);
   };
 
-  // =====================================================
-  // CLEAR FILTERS
-  // =====================================================
-
-  const handleClearFilters = async () => {
-    setStartDate("");
-    setEndDate("");
-
-    const filters = {
-      startDate: "",
-      endDate: "",
-    };
-
-    setAppliedFilters(filters);
-
-    await loadReport(filters);
-  };
-
-  // =====================================================
-  // DOWNLOAD REPORT
-  // =====================================================
-
-  const handleExport = async ({
-    format,
-    extension,
-  }) => {
+  const exportFile = async (format, extension) => {
     try {
-      setExportingFormat(format);
+      setExporting(format);
 
-      const response =
-        await exportReport(
-          format,
-          appliedFilters.startDate,
-          appliedFilters.endDate
-        );
+      const res = await exportReport(
+        format,
+        filters.startDate,
+        filters.endDate
+      );
 
-      // ---------------------------------------------
-      // Filename from backend
-      // ---------------------------------------------
-
-      const disposition =
-        response?.headers?.[
-          "content-disposition"
-        ];
-
-      let filename =
-        `recruiter-performance-report.${extension}`;
-
-      if (disposition) {
-        const filenameMatch =
-          disposition.match(
-            /filename="?([^"]+)"?/i
-          );
-
-        if (filenameMatch?.[1]) {
-          filename =
-            filenameMatch[1];
-        }
-      }
-
-      // ---------------------------------------------
-      // Blob download
-      // ---------------------------------------------
+      const disposition = res?.headers?.["content-disposition"];
+      const match = disposition?.match(/filename="?([^"]+)"?/i);
+      const filename =
+        match?.[1] || `recruiter-performance-report.${extension}`;
 
       const blob =
-        response.data instanceof Blob
-          ? response.data
-          : new Blob([
-              response.data,
-            ]);
+        res.data instanceof Blob ? res.data : new Blob([res.data]);
 
-      const url =
-        window.URL.createObjectURL(
-          blob
-        );
-
-      const link =
-        document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
 
       link.href = url;
       link.download = filename;
-
-      document.body.appendChild(link);
-
       link.click();
 
-      link.remove();
+      URL.revokeObjectURL(url);
 
-      window.URL.revokeObjectURL(url);
-
-      toast.success(
-        `Report downloaded as ${extension.toUpperCase()}.`
-      );
-    } catch (error) {
-      console.error(
-        "EXPORT REPORT ERROR:",
-        error?.response?.data || error
-      );
-
-      toast.error(
-        "Failed to export report."
-      );
+      toast.success(`Report downloaded as ${extension.toUpperCase()}.`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to export report.");
     } finally {
-      setExportingFormat(null);
+      setExporting("");
     }
   };
 
-  // =====================================================
-  // RENDER
-  // =====================================================
-
   return (
-    <div className="min-h-screen space-y-6 bg-slate-50/50 p-8">
-      {/* =================================================
-          HEADER
-      ================================================= */}
-
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-800">
-            Reports & Analytics
-          </h1>
-
-          <p className="mt-1 text-xs font-medium text-slate-500">
-            Export hiring data for leadership review
-          </p>
-        </div>
-
-        {/* =============================================
-            EXPORT BUTTONS
-        ============================================= */}
-
-        <div className="flex flex-wrap items-center gap-2">
-          {EXPORT_OPTIONS.map(
-            (option) => (
-              <button
-                key={option.format}
-                type="button"
-                disabled={
-                  exportingFormat ===
-                  option.format
-                }
-                onClick={() =>
-                  handleExport(option)
-                }
-                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {exportingFormat ===
-                option.format
-                  ? "Exporting..."
-                  : option.label}
-              </button>
-            )
-          )}
-        </div>
-      </div>
-
-      {/* =================================================
-          FILTER + RECRUITER PERFORMANCE
-      ================================================= */}
-
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        {/* =============================================
-            TOP ROW
-        ============================================= */}
-
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          {/* ===========================================
-              FILTERS
-          =========================================== */}
-
-          <div className="flex flex-wrap items-end gap-3">
-            {/* START DATE */}
-
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-slate-500">
-                Start date
-              </label>
-
-              <input
-                type="date"
-                value={startDate}
-                max={
-                  endDate ||
-                  undefined
-                }
-                onChange={(e) =>
-                  setStartDate(
-                    e.target.value
-                  )
-                }
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-              />
-            </div>
-
-            {/* END DATE */}
-
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-slate-500">
-                End date
-              </label>
-
-              <input
-                type="date"
-                value={endDate}
-                min={
-                  startDate ||
-                  undefined
-                }
-                onChange={(e) =>
-                  setEndDate(
-                    e.target.value
-                  )
-                }
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-              />
-            </div>
-
-            {/* APPLY */}
-
-            <button
-              type="button"
-              onClick={
-                handleApplyFilters
-              }
-              disabled={loading}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Apply Filters
-            </button>
-
-            {/* CLEAR */}
-
-            {(appliedFilters.startDate ||
-              appliedFilters.endDate) && (
-              <button
-                type="button"
-                onClick={
-                  handleClearFilters
-                }
-                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-
-          {/* ===========================================
-              TITLE ON RIGHT SIDE
-          =========================================== */}
-
+    <div className="min-h-screen bg-slate-50/60 p-6 md:p-8">
+      <div className="space-y-5">
+        {/* Header */}
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h2 className="text-sm font-bold text-slate-800">
-              Recruiter Performance
-            </h2>
-
-            <p className="mt-1 text-xs text-slate-400">
-              Hiring performance by recruiter
+            <h1 className="text-[22px] font-semibold text-slate-800">
+              Reports & Analytics
+            </h1>
+            <p className="mt-1 text-[11px] text-slate-500">
+              Export hiring data for leadership review
             </p>
           </div>
+
+          <div className="flex flex-wrap gap-2">
+            {EXPORTS.map(([format, extension, label]) => (
+              <button
+                key={format}
+                onClick={() => exportFile(format, extension)}
+                disabled={exporting === format}
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-[11px] font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
+              >
+                {exporting === format ? "Exporting..." : label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* =================================================
-            TABLE
-        ================================================= */}
-
-        <div className="mt-5 overflow-x-auto">
-          {loading ? (
-            <div className="py-8 text-center text-sm text-slate-500">
-              Loading recruiter performance...
+        {/* Report Card */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            
+            {/* Recruiter Performance - LEFT */}
+            <div>
+              <h2 className="text-[16px] font-semibold text-slate-800">
+                Recruiter performance
+              </h2>
+              <p className="mt-1 text-[11px] text-slate-400">
+                Hiring performance by recruiter
+              </p>
             </div>
-          ) : rows.length === 0 ? (
-            <div className="py-8 text-center text-sm text-slate-500">
-              No hires found for the selected date range.
+
+            {/* Filters - RIGHT */}
+            <div className="flex flex-wrap items-end gap-3">
+              <div>
+                <label className="mb-1 block text-[11px] font-semibold text-slate-500">
+                  Start date
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  max={endDate || undefined}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="h-10 w-[170px] rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[11px] font-semibold text-slate-500">
+                  End date
+                </label>
+                <input
+                  type="date"
+                  value={endDate}
+                  min={startDate || undefined}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="h-10 w-[170px] rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400"
+                />
+              </div>
+
+              <button
+                onClick={applyFilters}
+                disabled={loading}
+                className="h-10 rounded-lg bg-indigo-600 px-5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+              >
+                Apply Filters
+              </button>
             </div>
-          ) : (
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  <th className="px-3 py-3">
-                    Recruiter
-                  </th>
+          </div>
 
-                  <th className="px-3 py-3">
-                    Hires
-                  </th>
+         <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
+  <div className="grid grid-cols-8 bg-slate-50 px-3 py-2 text-[10px] font-semibold uppercase text-slate-500">
+    <span>Recruiter</span>
+    <span>Hires</span>
+    <span >Avg TTH</span>
+  </div>
 
-                  <th className="px-3 py-3">
-                    Avg TTH
-                  </th>
-                </tr>
-              </thead>
+  {loading ? (
+    <div className="p-5 text-center text-sm text-slate-500">
+      Loading recruiter performance...
+    </div>
+  ) : rows.length === 0 ? (
+    <div className="p-5 text-center text-sm text-slate-500">
+      No hires found for the selected date range.
+    </div>
+  ) : (
+    rows.map((row, index) => (
+      <div
+        key={`${row.recruiterId || row.recruiter || index}`}
+        className="grid grid-cols-3 border-t border-slate-100 px-3 py-2 text-[12px] text-slate-700"
+      >
+        <span className="font-medium text-slate-800">
+          {row.recruiter}
+        </span>
 
-              <tbody>
-                {rows.map(
-                  (row, index) => (
-                    <tr
-                      key={
-                        row.recruiterId ||
-                        index
-                      }
-                      className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50"
-                    >
-                      <td className="px-3 py-4 font-medium text-slate-800">
-                        {row.recruiter}
-                      </td>
+        <span>{row.hires}</span>
 
-                      <td className="px-3 py-4 text-slate-600">
-                        {row.hires}
-                      </td>
+        <span className="text-right">
+          {row.avgTTH}d
+        </span>
+      </div>
+    ))
+  )}
+</div>
 
-                      <td className="px-3 py-4 text-slate-600">
-                        {row.avgTTH}d
-                      </td>
-                    </tr>
-                  )
-                )}
-              </tbody>
-            </table>
-          )}
         </div>
       </div>
     </div>

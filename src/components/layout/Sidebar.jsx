@@ -23,56 +23,34 @@ const Sidebar = () => {
 
   const permissions = user?.role?.permissions || [];
 
-  // =====================================
-  // NORMALIZE ROLE
-  // =====================================
   const normalizedRole = String(roleName)
     .toLowerCase()
     .replace(/\s+/g, "")
     .trim();
 
-  const isSuperAdmin =
-    normalizedRole === "superadmin";
+  const isSuperAdmin = normalizedRole === "superadmin";
 
-  // =====================================
-  // CHECK VIEW PERMISSION
-  // =====================================
   const canView = (module, requires = []) => {
-    // SuperAdmin can see everything
     if (isSuperAdmin) {
       return true;
     }
 
-    // Main module + required modules
-    const modulesToCheck = [
-      module,
-      ...requires,
-    ];
+    const modulesToCheck = [module, ...requires];
 
-    // Every required permission must have view=true
-    return modulesToCheck.every(
-      (requiredModule) => {
-        const permission = permissions.find(
-          (item) =>
-            String(item.module)
-              .toLowerCase()
-              .trim() ===
-            String(requiredModule)
-              .toLowerCase()
-              .trim()
-        );
+    return modulesToCheck.every((requiredModule) => {
+      const permission = permissions.find(
+        (item) =>
+          String(item.module).toLowerCase().trim() ===
+          String(requiredModule).toLowerCase().trim()
+      );
 
-        return (
-          permission?.view === true ||
-          permission?.view === "true"
-        );
-      }
-    );
+      return (
+        permission?.view === true ||
+        permission?.view === "true"
+      );
+    });
   };
 
-  // =====================================
-  // RECRUITMENT
-  // =====================================
   const recruitment = [
     {
       name: "Job Requisitions",
@@ -80,38 +58,31 @@ const Sidebar = () => {
       path: "/job-requisitions",
       module: "jobRequisitions",
     },
-
     {
       name: "Candidate Pipeline",
       icon: <FaSliders />,
       path: "/candidate-pipeline",
       module: "candidates",
     },
-
     {
       name: "ATS Ranking",
       icon: <FaChartLine />,
       path: "/ats-ranking",
       module: "atsRanking",
-
-      // ATS depends on Candidates permission
       requires: ["candidates"],
     },
-
     {
       name: "Interviews",
       icon: <FaCalendarDays />,
       path: "/interviews",
       module: "interviews",
     },
-
     {
       name: "Offer Letters",
       icon: <FaFileLines />,
       path: "/offer-letters",
       module: "offerLetters",
     },
-
     {
       name: "Report",
       icon: <FaClock />,
@@ -120,9 +91,6 @@ const Sidebar = () => {
     },
   ];
 
-  // =====================================
-  // ADMINISTRATION
-  // =====================================
   const administration = [
     {
       name: "User Management",
@@ -130,21 +98,18 @@ const Sidebar = () => {
       path: "/user-management",
       module: "users",
     },
-
     {
       name: "Roles & Permissions",
       icon: <FaShield />,
       path: "/roles-permissions",
       module: "roles",
     },
-
     {
       name: "Departments & Types",
       icon: <FaBuilding />,
       path: "/departments",
       module: "departments",
     },
-
     {
       name: "Audit Log",
       icon: <FaClock />,
@@ -153,76 +118,60 @@ const Sidebar = () => {
     },
   ];
 
-  // =====================================
-  // FILTER MENUS
-  // =====================================
-  const visibleRecruitment =
-    recruitment.filter((item) =>
-      canView(
-        item.module,
-        item.requires || []
-      )
-    );
+  const showDashboard = canView("dashboard");
 
-  const visibleAdministration =
-    administration.filter((item) =>
-      canView(item.module)
-    );
+  const visibleRecruitment = recruitment.filter((item) =>
+    canView(item.module, item.requires || [])
+  );
 
-  // =====================================
-  // LOGOUT
-  // =====================================
+  const visibleAdministration = administration.filter((item) =>
+    canView(item.module)
+  );
+
   const handleLogout = () => {
     logout();
     window.location.href = "/login";
   };
 
   return (
-    <aside className="flex h-full min-h-screen w-63 flex-col overflow-y-auto bg-[#11131d] text-white">
-
-      {/* LOGO */}
+    <aside className="flex h-screen w-63 flex-col overflow-y-auto bg-[#11131d] text-white">
       <div className="flex items-center gap-2 p-6">
-
         <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-md font-semibold">
           T
         </div>
 
         <div>
-          <h2 className="text-md font-bold">
-            Talenta
-          </h2>
+          <h2 className="text-md font-bold">Talenta</h2>
 
           <p className="text-xs text-gray-400">
             HR / ATS
           </p>
         </div>
-
       </div>
 
-      {/* MENU */}
       <div className="flex-1 px-6">
+        {showDashboard && (
+          <>
+            <p className="mb-2 flex text-[11px] uppercase text-gray-500">
+              Overview
+            </p>
 
-        {/* OVERVIEW */}
-        <p className="mb-2 flex text-[11px] uppercase text-gray-500">
-          Overview
-        </p>
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) =>
+                `mb-2 flex items-center gap-3 rounded-lg p-1.5 text-sm font-semibold ${
+                  isActive
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-300 hover:bg-gray-800"
+                }`
+              }
+            >
+              <FaTableColumns />
+              Dashboard
+            </NavLink>
+          </>
+        )}
 
-        {/* DASHBOARD */}
-        <NavLink
-          to="/dashboard"
-          className={({ isActive }) =>
-            `mb-2 flex items-center gap-3 rounded-lg p-1.5 text-sm font-semibold ${
-              isActive
-                ? "bg-blue-600 text-white"
-                : "text-gray-300 hover:bg-gray-800"
-            }`
-          }
-        >
-          <FaTableColumns />
-          Dashboard
-        </NavLink>
-
-        {/* RECRUITMENT */}
         {visibleRecruitment.length > 0 && (
           <>
             <p className="mb-3 mt-3 flex text-[11px] font-semibold uppercase text-gray-500">
@@ -248,7 +197,6 @@ const Sidebar = () => {
           </>
         )}
 
-        {/* ADMINISTRATION */}
         {visibleAdministration.length > 0 && (
           <>
             <p className="mb-1 mt-4 flex text-[11px] font-semibold uppercase text-gray-500">
@@ -273,14 +221,10 @@ const Sidebar = () => {
             ))}
           </>
         )}
-
       </div>
 
-      {/* USER INFO */}
       <div className="border-t border-gray-800 p-6">
-
         <div className="flex items-center gap-3">
-
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-600 font-bold">
             {userName.charAt(0).toUpperCase()}
           </div>
@@ -294,7 +238,6 @@ const Sidebar = () => {
               {roleName}
             </p>
           </div>
-
         </div>
 
         <button
@@ -304,9 +247,7 @@ const Sidebar = () => {
         >
           Log out →
         </button>
-
       </div>
-
     </aside>
   );
 };
