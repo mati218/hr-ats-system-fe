@@ -14,11 +14,14 @@ import CandidatePipeline from "../pages/CandidatePipeline/CandidatePipeline";
 import Interviews from "../pages/interviews/Interviews";
 import OfferLetters from "../pages/OfferLetters/OfferLetters";
 import ReportsAnalytics from "../pages/report/ReportsAnalytics";
+import Myinterviews from "../pages/myinterview/Myinterviews";
 
 const ProtectedRoutes = () => {
   return (
     <Route element={<PrivateRoute />}>
       <Route element={<MainLayout />}>
+
+        {/* ================= DASHBOARD ================= */}
 
         <Route
           element={
@@ -31,6 +34,8 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
+        {/* ================= USERS ================= */}
+
         <Route
           element={
             <PrivateRoute module="users" />
@@ -41,6 +46,8 @@ const ProtectedRoutes = () => {
             element={<UserManagement />}
           />
         </Route>
+
+        {/* ================= ROLES ================= */}
 
         <Route
           element={
@@ -63,6 +70,8 @@ const ProtectedRoutes = () => {
           }
         />
 
+        {/* ================= DEPARTMENTS ================= */}
+
         <Route
           element={
             <PrivateRoute module="departments" />
@@ -74,6 +83,8 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
+        {/* ================= AUDIT LOG ================= */}
+
         <Route
           element={
             <PrivateRoute module="auditLogs" />
@@ -84,6 +95,8 @@ const ProtectedRoutes = () => {
             element={<AuditLog />}
           />
         </Route>
+
+        {/* ================= ATS ================= */}
 
         <Route
           element={
@@ -99,6 +112,8 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
+        {/* ================= JOB REQUISITIONS ================= */}
+
         <Route
           element={
             <PrivateRoute module="jobRequisitions" />
@@ -109,6 +124,8 @@ const ProtectedRoutes = () => {
             element={<JobRequisition />}
           />
         </Route>
+
+        {/* ================= CANDIDATE PIPELINE ================= */}
 
         <Route
           element={
@@ -121,6 +138,11 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
+        {/* =================================================
+            NORMAL INTERVIEWS
+            Schedule / Reschedule / Cancel / Complete
+            ================================================= */}
+
         <Route
           element={
             <PrivateRoute module="interviews" />
@@ -131,6 +153,25 @@ const ProtectedRoutes = () => {
             element={<Interviews />}
           />
         </Route>
+
+        {/* =================================================
+            MY INTERVIEWS
+            ONLY INTERVIEWER
+            Feedback only
+            ================================================= */}
+
+        <Route
+          element={
+            <PrivateRoute interviewerOnly />
+          }
+        >
+          <Route
+            path="/my-interviews"
+            element={<Myinterviews />}
+          />
+        </Route>
+
+        {/* ================= OFFER LETTERS ================= */}
 
         <Route
           element={
@@ -143,7 +184,8 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
-        {/* Reports */}
+        {/* ================= REPORT ================= */}
+
         <Route
           element={
             <PrivateRoute module="report" />
