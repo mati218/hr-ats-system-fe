@@ -1,16 +1,12 @@
 import api from "./axios";
 
 // =====================================================
-// GET ALL CANDIDATES
+// CANDIDATES
 // =====================================================
 
 export const fetchAllCandidates = async () => {
   return api.get("/candidates");
 };
-
-// =====================================================
-// GET SINGLE CANDIDATE
-// =====================================================
 
 export const getCandidate = async (id) => {
   return api.get(`/candidates/${id}`);
@@ -41,7 +37,7 @@ export const applyNow = async (data) => {
 };
 
 // =====================================================
-// REJECT
+// REJECT CANDIDATE
 // =====================================================
 
 export const rejectCandidate = async (id) => {
@@ -49,7 +45,7 @@ export const rejectCandidate = async (id) => {
 };
 
 // =====================================================
-// MOVE STAGE
+// MOVE CANDIDATE STAGE
 // =====================================================
 
 export const moveCandidateStage = async (id, stage) => {
@@ -59,39 +55,32 @@ export const moveCandidateStage = async (id, stage) => {
 };
 
 // =====================================================
-// SCHEDULE INTERVIEW
+// SCREENING
 // =====================================================
 
-export const scheduleInterview = async (payload) => {
-  const response = await api.post(
-    "/interviews",
-    payload
-  );
-
-  return response.data;
-};
-
-// =====================================================
-// INTERVIEW RESULT
-// =====================================================
-
-export const submitInterviewResult = async (
-  interviewId,
-  result,
+export const completeScreening = async (
+  candidateId,
+  status,
+  score = 0,
   notes = ""
 ) => {
   return api.patch(
-    `/interviews/${interviewId}/result`,
+    `/candidates/${candidateId}/screening`,
     {
-      result,
+      status,
+      score,
       notes,
     }
   );
 };
 
 // =====================================================
-// UPDATE INTERVIEW STATUS
+// INTERVIEW
 // =====================================================
+
+export const scheduleInterview = async (payload) => {
+  return api.post("/interviews", payload);
+};
 
 export const updateInterviewStatus = async (
   candidateId,
@@ -103,9 +92,23 @@ export const updateInterviewStatus = async (
   );
 };
 
-// =====================================================
-// GET CANDIDATE INTERVIEWS
-// =====================================================
+/*
+ * PASS INTERVIEW
+ *
+ * IMPORTANT:
+ * This uses the CANDIDATE ID.
+ *
+ * Backend endpoint:
+ * PATCH /api/candidates/:candidateId/interview-status
+ */
+export const passInterview = async (candidateId) => {
+  return api.patch(
+    `/candidates/${candidateId}/interview-status`,
+    {
+      status: "Passed",
+    }
+  );
+};
 
 export const getCandidateInterviews = async (
   candidateId
@@ -116,7 +119,7 @@ export const getCandidateInterviews = async (
 };
 
 // =====================================================
-// SEND OFFER
+// OFFERS
 // =====================================================
 
 export const sendOffer = async (
@@ -129,10 +132,6 @@ export const sendOffer = async (
   });
 };
 
-// =====================================================
-// GET OFFER
-// =====================================================
-
 export const getCandidateOffer = async (
   candidateId
 ) => {
@@ -140,10 +139,6 @@ export const getCandidateOffer = async (
     `/offers/candidate/${candidateId}`
   );
 };
-
-// =====================================================
-// UPDATE OFFER
-// =====================================================
 
 export const updateOfferStatus = async (
   candidateId,
@@ -164,29 +159,11 @@ export const updateOfferStatus = async (
 // HIRE
 // =====================================================
 
-export const hireCandidate = async (
-  candidateId
-) => {
+export const hireCandidate = async (candidateId) => {
   return api.patch(
     `/candidates/${candidateId}/stage`,
     {
       stage: "Hired",
-    }
-  );
-};
-
-export const completeScreening = async (
-  candidateId,
-  status,
-  score = 0,
-  notes = ""
-) => {
-  return api.patch(
-    `/candidates/${candidateId}/screening`,
-    {
-      status,
-      score,
-      notes,
     }
   );
 };
