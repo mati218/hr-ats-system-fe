@@ -121,8 +121,7 @@ function ATSRanking() {
     }
 
     try {
-      const response =
-        await getCandidate(candidateId);
+      const response = await getCandidate(candidateId);
 
       const fullCandidate =
         response?.data?.data;
@@ -379,7 +378,6 @@ function ATSRanking() {
       return;
     }
 
-    // Check if offer has already been sent
     const offerAlreadySent =
       candidate?.stage === "Offer Sent" ||
       candidate?.offer?.status === "Sent";
@@ -439,7 +437,6 @@ function ATSRanking() {
         return;
       }
 
-      // Prevent sending another offer
       const offerAlreadySent =
         candidate?.stage === "Offer Sent" ||
         candidate?.offer?.status === "Sent";
@@ -513,6 +510,8 @@ function ATSRanking() {
 
   return (
     <div className="min-h-screen bg-[#f5f6fa] px-6 py-7 sm:px-8">
+
+      {/* HEADER */}
       <div className="mb-5 flex items-start justify-between gap-5 text-left">
         <div>
           <h1 className="text-[22px] font-medium leading-tight text-slate-900">
@@ -524,6 +523,7 @@ function ATSRanking() {
           </p>
         </div>
 
+        {/* JOB SELECT */}
         <select
           value={selectedRequisition}
           onChange={(e) => {
@@ -556,7 +556,9 @@ function ATSRanking() {
         </select>
       </div>
 
+      {/* CANDIDATES */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+
         {loading && (
           <div className="px-6 py-8 text-center text-sm text-slate-500">
             Loading candidates...
@@ -582,7 +584,7 @@ function ATSRanking() {
           candidates.length > 0 &&
           candidates.map(
             (candidate, index) => {
-              // Check whether offer was already sent
+
               const offerAlreadySent =
                 candidate?.stage === "Offer Sent" ||
                 candidate?.offer?.status === "Sent";
@@ -594,6 +596,7 @@ function ATSRanking() {
                     candidate?._id ||
                     index
                   }
+                  showViewCandidate={false}
                   candidate={{
                     id:
                       candidate?.candidateId ||
@@ -635,7 +638,6 @@ function ATSRanking() {
                     offer:
                       candidate?.offer,
 
-                    // Offer status for CandidateCard
                     offerAlreadySent,
                   }}
                   onViewResume={() => {
@@ -669,6 +671,7 @@ function ATSRanking() {
           )}
       </div>
 
+      {/* OFFER LETTER MODAL */}
       <OfferLetterModal
         isOpen={openModal}
         candidate={offerCandidate}
@@ -681,6 +684,7 @@ function ATSRanking() {
         }
       />
 
+      {/* CANDIDATE PROFILE */}
       <CandidateProfile
         isOpen={
           !!selectedCandidate
@@ -696,6 +700,7 @@ function ATSRanking() {
         }
       />
 
+      {/* SCHEDULE INTERVIEW */}
       <ScheduleInterviewModal
         isOpen={
           scheduleModalOpen
