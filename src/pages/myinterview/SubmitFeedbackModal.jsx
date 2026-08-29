@@ -1,4 +1,8 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import { toast } from "sonner";
 
 import {
@@ -53,30 +57,15 @@ function SubmitFeedbackModal({
   onClose,
   onSubmit,
 }) {
-  /*
-   * IMPORTANT:
-   * Form values are initialized from the interview.
-   *
-   * The parent should render this component with:
-   *
-   * key={interview?._id}
-   *
-   * This makes React create a fresh modal state
-   * whenever a different interview is selected.
-   */
-
-  const existingFeedback =
-    interview?.feedback;
+  // =====================================================
+  // FORM STATES
+  // =====================================================
 
   const [overallRating, setOverallRating] =
-    useState(
-      existingFeedback?.overallRating || 3
-    );
+    useState(3);
 
   const [recommendation, setRecommendation] =
-    useState(
-      existingFeedback?.recommendation || ""
-    );
+    useState("");
 
   const [
     recommendationOptions,
@@ -88,14 +77,10 @@ function SubmitFeedbackModal({
   const [
     technicalStrengths,
     setTechnicalStrengths,
-  ] = useState(
-    existingFeedback?.technicalStrengths || ""
-  );
+  ] = useState("");
 
   const [concerns, setConcerns] =
-    useState(
-      existingFeedback?.concerns || ""
-    );
+    useState("");
 
   const [loadingOptions, setLoadingOptions] =
     useState(false);
@@ -104,91 +89,128 @@ function SubmitFeedbackModal({
     useState(false);
 
   // =====================================================
+  // UPDATE FORM WHEN INTERVIEW CHANGES
+  // =====================================================
+
+  useEffect(() => {
+    if (!isOpen || !interview) {
+      return;
+    }
+
+    const feedback =
+      interview?.feedback;
+
+    setOverallRating(
+      feedback?.overallRating
+        ? Number(feedback.overallRating)
+        : 3
+    );
+
+    setRecommendation(
+      feedback?.recommendation || ""
+    );
+
+    setTechnicalStrengths(
+      feedback?.technicalStrengths || ""
+    );
+
+    setConcerns(
+      feedback?.concerns || ""
+    );
+  }, [
+    isOpen,
+    interview,
+  ]);
+
+  // =====================================================
   // LOAD RECOMMENDATION OPTIONS
   // =====================================================
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen || !interview) {
       return;
     }
 
     let cancelled = false;
 
-    const loadRecommendations =
-      async () => {
-        try {
-          setLoadingOptions(true);
+    const loadRecommendations = async () => {
+      try {
+        setLoadingOptions(true);
 
-          const response =
-            await getRecommendationOptions();
+        const response =
+          await getRecommendationOptions();
 
-          const options =
-            response?.data?.data || [];
+        const options =
+          response?.data?.data || [];
 
-          if (cancelled) {
-            return;
-          }
+        if (cancelled) {
+          return;
+        }
 
-          if (
-            Array.isArray(options) &&
-            options.length > 0
-          ) {
-            setRecommendationOptions(
-              options
-            );
-
-            /*
-             * Only set default recommendation
-             * if there is no existing feedback.
-             */
-            if (
-              !existingFeedback?.recommendation
-            ) {
-              setRecommendation(
-                options[0]?.value || ""
-              );
-            }
-          } else {
-            setRecommendationOptions(
-              FALLBACK_RECOMMENDATION_OPTIONS
-            );
-
-            if (
-              !existingFeedback?.recommendation
-            ) {
-              setRecommendation(
-                "Strong Hire"
-              );
-            }
-          }
-        } catch (error) {
-          if (cancelled) {
-            return;
-          }
-
-          console.error(
-            "GET RECOMMENDATION OPTIONS ERROR:",
-            error?.response?.data ||
-              error
+        if (
+          Array.isArray(options) &&
+          options.length > 0
+        ) {
+          setRecommendationOptions(
+            options
           );
 
+          /*
+           * Existing feedback hai to
+           * uski recommendation ko change
+           * nahi karna.
+           */
+          if (
+            !interview?.feedback
+              ?.recommendation
+          ) {
+            setRecommendation(
+              options[0]?.value || ""
+            );
+          }
+        } else {
           setRecommendationOptions(
             FALLBACK_RECOMMENDATION_OPTIONS
           );
 
           if (
-            !existingFeedback?.recommendation
+            !interview?.feedback
+              ?.recommendation
           ) {
             setRecommendation(
               "Strong Hire"
             );
           }
-        } finally {
-          if (!cancelled) {
-            setLoadingOptions(false);
-          }
         }
-      };
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        console.error(
+          "GET RECOMMENDATION OPTIONS ERROR:",
+          error?.response?.data ||
+            error
+        );
+
+        setRecommendationOptions(
+          FALLBACK_RECOMMENDATION_OPTIONS
+        );
+
+        if (
+          !interview?.feedback
+            ?.recommendation
+        ) {
+          setRecommendation(
+            "Strong Hire"
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingOptions(false);
+        }
+      }
+    };
 
     loadRecommendations();
 
@@ -197,7 +219,7 @@ function SubmitFeedbackModal({
     };
   }, [
     isOpen,
-    existingFeedback?.recommendation,
+    interview,
   ]);
 
   // =====================================================
@@ -261,9 +283,11 @@ function SubmitFeedbackModal({
 
           recommendation,
 
-          technicalStrengths,
+          technicalStrengths:
+            technicalStrengths || "",
 
-          concerns,
+          concerns:
+            concerns || "",
         }
       );
 
@@ -288,8 +312,13 @@ function SubmitFeedbackModal({
     }
   };
 
+  // =====================================================
+  // UI
+  // =====================================================
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+
       <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
 
         {/* ================================================= */}
@@ -297,7 +326,9 @@ function SubmitFeedbackModal({
         {/* ================================================= */}
 
         <div className="flex items-start justify-between">
+
           <div>
+
             <h2 className="text-lg font-bold text-slate-900">
               {hasExistingFeedback
                 ? "View Feedback"
@@ -314,6 +345,7 @@ function SubmitFeedbackModal({
               {candidate?.stage &&
                 ` · ${candidate.stage}`}
             </p>
+
           </div>
 
           <button
@@ -324,6 +356,7 @@ function SubmitFeedbackModal({
           >
             ×
           </button>
+
         </div>
 
         {/* ================================================= */}
@@ -332,11 +365,10 @@ function SubmitFeedbackModal({
 
         <div className="mt-5 space-y-4">
 
-          {/* =============================================== */}
           {/* OVERALL RATING */}
-          {/* =============================================== */}
 
           <div>
+
             <label className="mb-1 block text-sm font-semibold text-slate-700">
               Overall Rating
             </label>
@@ -345,9 +377,7 @@ function SubmitFeedbackModal({
               value={overallRating}
               onChange={(e) =>
                 setOverallRating(
-                  Number(
-                    e.target.value
-                  )
+                  Number(e.target.value)
                 )
               }
               disabled={
@@ -356,6 +386,7 @@ function SubmitFeedbackModal({
               }
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
             >
+
               {RATING_OPTIONS.map(
                 (option) => (
                   <option
@@ -366,14 +397,15 @@ function SubmitFeedbackModal({
                   </option>
                 )
               )}
+
             </select>
+
           </div>
 
-          {/* =============================================== */}
           {/* RECOMMENDATION */}
-          {/* =============================================== */}
 
           <div>
+
             <label className="mb-1 block text-sm font-semibold text-slate-700">
               Recommendation
             </label>
@@ -392,6 +424,7 @@ function SubmitFeedbackModal({
               }
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
             >
+
               {loadingOptions ? (
                 <option value="">
                   Loading...
@@ -408,14 +441,15 @@ function SubmitFeedbackModal({
                   )
                 )
               )}
+
             </select>
+
           </div>
 
-          {/* =============================================== */}
           {/* TECHNICAL STRENGTHS */}
-          {/* =============================================== */}
 
           <div>
+
             <label className="mb-1 block text-sm font-semibold text-slate-700">
               Technical Strengths
             </label>
@@ -437,13 +471,13 @@ function SubmitFeedbackModal({
               rows={3}
               className="w-full resize-y rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
             />
+
           </div>
 
-          {/* =============================================== */}
           {/* CONCERNS */}
-          {/* =============================================== */}
 
           <div>
+
             <label className="mb-1 block text-sm font-semibold text-slate-700">
               Concerns / Gaps
             </label>
@@ -463,7 +497,9 @@ function SubmitFeedbackModal({
               rows={3}
               className="w-full resize-y rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
             />
+
           </div>
+
         </div>
 
         {/* ================================================= */}
@@ -496,8 +532,11 @@ function SubmitFeedbackModal({
                 : "Submit Feedback"}
             </button>
           )}
+
         </div>
+
       </div>
+
     </div>
   );
 }

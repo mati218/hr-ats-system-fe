@@ -1,4 +1,9 @@
-import { useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+
 import { toast } from "sonner";
 
 import {
@@ -200,17 +205,10 @@ function MyInterviews() {
   // LOAD MY INTERVIEWS + FEEDBACK
   // ===================================================
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setAccessDenied(false);
-
-      /*
-       * Backend req.user se logged-in interviewer
-       * identify karega.
-       *
-       * Yahan interviewerId send nahi karna.
-       */
 
       const [
         interviewsResponse,
@@ -257,17 +255,17 @@ function MyInterviews() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // ===================================================
-  // LOAD WHEN USER IS AVAILABLE
+  // LOAD DATA WHEN USER CHANGES
   // ===================================================
 
   useEffect(() => {
     if (user) {
       loadData();
     }
-  }, [user]);
+  }, [user, loadData]);
 
   // ===================================================
   // OPEN FEEDBACK MODAL
@@ -306,6 +304,10 @@ function MyInterviews() {
     }
 
     try {
+      // ================================================
+      // SEND FEEDBACK TO BACKEND
+      // ================================================
+
       await submitInterviewFeedback(
         interviewId,
         {
@@ -324,12 +326,72 @@ function MyInterviews() {
         }
       );
 
-      /*
-       * Feedback submit hone ke baad
-       * fresh data load hoga.
-       */
+      // ================================================
+      // UPDATE CURRENT INTERVIEW IMMEDIATELY
+      // ================================================
+
+      const updatedFeedback = {
+        ...(feedbackTarget?.feedback || {}),
+
+        overallRating: Number(
+          payload.overallRating
+        ),
+
+        recommendation:
+          payload.recommendation,
+
+        technicalStrengths:
+          payload.technicalStrengths || "",
+
+        concerns:
+          payload.concerns || "",
+
+        submittedAt:
+          new Date().toISOString(),
+      };
+
+      // ================================================
+      // UPDATE INTERVIEWS LIST
+      // ================================================
+
+      setInterviews((previousInterviews) =>
+        previousInterviews.map((interview) => {
+          const currentId =
+            interview?._id ||
+            interview?.id;
+
+          if (currentId !== interviewId) {
+            return interview;
+          }
+
+          return {
+            ...interview,
+            feedback: updatedFeedback,
+          };
+        })
+      );
+
+      // ================================================
+      // UPDATE CURRENT FEEDBACK TARGET
+      // ================================================
+
+      setFeedbackTarget((previous) => {
+        if (!previous) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          feedback: updatedFeedback,
+        };
+      });
+
+      // ================================================
+      // REFRESH BACKEND DATA
+      // ================================================
 
       await loadData();
+
     } catch (error) {
       console.error(
         "SUBMIT FEEDBACK ERROR:",
@@ -343,18 +405,6 @@ function MyInterviews() {
   // ===================================================
   // VIEW CANDIDATE
   // ===================================================
-
-  /*
-   * IMPORTANT:
-   *
-   * Yahan getCandidate() API call nahi ho rahi.
-   *
-   * interview.candidateId already backend se
-   * populated aa raha hai.
-   *
-   * Isliye directly CandidateProfile modal open
-   * kar rahe hain.
-   */
 
   const handleViewCandidate = (candidate) => {
     if (!candidate) {
@@ -385,6 +435,7 @@ function MyInterviews() {
     return (
       <div className="min-h-screen bg-slate-50/50 p-8">
         <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 text-rose-600">
             !
           </div>
@@ -397,6 +448,7 @@ function MyInterviews() {
             My Interviews is only available to
             interviewers.
           </p>
+
         </div>
       </div>
     );
@@ -410,9 +462,11 @@ function MyInterviews() {
     return (
       <div className="min-h-screen bg-slate-50/50 p-8">
         <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+
           <p className="text-sm text-slate-500">
             Loading your interviews...
           </p>
+
         </div>
       </div>
     );
@@ -445,6 +499,7 @@ function MyInterviews() {
 
       {interviews.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+
           <p className="text-base font-semibold text-slate-700">
             No interviews assigned
           </p>
@@ -453,6 +508,7 @@ function MyInterviews() {
             You currently have no interviews
             assigned to you.
           </p>
+
         </div>
       ) : (
         <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -480,9 +536,7 @@ function MyInterviews() {
                 className="flex flex-col gap-4 p-4 transition hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
               >
 
-                {/* ================================= */}
                 {/* LEFT */}
-                {/* ================================= */}
 
                 <div className="flex items-center gap-3">
 
@@ -527,13 +581,9 @@ function MyInterviews() {
 
                 </div>
 
-                {/* ================================= */}
                 {/* RIGHT */}
-                {/* ================================= */}
 
                 <div className="flex flex-wrap items-center gap-2">
-
-                  {/* MODE */}
 
                   {interview?.mode && (
                     <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">
@@ -543,8 +593,6 @@ function MyInterviews() {
                     </span>
                   )}
 
-                  {/* STATUS */}
-
                   <span
                     className={getStatusBadgeClasses(
                       status
@@ -553,9 +601,7 @@ function MyInterviews() {
                     {status || "Unknown"}
                   </span>
 
-                  {/* ================================= */}
                   {/* VIEW CANDIDATE */}
-                  {/* ================================= */}
 
                   <button
                     type="button"
@@ -569,9 +615,7 @@ function MyInterviews() {
                     View Candidate
                   </button>
 
-                  {/* ================================= */}
                   {/* FEEDBACK */}
-                  {/* ================================= */}
 
                   <button
                     type="button"
@@ -720,6 +764,10 @@ function MyInterviews() {
       {/* ============================================= */}
 
       <SubmitFeedbackModal
+        key={
+          feedbackTarget?._id ||
+          feedbackTarget?.id
+        }
         isOpen={
           showFeedbackModal
         }

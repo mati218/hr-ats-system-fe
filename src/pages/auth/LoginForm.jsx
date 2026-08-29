@@ -1,64 +1,129 @@
 import { useForm } from "react-hook-form";
 import { loginUser } from "../../lib/api/authApi";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
 
 import Checkbox from "../../components/ui/Checkbox";
 import Button from "../../components/ui/Button";
 import FormInput from "../../components/ui/FormInput";
-import { Link } from "react-router-dom";
 
 const LoginForm = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-    const {
+
+  const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
-const onSubmit = async (data) => {
-  try {
-    const response = await loginUser(data);
 
-    console.log("Response:", response.data);
+  const onSubmit = async (data) => {
+    try {
+      const response = await loginUser(data);
 
-    login(response.data.data, response.data.token);
+      console.log("Response:", response.data);
 
-localStorage.setItem("token", response.data.token);
+      // ==========================================
+      // SAVE LOGIN DATA
+      // ==========================================
 
-localStorage.setItem(
-  "user",
-  JSON.stringify(response.data.data)
-);
+      login(
+        response.data.data,
+        response.data.token
+      );
 
-toast.success("Login successful!");
-navigate("/dashboard");
+      localStorage.setItem(
+        "token",
+        response.data.token
+      );
 
-    console.log("Token:", localStorage.getItem("token"));
-    console.log(
-      "User:",
-      JSON.parse(localStorage.getItem("user"))
-    );
+      localStorage.setItem(
+        "user",
+        JSON.stringify(response.data.data)
+      );
 
-  }catch (error) {
+      toast.success("Login successful!");
 
-  console.log("Full Error:", error);
+      // ==========================================
+      // GET USER ROLE
+      // ==========================================
 
-  console.log("Response:", error.response);
+      const user = response.data.data;
 
-  console.log("Data:", error.response?.data);
+      const roleName =
+        typeof user?.role === "object"
+          ? user?.role?.roleName ||
+            user?.role?.name ||
+            ""
+          : user?.role || "";
 
-  console.log("Status:", error.response?.status);
+      const normalizedRole = String(roleName)
+        .toLowerCase()
+        .replace(/\s+/g, "")
+        .trim();
 
-  toast.error("Login failed");
-}
-};
+      console.log("LOGIN USER:", user);
+      console.log("LOGIN ROLE:", normalizedRole);
 
+      // ==========================================
+      // ROLE BASED NAVIGATION
+      // ==========================================
+
+      if (normalizedRole === "interviewer") {
+        navigate("/my-interviews", {
+          replace: true,
+        });
+      } else {
+        navigate("/dashboard", {
+          replace: true,
+        });
+      }
+
+      // ==========================================
+      // DEBUG
+      // ==========================================
+
+      console.log(
+        "Token:",
+        localStorage.getItem("token")
+      );
+
+      console.log(
+        "User:",
+        JSON.parse(
+          localStorage.getItem("user")
+        )
+      );
+
+    } catch (error) {
+      console.log(
+        "Full Error:",
+        error
+      );
+
+      console.log(
+        "Response:",
+        error.response
+      );
+
+      console.log(
+        "Data:",
+        error.response?.data
+      );
+
+      console.log(
+        "Status:",
+        error.response?.status
+      );
+
+      toast.error("Login failed");
+    }
+  };
 
   return (
     <section
-      className="relative flex min-h-screen w-full items-center
+      className="relative flex min-h-screen w-full items-center 
       justify-center bg-white px-4 py-8 sm:px-8 md:px-12 lg:h-screen lg:w-1/2 lg:px-16"
     >
       <div className="w-full max-w-lg">
@@ -71,12 +136,15 @@ navigate("/dashboard");
           Welcome back — enter your credentials.
         </p>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-3">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="mt-3"
+        >
 
-    
+          {/* EMAIL */}
           <div className="mb-5">
             <span className="text-1xl flex font-semibold text-gray-900">
-              Email 
+              Email
             </span>
 
             <FormInput
@@ -88,7 +156,7 @@ navigate("/dashboard");
             />
           </div>
 
-         
+          {/* PASSWORD */}
           <div className="mb-5">
             <span className="text-1xl flex font-semibold text-gray-900">
               Password
@@ -103,7 +171,7 @@ navigate("/dashboard");
             />
           </div>
 
-         
+          {/* REMEMBER ME + FORGOT PASSWORD */}
           <div className="mb-4 flex items-center justify-between">
 
             <Checkbox
@@ -122,7 +190,9 @@ navigate("/dashboard");
 
           </div>
 
-          <Button className="w-125 h-12"
+          {/* SIGN IN BUTTON */}
+          <Button
+            className="w-125 h-12"
             type="submit"
             text="Sign in"
           />
@@ -134,4 +204,4 @@ navigate("/dashboard");
   );
 };
 
-export default LoginForm;     
+export default LoginForm;
