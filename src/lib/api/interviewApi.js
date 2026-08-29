@@ -1,69 +1,57 @@
-import api from "./axios";
+import axiosInstance from "./axiosInstance";
 
-// =====================================================
-// GET ALL INTERVIEWS
-// =====================================================
-
-export const fetchAllInterviews = async () => {
-  return api.get("/interviews");
+export const fetchAllInterviews = () => {
+  return axiosInstance.get("/interviews");
 };
 
-// =====================================================
-// GET SINGLE INTERVIEW
-// =====================================================
 
-export const getInterview = async (id) => {
-  return api.get(`/interviews/${id}`);
-};
-
-// =====================================================
-// SCHEDULE INTERVIEW
-// =====================================================
-
-export const scheduleInterview = async (payload) => {
-  return api.post("/interviews", payload);
-};
-
-// =====================================================
-// CONFIRM INTERVIEW
-// =====================================================
-
-export const confirmInterview = async (id) => {
-  return api.patch(
-    `/interviews/${id}/confirm`
+export const getInterview = (interviewId) => {
+  return axiosInstance.get(
+    `/interviews/${interviewId}`
   );
 };
 
-// =====================================================
-// RESCHEDULE INTERVIEW
-// =====================================================
 
-export const rescheduleInterview = async (
-  id,
-  data
+export const scheduleInterview = (payload) => {
+  return axiosInstance.post(
+    "/interviews",
+    payload
+  );
+};
+
+
+export const confirmInterview = (
+  interviewId
 ) => {
-  return api.patch(
-    `/interviews/${id}/reschedule`,
-    data
+  return axiosInstance.patch(
+    `/interviews/${interviewId}/confirm`
   );
 };
 
-// =====================================================
-// CANCEL INTERVIEW
-// =====================================================
 
-export const cancelInterview = async (id) => {
-  return api.patch(
-    `/interviews/${id}/cancel`
+export const rescheduleInterview = (
+  interviewId,
+  payload
+) => {
+  return axiosInstance.patch(
+    `/interviews/${interviewId}/reschedule`,
+    payload
   );
 };
 
-// =====================================================
-// COMPLETE INTERVIEW
-// =====================================================
 
-export const completeInterview = async (id) => {
-  return api.patch(
-    `/interviews/${id}/complete`
+export const cancelInterview = (
+  interviewId
+) => {
+  return axiosInstance.patch(
+    `/interviews/${interviewId}/cancel`
+  );
+};
+
+export const completeInterview = (
+  interviewId
+) => {
+  return axiosInstance.patch(
+    `/interviews/${interviewId}/complete`
   );
 };
