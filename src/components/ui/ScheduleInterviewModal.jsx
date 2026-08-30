@@ -26,14 +26,29 @@ const INITIAL_FORM = {
 };
 
 // =====================================================
+// INITIAL ERRORS
+// =====================================================
+
+const INITIAL_ERRORS = {
+  candidateId: "",
+  round: "",
+  mode: "",
+  date: "",
+  time: "",
+  duration: "",
+  interviewerId: "",
+  location: "",
+  notes: "",
+};
+
+// =====================================================
 // LOCAL DATE
 // =====================================================
 
 const getLocalDateString = (
   date = new Date()
 ) => {
-  const year =
-    date.getFullYear();
+  const year = date.getFullYear();
 
   const month = String(
     date.getMonth() + 1
@@ -50,18 +65,14 @@ const getLocalDateString = (
 // API DATE -> INPUT DATE
 // =====================================================
 
-const getInputDate = (
-  dateValue
-) => {
+const getInputDate = (dateValue) => {
   if (!dateValue) {
     return "";
   }
 
   if (
     typeof dateValue === "string" &&
-    /^\d{4}-\d{2}-\d{2}$/.test(
-      dateValue
-    )
+    /^\d{4}-\d{2}-\d{2}$/.test(dateValue)
   ) {
     return dateValue;
   }
@@ -73,15 +84,9 @@ const getInputDate = (
     return dateValue.split("T")[0];
   }
 
-  const date = new Date(
-    dateValue
-  );
+  const date = new Date(dateValue);
 
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
+  if (Number.isNaN(date.getTime())) {
     return "";
   }
 
@@ -92,10 +97,7 @@ const getInputDate = (
 // REDUCER
 // =====================================================
 
-function formReducer(
-  form,
-  action
-) {
+function formReducer(form, action) {
   switch (action.type) {
     case "reset":
       return {
@@ -105,8 +107,7 @@ function formReducer(
     case "update":
       return {
         ...form,
-        [action.field]:
-          action.value,
+        [action.field]: action.value,
       };
 
     case "setForm":
@@ -140,6 +141,11 @@ function ScheduleInterviewModal({
     formReducer,
     INITIAL_FORM
   );
+
+  const [
+    errors,
+    setErrors,
+  ] = useState(INITIAL_ERRORS);
 
   const [
     candidates,
@@ -199,9 +205,7 @@ function ScheduleInterviewModal({
     const loadCandidates =
       async () => {
         try {
-          setLoadingCandidates(
-            true
-          );
+          setLoadingCandidates(true);
 
           const response =
             await fetchAllCandidates();
@@ -213,9 +217,7 @@ function ScheduleInterviewModal({
             [];
 
           const allCandidates =
-            Array.isArray(
-              candidateData
-            )
+            Array.isArray(candidateData)
               ? candidateData
               : [];
 
@@ -249,9 +251,7 @@ function ScheduleInterviewModal({
               "Failed to load candidates."
           );
         } finally {
-          setLoadingCandidates(
-            false
-          );
+          setLoadingCandidates(false);
         }
       };
 
@@ -273,9 +273,7 @@ function ScheduleInterviewModal({
     const loadInterviewers =
       async () => {
         try {
-          setLoadingInterviewers(
-            true
-          );
+          setLoadingInterviewers(true);
 
           const response =
             await getUsersLookup(
@@ -329,9 +327,7 @@ function ScheduleInterviewModal({
               "Failed to load interviewers."
           );
         } finally {
-          setLoadingInterviewers(
-            false
-          );
+          setLoadingInterviewers(false);
         }
       };
 
@@ -346,6 +342,9 @@ function ScheduleInterviewModal({
     if (!isOpen) {
       return;
     }
+
+    // Clear old validation errors
+    setErrors(INITIAL_ERRORS);
 
     // ===================================================
     // RESCHEDULE
@@ -456,6 +455,78 @@ function ScheduleInterviewModal({
       field,
       value,
     });
+
+    // Remove error when user fixes field
+    if (value) {
+      setErrors((previous) => ({
+        ...previous,
+        [field]: "",
+      }));
+    }
+  };
+
+  // =====================================================
+  // VALIDATE FORM
+  // =====================================================
+
+  const validateForm = () => {
+    const newErrors = {
+      ...INITIAL_ERRORS,
+    };
+
+    const candidateId =
+      form.candidateId ||
+      activeCandidate?._id ||
+      activeCandidate?.id ||
+      activeCandidate?.candidateId;
+
+    // Candidate
+    if (!candidateId) {
+      newErrors.candidateId =
+        "Candidate is required.";
+    }
+
+    // Round
+    if (!form.round) {
+      newErrors.round =
+        "Interview round is required.";
+    }
+
+    // Mode
+    if (!form.mode) {
+      newErrors.mode =
+        "Interview mode is required.";
+    }
+
+    // Date
+    if (!form.date) {
+      newErrors.date =
+        "Interview date is required.";
+    }
+
+    // Time
+    if (!form.time) {
+      newErrors.time =
+        "Interview time is required.";
+    }
+
+    // Duration
+    if (!form.duration) {
+      newErrors.duration =
+        "Interview duration is required.";
+    }
+
+    // Interviewer
+    if (!form.interviewerId) {
+      newErrors.interviewerId =
+        "Interviewer is required.";
+    }
+
+    setErrors(newErrors);
+
+    return !Object.values(
+      newErrors
+    ).some(Boolean);
   };
 
   // =====================================================
@@ -481,53 +552,27 @@ function ScheduleInterviewModal({
 
   const handleSubmit =
     async () => {
+      // ===============================================
+      // VALIDATION
+      // ===============================================
+
+      const isValid =
+        validateForm();
+
+      if (!isValid) {
+        return;
+      }
+
       const candidateId =
         form.candidateId ||
         activeCandidate?._id ||
         activeCandidate?.id ||
         activeCandidate?.candidateId;
 
-      // Candidate
-      if (!candidateId) {
-        toast.error(
-          "Please select a candidate."
-        );
-        return;
-      }
+      // ===============================================
+      // RESCHEDULE PROTECTION
+      // ===============================================
 
-      // Date
-      if (!form.date) {
-        toast.error(
-          "Please select interview date."
-        );
-        return;
-      }
-
-      // Time
-      if (!form.time) {
-        toast.error(
-          "Please select interview time."
-        );
-        return;
-      }
-
-      // Duration
-      if (!form.duration) {
-        toast.error(
-          "Please select interview duration."
-        );
-        return;
-      }
-
-      // Interviewer
-      if (!form.interviewerId) {
-        toast.error(
-          "Please select interviewer."
-        );
-        return;
-      }
-
-      // Completed protection
       if (
         isReschedule &&
         interview?.status ===
@@ -539,7 +584,6 @@ function ScheduleInterviewModal({
         return;
       }
 
-      // Cancelled protection
       if (
         isReschedule &&
         interview?.status ===
@@ -607,6 +651,12 @@ function ScheduleInterviewModal({
           error?.response?.data ||
             error
         );
+
+        toast.error(
+          error?.response?.data
+            ?.message ||
+            "Failed to save interview."
+        );
       } finally {
         setSubmitting(false);
       }
@@ -614,7 +664,6 @@ function ScheduleInterviewModal({
 
   // =====================================================
   // CANCEL INTERVIEW
-  // ONLY AVAILABLE IN RESCHEDULE MODAL
   // =====================================================
 
   const handleCancelInterview =
@@ -627,7 +676,6 @@ function ScheduleInterviewModal({
         return;
       }
 
-      // Completed cannot cancel
       if (
         interview.status ===
         "Completed"
@@ -638,7 +686,6 @@ function ScheduleInterviewModal({
         return;
       }
 
-      // Already cancelled
       if (
         interview.status ===
         "Cancelled"
@@ -737,7 +784,9 @@ function ScheduleInterviewModal({
 
         <div className="space-y-4 px-5 py-4">
 
-          {/* CANDIDATE */}
+          {/* =================================================
+              CANDIDATE
+          ================================================= */}
 
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">
@@ -745,7 +794,13 @@ function ScheduleInterviewModal({
             </label>
 
             {isReschedule ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-800">
+              <div
+                className={`rounded-lg border px-3 py-2 text-xs font-medium ${
+                  errors.candidateId
+                    ? "border-red-500 bg-red-50"
+                    : "border-slate-200 bg-slate-50"
+                } text-slate-800`}
+              >
                 {selectedCandidate?.name ||
                   selectedCandidate?.fullName ||
                   "Unknown Candidate"}
@@ -765,7 +820,11 @@ function ScheduleInterviewModal({
                   submitting ||
                   loadingCandidates
                 }
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500 disabled:bg-slate-100"
+                className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 ${
+                  errors.candidateId
+                    ? "border-red-500 focus:border-red-500"
+                    : "border-slate-200 focus:border-blue-500"
+                }`}
               >
                 <option value="">
                   {loadingCandidates
@@ -800,11 +859,21 @@ function ScheduleInterviewModal({
                 )}
               </select>
             )}
+
+            {errors.candidateId && (
+              <p className="mt-1 text-[11px] font-medium text-red-500">
+                {errors.candidateId}
+              </p>
+            )}
           </div>
 
-          {/* ROUND + MODE */}
+          {/* =================================================
+              ROUND + MODE
+          ================================================= */}
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+
+            {/* ROUND */}
 
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">
@@ -823,7 +892,11 @@ function ScheduleInterviewModal({
                   submitting ||
                   isReschedule
                 }
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
+                className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${
+                  errors.round
+                    ? "border-red-500"
+                    : "border-slate-200 focus:border-blue-500"
+                }`}
               >
                 <option value="Technical">
                   Technical
@@ -833,7 +906,15 @@ function ScheduleInterviewModal({
                   Final
                 </option>
               </select>
+
+              {errors.round && (
+                <p className="mt-1 text-[11px] font-medium text-red-500">
+                  {errors.round}
+                </p>
+              )}
             </div>
+
+            {/* MODE */}
 
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">
@@ -852,7 +933,11 @@ function ScheduleInterviewModal({
                   submitting ||
                   isReschedule
                 }
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
+                className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${
+                  errors.mode
+                    ? "border-red-500"
+                    : "border-slate-200 focus:border-blue-500"
+                }`}
               >
                 <option value="Video Call">
                   Video Call
@@ -866,13 +951,23 @@ function ScheduleInterviewModal({
                   Phone Call
                 </option>
               </select>
+
+              {errors.mode && (
+                <p className="mt-1 text-[11px] font-medium text-red-500">
+                  {errors.mode}
+                </p>
+              )}
             </div>
 
           </div>
 
-          {/* DATE + TIME */}
+          {/* =================================================
+              DATE + TIME
+          ================================================= */}
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+
+            {/* DATE */}
 
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">
@@ -894,9 +989,21 @@ function ScheduleInterviewModal({
                 disabled={
                   submitting
                 }
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500 disabled:bg-slate-100"
+                className={`w-full rounded-lg border px-3 py-2 text-xs outline-none disabled:bg-slate-100 ${
+                  errors.date
+                    ? "border-red-500 focus:border-red-500"
+                    : "border-slate-200 focus:border-blue-500"
+                }`}
               />
+
+              {errors.date && (
+                <p className="mt-1 text-[11px] font-medium text-red-500">
+                  {errors.date}
+                </p>
+              )}
             </div>
+
+            {/* TIME */}
 
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">
@@ -915,15 +1022,29 @@ function ScheduleInterviewModal({
                 disabled={
                   submitting
                 }
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500 disabled:bg-slate-100"
+                className={`w-full rounded-lg border px-3 py-2 text-xs outline-none disabled:bg-slate-100 ${
+                  errors.time
+                    ? "border-red-500 focus:border-red-500"
+                    : "border-slate-200 focus:border-blue-500"
+                }`}
               />
+
+              {errors.time && (
+                <p className="mt-1 text-[11px] font-medium text-red-500">
+                  {errors.time}
+                </p>
+              )}
             </div>
 
           </div>
 
-          {/* DURATION + INTERVIEWER */}
+          {/* =================================================
+              DURATION + INTERVIEWER
+          ================================================= */}
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+
+            {/* DURATION */}
 
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">
@@ -944,7 +1065,11 @@ function ScheduleInterviewModal({
                   submitting ||
                   isReschedule
                 }
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
+                className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${
+                  errors.duration
+                    ? "border-red-500"
+                    : "border-slate-200 focus:border-blue-500"
+                }`}
               >
                 <option value="">
                   Select duration
@@ -966,7 +1091,15 @@ function ScheduleInterviewModal({
                   90 minutes
                 </option>
               </select>
+
+              {errors.duration && (
+                <p className="mt-1 text-[11px] font-medium text-red-500">
+                  {errors.duration}
+                </p>
+              )}
             </div>
+
+            {/* INTERVIEWER */}
 
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">
@@ -988,7 +1121,11 @@ function ScheduleInterviewModal({
                   submitting ||
                   isReschedule
                 }
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
+                className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${
+                  errors.interviewerId
+                    ? "border-red-500"
+                    : "border-slate-200 focus:border-blue-500"
+                }`}
               >
                 <option value="">
                   {loadingInterviewers
@@ -1018,11 +1155,19 @@ function ScheduleInterviewModal({
                   }
                 )}
               </select>
+
+              {errors.interviewerId && (
+                <p className="mt-1 text-[11px] font-medium text-red-500">
+                  {errors.interviewerId}
+                </p>
+              )}
             </div>
 
           </div>
 
-          {/* LOCATION */}
+          {/* =================================================
+              LOCATION
+          ================================================= */}
 
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">
@@ -1047,9 +1192,17 @@ function ScheduleInterviewModal({
               placeholder="Google Meet link or office room"
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
             />
+
+            {errors.location && (
+              <p className="mt-1 text-[11px] font-medium text-red-500">
+                {errors.location}
+              </p>
+            )}
           </div>
 
-          {/* NOTES */}
+          {/* =================================================
+              NOTES
+          ================================================= */}
 
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">
@@ -1074,17 +1227,23 @@ function ScheduleInterviewModal({
               rows={3}
               className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
             />
+
+            {errors.notes && (
+              <p className="mt-1 text-[11px] font-medium text-red-500">
+                {errors.notes}
+              </p>
+            )}
           </div>
 
         </div>
 
-        {/* FOOTER */}
+        {/* =================================================
+            FOOTER
+        ================================================= */}
 
         <div className="flex items-center justify-between border-t border-slate-200 px-5 py-4">
 
-          {/* =============================================
-              CANCEL ONLY HERE
-              ============================================= */}
+          {/* CANCEL INTERVIEW */}
 
           <div>
             {canCancel && (
@@ -1106,15 +1265,15 @@ function ScheduleInterviewModal({
             )}
           </div>
 
-          {/* RIGHT */}
+          {/* RIGHT SIDE */}
 
           <div className="flex gap-2">
 
+            {/* CLOSE */}
+
             <button
               type="button"
-              onClick={
-                onClose
-              }
+              onClick={onClose}
               disabled={
                 submitting ||
                 cancelling
@@ -1124,11 +1283,11 @@ function ScheduleInterviewModal({
               Close
             </button>
 
+            {/* SCHEDULE / RESCHEDULE */}
+
             <button
               type="button"
-              onClick={
-                handleSubmit
-              }
+              onClick={handleSubmit}
               disabled={
                 submitting ||
                 cancelling
@@ -1143,6 +1302,7 @@ function ScheduleInterviewModal({
             </button>
 
           </div>
+
         </div>
 
       </div>
