@@ -729,148 +729,131 @@ function CandidateProfile({
           </div>
 
         </div>
+{/* =====================================================
+    FOOTER
+    ===================================================== */}
 
-        {/* =====================================================
-            FOOTER
-            READ ONLY = ONLY CLOSE BUTTON
-        ===================================================== */}
+<div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white px-6 py-4">
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white px-6 py-4">
+  {!readOnly && (
+    <>
+      {/* LEFT SIDE ACTIONS */}
+      <div className="flex flex-wrap items-center gap-2">
 
-          {!readOnly && (
-            <>
-              <div className="flex flex-wrap items-center gap-2">
+        {!isRejected && (
+          <button
+            type="button"
+            onClick={handleReject}
+            disabled={rejecting || decisionLoading}
+            className="rounded-lg bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50"
+          >
+            {rejecting
+              ? "Rejecting..."
+              : "Reject Candidate"}
+          </button>
+        )}
 
-                {!isRejected && (
-                  <button
-                    type="button"
-                    onClick={handleReject}
-                    disabled={
-                      rejecting ||
-                      decisionLoading
-                    }
-                    className="rounded-lg bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50"
-                  >
-                    {rejecting
-                      ? "Rejecting..."
-                      : "Reject Candidate"}
-                  </button>
-                )}
+        {candidate.stage === "Screening" && (
+          <button
+            type="button"
+            disabled={decisionLoading}
+            onClick={() =>
+              handleScreeningDecision("Passed")
+            }
+            className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+          >
+            {decisionLoading
+              ? "Processing..."
+              : "Pass Screening"}
+          </button>
+        )}
 
-                {candidate.stage ===
-                  "Screening" && (
-                  <button
-                    type="button"
-                    disabled={
-                      decisionLoading
-                    }
-                    onClick={() =>
-                      handleScreeningDecision(
-                        "Passed"
-                      )
-                    }
-                    className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-                  >
-                    {decisionLoading
-                      ? "Processing..."
-                      : "Pass Screening"}
-                  </button>
-                )}
+        {canPassInterview && (
+          <button
+            type="button"
+            disabled={decisionLoading}
+            onClick={handlePassInterview}
+            className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+          >
+            {decisionLoading
+              ? "Processing..."
+              : "Pass Interview"}
+          </button>
+        )}
 
-                {canPassInterview && (
-                  <button
-                    type="button"
-                    disabled={
-                      decisionLoading
-                    }
-                    onClick={
-                      handlePassInterview
-                    }
-                    className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-                  >
-                    {decisionLoading
-                      ? "Processing..."
-                      : "Pass Interview"}
-                  </button>
-                )}
+        {canMoveToOffer && (
+          <button
+            type="button"
+            disabled={decisionLoading}
+            onClick={handleMoveToOffer}
+            className="rounded-lg bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+          >
+            Move to Offer Letter
+          </button>
+        )}
 
-                {canMoveToOffer && (
-                  <button
-                    type="button"
-                    disabled={
-                      decisionLoading
-                    }
-                    onClick={
-                      handleMoveToOffer
-                    }
-                    className="rounded-lg bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
-                  >
-                    Move to Offer Letter
-                  </button>
-                )}
+        {canAcceptOffer && (
+          <button
+            type="button"
+            disabled={decisionLoading}
+            onClick={() =>
+              handleOfferDecision("Accepted")
+            }
+            className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+          >
+            Accept Offer
+          </button>
+        )}
 
-                {canAcceptOffer && (
-                  <button
-                    type="button"
-                    disabled={
-                      decisionLoading
-                    }
-                    onClick={() =>
-                      handleOfferDecision(
-                        "Accepted"
-                      )
-                    }
-                    className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-                  >
-                    Accept Offer
-                  </button>
-                )}
+      </div>
 
-              </div>
+      {/* RIGHT SIDE: SCHEDULE + CLOSE */}
+      <div className="ml-auto flex items-center gap-2">
 
-              <div className="flex items-center gap-2">
+        {canScheduleInterview && (
+          <button
+            type="button"
+            onClick={handleScheduleInterview}
+            className="rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700"
+          >
+            Schedule Interview
+          </button>
+        )}
 
-                {canScheduleInterview && (
-                  <button
-                    type="button"
-                    onClick={
-                      handleScheduleInterview
-                    }
-                    className="rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700"
-                  >
-                    Schedule Interview
-                  </button>
-                )}
-
-                {candidate.stage ===
-                  "Interview" &&
-                  interviewScheduled && (
-                    <span className="rounded-lg bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-700">
-                      Interview Scheduled
-                    </span>
-                  )}
-
-              </div>
-            </>
+        {candidate.stage === "Interview" &&
+          interviewScheduled && (
+            <span className="rounded-lg bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-700">
+              Interview Scheduled
+            </span>
           )}
 
-          {/* ONLY BUTTON IN READ ONLY MODE */}
+        {/* CLOSE BUTTON */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          Close
+        </button>
 
-          <div
-            className={
-              readOnly ? "ml-auto" : ""
-            }
-          >
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              Close
-            </button>
-          </div>
+      </div>
+    </>
+  )}
 
-        </div>
+  {/* READ ONLY MODE */}
+  {readOnly && (
+    <div className="ml-auto">
+      <button
+        type="button"
+        onClick={onClose}
+        className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+      >
+        Close
+      </button>
+    </div>
+  )}
+
+</div>
 
       </div>
 
