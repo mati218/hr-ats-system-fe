@@ -85,19 +85,14 @@ const Sidebar = () => {
       module: "atsRanking",
       requires: ["candidates"],
     },
-{
-  name: "Interviews",
-  icon: <FaCalendarDays />,
-  path: "/interviews",
-  module: "interviews",
-},
 
-{
-  name: "My Interviews",
-  icon: <FaCalendarDays />,
-  path: "/my-interviews",
-  interviewerOnly: true,
-},
+    {
+      name: "Interviews",
+      icon: <FaCalendarDays />,
+      path: "/interviews",
+      module: "interviews",
+    },
+
     {
       name: "Offer Letters",
       icon: <FaFileLines />,
@@ -145,21 +140,19 @@ const Sidebar = () => {
 
   const showDashboard = canView("dashboard");
 
- const visibleRecruitment = recruitment.filter((item) => {
-  if (item.interviewerOnly) {
-    return isInterviewer;
-  }
-  if (
-    item.path === "/interviews" &&
-    isInterviewer
-  ) {
-    return false;
-  }
-  return canView(
-    item.module,
-    item.requires || []
-  );
-});
+  const visibleRecruitment = recruitment.filter((item) => {
+    if (
+      item.path === "/interviews" &&
+      isInterviewer
+    ) {
+      return false;
+    }
+
+    return canView(
+      item.module,
+      item.requires || []
+    );
+  });
 
   const visibleAdministration = administration.filter(
     (item) => canView(item.module)
@@ -219,6 +212,29 @@ const Sidebar = () => {
             >
               <FaTableColumns />
               Dashboard
+            </NavLink>
+          </>
+        )}
+
+        {/* MY WORK */}
+        {isInterviewer && (
+          <>
+            <p className="mb-3 mt-3 flex text-[11px] font-semibold uppercase text-gray-500">
+              My Work
+            </p>
+
+            <NavLink
+              to="/my-interviews"
+              className={({ isActive }) =>
+                `mb-1 flex items-center gap-3 rounded-lg p-1.5 text-sm font-semibold ${
+                  isActive
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-300 hover:bg-gray-800"
+                }`
+              }
+            >
+              <FaCalendarDays />
+              My Interviews
             </NavLink>
           </>
         )}
