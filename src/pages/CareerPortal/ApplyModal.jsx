@@ -85,44 +85,6 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.name.trim()) {
-      toast.error("Please enter your name.");
-      return;
-    }
-
-    if (!/^[A-Za-z\s]+$/.test(form.name.trim())) {
-      toast.error("Name should contain characters only.");
-      return;
-    }
-
-    if (!form.email.trim()) {
-      toast.error("Please enter your email.");
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
-      toast.error("Please enter a valid email address.");
-      return;
-    }
-
-    if (form.phone.trim() && !/^\d+$/.test(form.phone.trim())) {
-      toast.error("Phone number should contain numbers only.");
-      return;
-    }
-
-    if (
-      form.experience.trim() &&
-      !/^\d+$/.test(form.experience.trim())
-    ) {
-      toast.error("Experience should contain numbers only.");
-      return;
-    }
-
-    if (!(form.resume instanceof File)) {
-      toast.error("Please select your PDF resume.");
-      return;
-    }
-
     const requisitionId = job._id || job.id;
 
     if (!requisitionId) {
@@ -165,6 +127,8 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
       <div className="max-h-[90vh] w-full max-w-152.5 overflow-y-auto rounded-[20px] bg-white shadow-xl">
+
+        {/* HEADER */}
         <div className="flex items-center justify-between border-b border-[#E1E4EB] px-7 py-5">
           <div>
             <h2 className="text-[18px] font-bold leading-6 text-[#111827]">
@@ -190,11 +154,14 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
           </button>
         </div>
 
+        {/* FORM */}
         <form
           onSubmit={handleSubmit}
           className="px-7 py-5"
         >
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+
+            {/* FULL NAME */}
             <div>
               <label className="block text-[13px] font-semibold text-[#111827]">
                 Full Name
@@ -207,11 +174,15 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
                 onChange={handleChange}
                 placeholder="Your full name"
                 required
+                minLength={3}
+                pattern="[A-Za-z\s]+"
+                title="Name should contain characters only."
                 disabled={submitting}
                 className="mt-1 h-10.5 w-full rounded-[10px] border border-[#DDE2EA] bg-white px-3 text-[14px] text-[#111827] outline-none placeholder:text-[#64748B] focus:border-[#315FEA] disabled:bg-slate-50"
               />
             </div>
 
+            {/* EMAIL */}
             <div>
               <label className="block text-[13px] font-semibold text-[#111827]">
                 Email
@@ -229,6 +200,7 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
               />
             </div>
 
+            {/* PHONE */}
             <div>
               <label className="block text-[13px] font-semibold text-[#111827]">
                 Phone
@@ -241,11 +213,14 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
                 onChange={handleChange}
                 placeholder="03001234567"
                 inputMode="numeric"
+                pattern="[0-9]*"
+                title="Phone number should contain numbers only."
                 disabled={submitting}
                 className="mt-1 h-10.5 w-full rounded-[10px] border border-[#DDE2EA] bg-white px-3 text-[14px] text-[#111827] outline-none placeholder:text-[#64748B] focus:border-[#315FEA] disabled:bg-slate-50"
               />
             </div>
 
+            {/* EXPERIENCE */}
             <div>
               <label className="block text-[13px] font-semibold text-[#111827]">
                 Years of Experience
@@ -258,12 +233,15 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
                 onChange={handleChange}
                 placeholder="5"
                 inputMode="numeric"
+                pattern="[0-9]*"
+                title="Experience should contain numbers only."
                 disabled={submitting}
                 className="mt-1 h-10.5 w-full rounded-[10px] border border-[#DDE2EA] bg-white px-3 text-[14px] text-[#111827] outline-none placeholder:text-[#64748B] focus:border-[#315FEA] disabled:bg-slate-50"
               />
             </div>
           </div>
 
+          {/* RESUME */}
           <div className="mt-4">
             <label className="block text-[12px] font-semibold text-[#111827]">
               Resume / CV
@@ -294,6 +272,7 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
             )}
           </div>
 
+          {/* COVER NOTE */}
           <div className="mt-4">
             <label className="block text-[13px] font-semibold text-[#111827]">
               Cover Note (optional)
@@ -310,7 +289,9 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
             />
           </div>
 
+          {/* BUTTONS */}
           <div className="mt-5 flex justify-end gap-2.5 border-t border-[#E1E4EB] pt-4">
+
             <button
               type="button"
               onClick={onClose}
@@ -327,6 +308,7 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
             >
               {submitting ? "Submitting..." : "Submit Application"}
             </button>
+
           </div>
         </form>
       </div>
@@ -335,3 +317,4 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
 };
 
 export default ApplyModal;
+
