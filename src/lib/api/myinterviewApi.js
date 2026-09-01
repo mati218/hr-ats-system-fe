@@ -1,4 +1,3 @@
-
 import axiosInstance from "./axiosInstance";
 
 export const getMyInterviews = () => {
@@ -30,12 +29,18 @@ export const submitInterviewFeedback = (
   return axiosInstance.patch(
     `/my-interviews/${interviewId}/feedback`,
     {
-      overallRating: Number(payload.overallRating),
-      recommendation: payload.recommendation,
+      overallRating: Number(
+        payload.overallRating
+      ),
+
+      recommendation:
+        payload.recommendation,
+
       technicalStrengths:
         payload.technicalStrengths || "",
-      concerns: payload.concerns || "",
+
+      concerns:
+        payload.concerns || "",
     }
   );
 };
-

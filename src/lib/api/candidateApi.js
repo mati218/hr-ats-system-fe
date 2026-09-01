@@ -4,13 +4,22 @@ import api from "./axios";
 // CANDIDATES
 // =====================================================
 
-export const fetchAllCandidates = async () => {
-  return api.get("/candidates");
+export const fetchAllCandidates = async ({
+  search,
+  requisitionId,
+} = {}) => {
+  return api.get("/candidates", {
+    params: {
+      ...(search ? { search } : {}),
+      ...(requisitionId ? { requisitionId } : {}),
+    },
+  });
 };
 
 export const getCandidate = async (id) => {
   return api.get(`/candidates/${id}`);
 };
+
 
 // =====================================================
 // APPLY
@@ -23,9 +32,18 @@ export const applyNow = async (data) => {
   formData.append("email", data.email || "");
   formData.append("phone", data.phone || "");
   formData.append("role", data.role || "");
-  formData.append("requisitionId", data.requisitionId || "");
-  formData.append("experience", data.experience || "");
-  formData.append("coverNote", data.coverNote || "");
+  formData.append(
+    "requisitionId",
+    data.requisitionId || ""
+  );
+  formData.append(
+    "experience",
+    data.experience || ""
+  );
+  formData.append(
+    "coverNote",
+    data.coverNote || ""
+  );
 
   if (data.resume instanceof File) {
     formData.append("resume", data.resume);
@@ -37,7 +55,7 @@ export const applyNow = async (data) => {
 };
 
 // =====================================================
-// REJECT CANDIDATE
+// REJECT
 // =====================================================
 
 export const rejectCandidate = async (id) => {
@@ -45,13 +63,17 @@ export const rejectCandidate = async (id) => {
 };
 
 // =====================================================
-// MOVE CANDIDATE STAGE
+// MOVE STAGE
 // =====================================================
 
-export const moveCandidateStage = async (id, stage) => {
-  return api.patch(`/candidates/${id}/stage`, {
-    stage,
-  });
+export const moveCandidateStage = async (
+  id,
+  stage
+) => {
+  return api.patch(
+    `/candidates/${id}/stage`,
+    { stage }
+  );
 };
 
 // =====================================================
@@ -92,16 +114,9 @@ export const updateInterviewStatus = async (
   );
 };
 
-/*
- * PASS INTERVIEW
- *
- * IMPORTANT:
- * This uses the CANDIDATE ID.
- *
- * Backend endpoint:
- * PATCH /api/candidates/:candidateId/interview-status
- */
-export const passInterview = async (candidateId) => {
+export const passInterview = async (
+  candidateId
+) => {
   return api.patch(
     `/candidates/${candidateId}/interview-status`,
     {
@@ -159,11 +174,20 @@ export const updateOfferStatus = async (
 // HIRE
 // =====================================================
 
-export const hireCandidate = async (candidateId) => {
+export const hireCandidate = async (
+  candidateId
+) => {
   return api.patch(
     `/candidates/${candidateId}/stage`,
     {
       stage: "Hired",
     }
+  );
+};
+export const getCandidateInterviewFeedback = (
+  candidateId
+) => {
+  return api.get(
+    `/candidates/${candidateId}/interview-feedback`
   );
 };

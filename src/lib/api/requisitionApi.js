@@ -1,5 +1,11 @@
 import api from "./axios";
 
+export const getRequisitions = (status, search) => {
+  return api.get("/requisitions", {
+    params: {
+      ...(status && status !== "All" ? { status } : {}),
+      ...(search ? { search } : {}),
+    },
 
 // =====================================
 // PUBLIC API

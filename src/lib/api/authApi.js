@@ -54,6 +54,16 @@ export const UpdatePasswordApi = ({
   );
 };
 
+export const changePassword = ({
+  currentPassword,
+  newPassword,
+}) => {
+  return api.post("/auth/change-password", {
+    currentPassword,
+    newPassword,
+  });
+};
+
 
 export const createUser = (data) => {
   return api.post("/user", data);

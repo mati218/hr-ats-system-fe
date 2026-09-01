@@ -693,6 +693,17 @@ function ScheduleInterviewModal({
   // CANCEL INTERVIEW
   // =====================================================
 
+  // =====================================================
+  // CANCEL INTERVIEW
+  //
+  // Phase 4 fix: this used to call window.confirm(), which
+  // is a jarring native browser dialog and inconsistent
+  // with every other confirmation in this app — the rest
+  // of the codebase (e.g. JobRequisition.jsx's delete flow)
+  // uses a toast.warning(...) with an action button instead.
+  // Same pattern applied here for consistency.
+  // =====================================================
+
   const handleCancelInterview =
     async () => {
       if (
@@ -725,30 +736,37 @@ function ScheduleInterviewModal({
         return;
       }
 
-      const confirmed =
-        window.confirm(
-          "Are you sure you want to cancel this interview?"
-        );
+      toast.warning(
+        "Are you sure you want to cancel this interview?",
+        {
+          duration: Infinity,
 
-      if (!confirmed) {
-        return;
-      }
+          action: {
+            label: "Cancel Interview",
+            onClick: async () => {
+              try {
+                setCancelling(true);
 
-      try {
-        setCancelling(true);
+                await onCancelInterview(
+                  interview
+                );
+              } catch (error) {
+                console.error(
+                  "CANCEL INTERVIEW ERROR:",
+                  error?.response?.data ||
+                    error
+                );
+              } finally {
+                setCancelling(false);
+              }
+            },
+          },
 
-        await onCancelInterview(
-          interview
-        );
-      } catch (error) {
-        console.error(
-          "CANCEL INTERVIEW ERROR:",
-          error?.response?.data ||
-            error
-        );
-      } finally {
-        setCancelling(false);
-      }
+          cancel: {
+            label: "Keep Interview",
+          },
+        }
+      );
     };
 
   // =====================================================

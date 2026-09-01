@@ -1,13 +1,17 @@
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import { toast } from "sonner";
 
 import ScoreCircle from "./ScoreCircle";
-
 import {
   rejectCandidate,
   updateOfferStatus,
   completeScreening,
   passInterview,
+  getCandidateInterviewFeedback,
 } from "../../lib/api/candidateApi";
 
 const PIPELINE_STAGES = [
@@ -18,6 +22,56 @@ const PIPELINE_STAGES = [
   "Offer Sent",
   "Hired",
 ];
+
+// =====================================================
+// RECOMMENDATION BADGE
+// =====================================================
+
+const getRecommendationBadgeClasses = (
+  recommendation
+) => {
+  switch (recommendation) {
+    case "Strong Hire":
+      return "rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700";
+
+    case "Hire":
+      return "rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700";
+
+    case "No Hire":
+      return "rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700";
+
+    case "Strong No Hire":
+      return "rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700";
+
+    default:
+      return "rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600";
+  }
+};
+
+// =====================================================
+// FORMAT FEEDBACK DATE
+// =====================================================
+
+const formatFeedbackDate = (dateStr) => {
+  if (!dateStr) {
+    return "N/A";
+  }
+
+  const date = new Date(dateStr);
+
+  if (Number.isNaN(date.getTime())) {
+    return "N/A";
+  }
+
+  return date.toLocaleDateString(
+    "en-US",
+    {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }
+  );
+};
 
 function CandidateProfile({
   isOpen,
@@ -30,17 +84,24 @@ function CandidateProfile({
   onOpenOfferModal,
   readOnly = false,
 }) {
-  const [rejecting, setRejecting] = useState(false);
-  const [downloading, setDownloading] = useState(false);
-  const [decisionLoading, setDecisionLoading] = useState(false);
+  const [rejecting, setRejecting] =
+    useState(false);
+
+  const [downloading, setDownloading] =
+    useState(false);
+
+  const [decisionLoading, setDecisionLoading] =
+    useState(false);
 
   // =====================================================
-  // HIDE MODAL
+  // CANDIDATE FEEDBACK STATE
   // =====================================================
 
-  if (!isOpen || !candidate) {
-    return null;
-  }
+  const [candidateFeedback, setCandidateFeedback] =
+    useState(null);
+
+  const [feedbackLoading, setFeedbackLoading] =
+    useState(false);
 
   // =====================================================
   // CANDIDATE ID
@@ -50,6 +111,74 @@ function CandidateProfile({
     candidate?._id ||
     candidate?.id ||
     candidate?.candidateId;
+
+  // =====================================================
+  // LOAD CANDIDATE FEEDBACK
+  // =====================================================
+useEffect(() => {
+  let mounted = true;
+
+  const loadCandidateFeedback = async () => {
+    if (!isOpen || !candidateId) {
+      return;
+    }
+
+    try {
+      setFeedbackLoading(true);
+      setCandidateFeedback(null);
+
+      const response =
+        await getCandidateInterviewFeedback(
+          candidateId
+        );
+
+      if (!mounted) {
+        return;
+      }
+
+      const feedbackData =
+        response?.data?.data;
+
+      if (
+        Array.isArray(feedbackData) &&
+        feedbackData.length > 0
+      ) {
+        setCandidateFeedback(
+          feedbackData[0]
+        );
+      } else {
+        setCandidateFeedback(null);
+      }
+    } catch (error) {
+      console.error(
+        "GET CANDIDATE FEEDBACK ERROR:",
+        error?.response?.data || error
+      );
+
+      if (mounted) {
+        setCandidateFeedback(null);
+      }
+    } finally {
+      if (mounted) {
+        setFeedbackLoading(false);
+      }
+    }
+  };
+
+  loadCandidateFeedback();
+
+  return () => {
+    mounted = false;
+  };
+}, [isOpen, candidateId]);
+
+  // =====================================================
+  // HIDE MODAL
+  // =====================================================
+
+  if (!isOpen || !candidate) {
+    return null;
+  }
 
   // =====================================================
   // REJECTED
@@ -99,7 +228,9 @@ function CandidateProfile({
     candidate?.name
       ?.split(" ")
       .filter(Boolean)
-      .map((word) => word[0])
+      .map(
+        (word) => word[0]
+      )
       .join("")
       .slice(0, 2)
       .toUpperCase() || "C";
@@ -125,50 +256,20 @@ function CandidateProfile({
   // ACTION CONDITIONS
   // =====================================================
 
-  /*
-    IMPORTANT FLOW:
-
-    Applied
-       ↓
-    Screening
-       ↓
-    Pass Screening
-       ↓
-    Shortlisted
-       ↓
-    Schedule Interview
-       ↓
-    Interview
-       ↓
-    Pass Interview
-       ↓
-    Move to Offer
-       ↓
-    Offer Sent
-       ↓
-    Accept Offer
-       ↓
-    Hired
-  */
-
-  // Schedule Interview ONLY from Shortlisted
   const canScheduleInterview =
     !isRejected &&
     candidate.stage === "Shortlisted" &&
     !interviewScheduled &&
     !interviewCompleted;
 
-  // Pass Interview ONLY when interview is scheduled
   const canPassInterview =
     candidate.stage === "Interview" &&
     interviewStatus === "Scheduled";
 
-  // Move to Offer ONLY after interview passed
   const canMoveToOffer =
     candidate.stage === "Interview" &&
     interviewPassed;
 
-  // Accept Offer ONLY from Offer Sent
   const canAcceptOffer =
     candidate.stage === "Offer Sent";
 
@@ -311,9 +412,6 @@ function CandidateProfile({
         return;
       }
 
-      // IMPORTANT:
-      // Interview can only be scheduled
-      // after Screening has been passed.
       if (
         candidate.stage !==
         "Shortlisted"
@@ -356,8 +454,6 @@ function CandidateProfile({
         return;
       }
 
-      // Only Screening candidate
-      // can use screening decision
       if (
         candidate.stage !==
         "Screening"
@@ -500,6 +596,7 @@ function CandidateProfile({
         await onAcceptOffer(
           candidate
         );
+
         return;
       }
 
@@ -510,10 +607,8 @@ function CandidateProfile({
           candidateId,
           {
             status,
-
             rejectionReason:
-              status ===
-              "Rejected"
+              status === "Rejected"
                 ? "Candidate declined offer"
                 : "",
           }
@@ -551,15 +646,13 @@ function CandidateProfile({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-
       <div className="w-full max-w-[840px] overflow-hidden rounded-2xl bg-white shadow-2xl">
 
-        {/* =====================================================
+        {/* =================================================
             HEADER
-        ===================================================== */}
+        ================================================= */}
 
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
-
           <h2 className="text-base font-bold text-slate-800">
             Candidate Profile
           </h2>
@@ -571,18 +664,17 @@ function CandidateProfile({
           >
             ×
           </button>
-
         </div>
 
-        {/* =====================================================
+        {/* =================================================
             CONTENT
-        ===================================================== */}
+        ================================================= */}
 
         <div className="max-h-[65vh] overflow-y-auto">
 
-          {/* =====================================================
+          {/* =================================================
               PROFILE HEADER
-          ===================================================== */}
+          ================================================= */}
 
           <div className="flex items-center justify-between px-6 py-5">
 
@@ -613,8 +705,7 @@ function CandidateProfile({
 
             <ScoreCircle
               score={
-                candidate.score ||
-                0
+                candidate.score || 0
               }
               color={
                 isRejected
@@ -625,9 +716,9 @@ function CandidateProfile({
 
           </div>
 
-          {/* =====================================================
+          {/* =================================================
               PIPELINE
-          ===================================================== */}
+          ================================================= */}
 
           <div className="px-6">
 
@@ -642,11 +733,7 @@ function CandidateProfile({
             ) : (
               <div className="relative flex items-start justify-between pb-3">
 
-                {/* BASE LINE */}
-
                 <div className="absolute left-3 right-3 top-3 h-0.5 bg-slate-200" />
-
-                {/* PROGRESS LINE */}
 
                 <div
                   className="absolute left-3 top-3 h-0.5 bg-emerald-500"
@@ -655,13 +742,12 @@ function CandidateProfile({
                   }}
                 />
 
-                {/* STAGES */}
-
                 {PIPELINE_STAGES.map(
                   (
                     stage,
                     index
                   ) => {
+
                     const isDone =
                       index <
                       currentStageIndex;
@@ -690,8 +776,7 @@ function CandidateProfile({
                             ? "✓"
                             : isCurrent
                             ? "•"
-                            : index +
-                              1}
+                            : index + 1}
                         </div>
 
                         <span className="mt-1.5 text-[11px] font-medium text-slate-500">
@@ -708,9 +793,9 @@ function CandidateProfile({
 
           </div>
 
-          {/* =====================================================
+          {/* =================================================
               CONTACT & DOCUMENTS
-          ===================================================== */}
+          ================================================= */}
 
           <div className="mt-6 px-6">
 
@@ -719,8 +804,6 @@ function CandidateProfile({
             </h4>
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-
-              {/* EMAIL */}
 
               <div>
 
@@ -734,8 +817,6 @@ function CandidateProfile({
                 </div>
 
               </div>
-
-              {/* PHONE */}
 
               <div>
 
@@ -766,27 +847,19 @@ function CandidateProfile({
                     </span>
 
                     <span className="truncate text-xs font-semibold text-slate-700">
-                      {
-                        resumeName
-                      }
+                      {resumeName}
                     </span>
 
                   </div>
 
-                  {/* VIEW */}
-
                   <a
-                    href={
-                      resumeUrl
-                    }
+                    href={resumeUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                   >
                     View
                   </a>
-
-                  {/* DOWNLOAD */}
 
                   <button
                     type="button"
@@ -814,9 +887,9 @@ function CandidateProfile({
 
           </div>
 
-          {/* =====================================================
+          {/* =================================================
               SKILLS
-          ===================================================== */}
+          ================================================= */}
 
           <div className="mt-6 px-6">
 
@@ -826,8 +899,7 @@ function CandidateProfile({
 
             <div className="flex flex-wrap gap-2">
 
-              {candidate.skills
-                ?.length ? (
+              {candidate.skills?.length ? (
                 candidate.skills.map(
                   (
                     skill,
@@ -851,18 +923,17 @@ function CandidateProfile({
 
           </div>
 
-          {/* =====================================================
-              NOTES
-          ===================================================== */}
+          {/* =================================================
+              RECRUITER NOTES
+          ================================================= */}
 
-          <div className="mt-6 px-6 pb-6">
+          <div className="mt-6 px-6">
 
             <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
               Recruiter Notes
             </h4>
 
-            {candidate.notes
-              ?.length ? (
+            {candidate.notes?.length ? (
               <div className="space-y-2">
 
                 {candidate.notes.map(
@@ -878,14 +949,10 @@ function CandidateProfile({
                       className="rounded-xl bg-slate-100 px-3.5 py-3 text-sm text-slate-500"
                     >
                       <span className="font-semibold text-slate-800">
-                        {
-                          note.author
-                        }
+                        {note.author}
                       </span>{" "}
                       —{" "}
-                      {
-                        note.text
-                      }
+                      {note.text}
                     </div>
                   )
                 )}
@@ -898,25 +965,74 @@ function CandidateProfile({
             )}
 
           </div>
+{/* =====================================================
+    CANDIDATE FEEDBACK
+===================================================== */}
 
+<div className="mt-6 px-6 pb-6">
+  <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
+    Candidate Feedback
+  </h4>
+
+  {feedbackLoading ? (
+    <div className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
+      Loading interview feedback...
+    </div>
+  ) : !candidateFeedback ? (
+    <div className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-400">
+      No candidate feedback submitted yet.
+    </div>
+  ) : (
+    <div className="space-y-2">
+
+      {/* RECOMMENDATION + RATING */}
+      <div className="flex flex-wrap items-center gap-2">
+
+        {/* Recommendation */}
+        <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
+          <span className="text-xs font-semibold text-slate-400">
+            Recommendation:
+          </span>
+
+          <span
+            className={getRecommendationBadgeClasses(
+              candidateFeedback?.recommendation
+            )}
+          >
+            {candidateFeedback?.recommendation || "N/A"}
+          </span>
         </div>
 
-        {/* =====================================================
+        {/* Rating */}
+        <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
+          <span className="text-xs font-semibold text-slate-400">
+            Overall Rating:
+          </span>
+
+          <span className="text-sm font-bold text-slate-800">
+            {candidateFeedback?.overallRating ?? "N/A"}
+          </span>
+
+          <span className="text-xs text-slate-400">
+            / 5
+          </span>
+        </div>
+
+      </div>
+
+    </div>
+  )}
+</div>
+        </div>
+
+        {/* =================================================
             FOOTER
-        ===================================================== */}
+        ================================================= */}
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white px-6 py-4">
 
-          {/* =====================================================
-              NORMAL MODE
-          ===================================================== */}
-
           {!readOnly && (
             <>
-
-              {/* =================================================
-                  LEFT ACTIONS
-              ================================================= */}
 
               <div className="flex flex-wrap items-center gap-2">
 
@@ -940,10 +1056,7 @@ function CandidateProfile({
                   </button>
                 )}
 
-                {/* =================================================
-                    SCREENING
-                    ONLY SHOW PASS SCREENING
-                ================================================= */}
+                {/* SCREENING */}
 
                 {candidate.stage ===
                   "Screening" && (
@@ -965,9 +1078,7 @@ function CandidateProfile({
                   </button>
                 )}
 
-                {/* =================================================
-                    PASS INTERVIEW
-                ================================================= */}
+                {/* PASS INTERVIEW */}
 
                 {canPassInterview && (
                   <button
@@ -986,9 +1097,7 @@ function CandidateProfile({
                   </button>
                 )}
 
-                {/* =================================================
-                    MOVE TO OFFER
-                ================================================= */}
+                {/* MOVE TO OFFER */}
 
                 {canMoveToOffer && (
                   <button
@@ -1005,9 +1114,7 @@ function CandidateProfile({
                   </button>
                 )}
 
-                {/* =================================================
-                    ACCEPT OFFER
-                ================================================= */}
+                {/* ACCEPT OFFER */}
 
                 {canAcceptOffer && (
                   <button
@@ -1028,19 +1135,9 @@ function CandidateProfile({
 
               </div>
 
-              {/* =================================================
-                  RIGHT ACTIONS
-              ================================================= */}
-
               <div className="ml-auto flex items-center gap-2">
 
-                {/* =================================================
-                    SCHEDULE INTERVIEW
-
-                    IMPORTANT:
-                    This only renders when:
-                    candidate.stage === "Shortlisted"
-                ================================================= */}
+                {/* SCHEDULE INTERVIEW */}
 
                 {canScheduleInterview && (
                   <button
@@ -1054,9 +1151,7 @@ function CandidateProfile({
                   </button>
                 )}
 
-                {/* =================================================
-                    INTERVIEW SCHEDULED
-                ================================================= */}
+                {/* INTERVIEW SCHEDULED */}
 
                 {candidate.stage ===
                   "Interview" &&
@@ -1070,9 +1165,7 @@ function CandidateProfile({
 
                 <button
                   type="button"
-                  onClick={
-                    onClose
-                  }
+                  onClick={onClose}
                   className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                 >
                   Close
@@ -1083,18 +1176,12 @@ function CandidateProfile({
             </>
           )}
 
-          {/* =====================================================
-              READ ONLY MODE
-          ===================================================== */}
-
           {readOnly && (
             <div className="ml-auto">
 
               <button
                 type="button"
-                onClick={
-                  onClose
-                }
+                onClick={onClose}
                 className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
               >
                 Close
@@ -1106,7 +1193,6 @@ function CandidateProfile({
         </div>
 
       </div>
-
     </div>
   );
 }

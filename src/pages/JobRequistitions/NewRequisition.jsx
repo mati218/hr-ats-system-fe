@@ -9,7 +9,10 @@ import {
   createRequisition,
   updateRequisition,
 } from "../../lib/api/requisitionApi";
-import { getEmploymentTypesLookup } from "../../lib/api/lookupApi";
+import {
+  getEmploymentTypesLookup,
+  getDepartmentLookup,
+} from "../../lib/api/authdepApi";
 
 const NewRequisition = ({
   isOpen,
@@ -44,6 +47,7 @@ const NewRequisition = ({
 
   const publishOption = watch("publishOption");
   const [employmentTypes, setEmploymentTypes] = useState([]);
+  const [departments, setDepartments] = useState([]);
 
   useEffect(() => {
     getEmploymentTypesLookup()
@@ -51,6 +55,16 @@ const NewRequisition = ({
       .catch((error) =>
         console.log("Failed to load employment types:", error)
       );
+
+    getDepartmentLookup()
+      .then((res) => setDepartments(res.data.data || []))
+      .catch((error) => {
+        console.log("Failed to load departments:", error);
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to load departments"
+        );
+      });
   }, []);
 
   const getTomorrowDate = () => {
@@ -212,18 +226,14 @@ const NewRequisition = ({
                 Select Department
               </option>
 
-              <option value="Engineering">
-                Engineering
-              </option>
-              <option value="Design">
-                Design
-              </option>
-              <option value="People Ops">
-                People Ops
-              </option>
-              <option value="Analytics">
-                Analytics
-              </option>
+              {departments.map((department) => (
+                <option
+                  key={department.id}
+                  value={department.name}
+                >
+                  {department.name}
+                </option>
+              ))}
             </select>
 
             {errors.department && (

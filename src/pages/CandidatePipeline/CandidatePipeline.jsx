@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import {
@@ -33,6 +34,8 @@ const SHOW_ALL = "ALL";
 
 function CandidatePipeline() {
   const { token } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [candidates, setCandidates] = useState([]);
 
@@ -89,75 +92,66 @@ function CandidatePipeline() {
 
   // =====================================================
   // LOAD CANDIDATES
+  //
+  // Phase 3 fix: this used to always call
+  // fetchAllCandidates() with no arguments — loading
+  // *every* candidate regardless of the selected job —
+  // and then filter them client-side in applyCandidateFilter.
+  // That meant the pipeline was never really job-scoped on
+  // the server, just visually filtered in the browser.
+  //
+  // Now the requisitionId is passed straight to the API,
+  // so when a specific job is selected only that job's
+  // candidates are ever fetched or held in state.
   // =====================================================
 
-  const loadCandidates = useCallback(async () => {
-    try {
-      const response = await fetchAllCandidates();
+  const loadCandidates = useCallback(
+    async (requisitionId) => {
+      try {
+        const response = await fetchAllCandidates(
+          requisitionId && requisitionId !== SHOW_ALL
+            ? { requisitionId }
+            : {}
+        );
 
-      const data =
-        response?.data?.data ||
-        response?.data?.candidates ||
-        response?.data ||
-        [];
+        const data =
+          response?.data?.data ||
+          response?.data?.candidates ||
+          response?.data ||
+          [];
 
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
-      console.error(
-        "GET CANDIDATES ERROR:",
-        error?.response?.data || error
-      );
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error(
+          "GET CANDIDATES ERROR:",
+          error?.response?.data || error
+        );
 
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to load candidates."
-      );
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to load candidates."
+        );
 
-      return [];
-    }
-  }, []);
-
-  // =====================================================
-  // FILTER CANDIDATES
-  // =====================================================
-
-  const applyCandidateFilter = useCallback(
-    (allCandidates, requisitionId) => {
-      if (
-        requisitionId === SHOW_ALL ||
-        !requisitionId
-      ) {
-        return allCandidates;
+        return [];
       }
-
-      return allCandidates.filter(
-        (candidate) =>
-          String(
-            candidate?.requisitionId?._id ||
-              candidate?.requisitionId
-          ) === String(requisitionId)
-      );
     },
     []
   );
 
   // =====================================================
-  // REFRESH CANDIDATES
+  // REFRESH CANDIDATES (for the currently selected job)
   // =====================================================
 
   const loadCandidatesForSelectedJob =
     useCallback(async () => {
       try {
-        const allCandidates = await loadCandidates();
-
-        const filtered = applyCandidateFilter(
-          allCandidates,
+        const jobCandidates = await loadCandidates(
           selectedRequisitionId
         );
 
-        setCandidates(filtered);
+        setCandidates(jobCandidates);
 
-        return filtered;
+        return jobCandidates;
       } catch (error) {
         console.error(
           "RELOAD CANDIDATES ERROR:",
@@ -168,7 +162,6 @@ function CandidatePipeline() {
       }
     }, [
       loadCandidates,
-      applyCandidateFilter,
       selectedRequisitionId,
     ]);
 
@@ -187,19 +180,40 @@ function CandidatePipeline() {
       try {
         setLoading(true);
 
+        // Search deep-link from the navbar (Topbar.jsx):
+        // if the user clicked a candidate/job result there,
+        // land here pre-scoped to that job.
+        const deepLinkRequisitionId =
+          location.state?.requisitionId || SHOW_ALL;
+
         const [
           loadedRequisitions,
           loadedCandidates,
         ] = await Promise.all([
           loadRequisitions(),
-          loadCandidates(),
+          loadCandidates(deepLinkRequisitionId),
         ]);
 
         setRequisitions(loadedRequisitions);
 
-        setSelectedRequisitionId(SHOW_ALL);
+        setSelectedRequisitionId(deepLinkRequisitionId);
 
         setCandidates(loadedCandidates);
+
+        // If the deep link also named a specific candidate,
+        // open their profile once the data is in.
+        if (location.state?.candidateId) {
+          await handleCandidateClick({
+            _id: location.state.candidateId,
+          });
+        }
+
+        // Clear the navigation state so refreshing the page
+        // or navigating away/back doesn't keep re-triggering
+        // this deep link.
+        if (location.state) {
+          navigate(location.pathname, { replace: true });
+        }
       } catch (error) {
         console.error(
           "INITIAL PIPELINE LOAD ERROR:",
@@ -214,6 +228,7 @@ function CandidatePipeline() {
     };
 
     initializePipeline();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     token,
     loadCandidates,
@@ -232,14 +247,11 @@ function CandidatePipeline() {
     try {
       setLoading(true);
 
-      const allCandidates = await loadCandidates();
-
-      const filtered = applyCandidateFilter(
-        allCandidates,
+      const jobCandidates = await loadCandidates(
         requisitionId
       );
 
-      setCandidates(filtered);
+      setCandidates(jobCandidates);
     } catch (error) {
       console.error(
         "FILTER CANDIDATES ERROR:",
@@ -648,6 +660,11 @@ function CandidatePipeline() {
               ? "All Jobs"
               : selectedRequisition?.role ||
                 "Select a Job"}
+            {" · "}
+            {candidates.length}{" "}
+            {candidates.length === 1
+              ? "candidate"
+              : "candidates"}
           </p>
         </div>
 
@@ -677,6 +694,20 @@ function CandidatePipeline() {
           )}
         </select>
       </div>
+
+      {/* =====================================================
+          EMPTY STATE — a specific job is selected but has
+          no candidates at all (as opposed to a stage column
+          simply being empty, which is normal).
+      ===================================================== */}
+
+      {selectedRequisitionId !== SHOW_ALL &&
+        candidates.length === 0 && (
+          <div className="mb-4 rounded-xl border border-slate-200 bg-white px-4 py-6 text-center text-sm text-slate-500">
+            No candidates found for{" "}
+            {selectedRequisition?.role || "this job"}.
+          </div>
+        )}
 
       {/* =====================================================
           PIPELINE
