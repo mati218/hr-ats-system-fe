@@ -31,6 +31,9 @@ const UserManagement = () => {
   const canEdit = getPermission("edit");
   const canDelete = getPermission("delete");
 
+  // =========================
+  // GET USERS
+  // =========================
   const loadUsers = async () => {
     try {
       const response = await getUsers();
@@ -57,31 +60,57 @@ const UserManagement = () => {
     }
   };
 
-  const handleDeleteUser = async (selected) => {
-    try {
-      if (!selected?._id) {
-        toast.error("User ID not found");
-        return;
-      }
-
-      await deleteUser(selected._id);
-
-      await loadUsers();
-
-      toast.success("User deleted successfully");
-    } catch (error) {
-      console.log(
-        "Delete user error:",
-        error.response?.data || error.message
-      );
-
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to delete user"
-      );
+  // =========================
+  // DELETE USER
+  // =========================
+  const handleDeleteUser = (selected) => {
+    if (!selected?._id) {
+      toast.error("User ID not found");
+      return;
     }
+
+    toast.warning(
+      "Are you sure you want to delete this user?",
+      {
+        duration: Infinity,
+
+        action: {
+          label: "Delete",
+
+          onClick: async () => {
+            try {
+              await deleteUser(selected._id);
+
+              // Refresh users after deletion
+              await loadUsers();
+
+              toast.success(
+                "User deleted successfully"
+              );
+            } catch (error) {
+              console.log(
+                "Delete user error:",
+                error.response?.data || error.message
+              );
+
+              toast.error(
+                error.response?.data?.message ||
+                  "Failed to delete user"
+              );
+            }
+          },
+        },
+
+        cancel: {
+          label: "Cancel",
+        },
+      }
+    );
   };
 
+  // =========================
+  // LOAD USERS ON PAGE LOAD
+  // =========================
   useEffect(() => {
     if (!canView) {
       return;
@@ -94,6 +123,9 @@ const UserManagement = () => {
     return () => clearTimeout(loadTimeout);
   }, [canView]);
 
+  // =========================
+  // ACCESS DENIED
+  // =========================
   if (!canView) {
     return (
       <div className="p-8">
@@ -108,6 +140,9 @@ const UserManagement = () => {
     );
   }
 
+  // =========================
+  // TABLE COLUMNS
+  // =========================
   const columns = [
     "NAME",
     "EMAIL",
@@ -118,6 +153,9 @@ const UserManagement = () => {
     "ACTION",
   ];
 
+  // =========================
+  // UI
+  // =========================
   return (
     <>
       <div className="flex items-center justify-between mb-6">
