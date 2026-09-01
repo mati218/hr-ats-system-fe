@@ -1,8 +1,11 @@
 import api from "./axios";
 
-export const getRequisitions = (status) => {
+export const getRequisitions = (status, search) => {
   return api.get("/requisitions", {
-    params: status && status !== "All" ? { status } : {},
+    params: {
+      ...(status && status !== "All" ? { status } : {}),
+      ...(search ? { search } : {}),
+    },
   });
 };
 

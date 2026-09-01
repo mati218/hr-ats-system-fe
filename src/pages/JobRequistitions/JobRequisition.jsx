@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import RequisitionTable from "../../components/ui/RequisitionTable";
 import NewRequisition from "./NewRequisition";
@@ -15,6 +16,9 @@ import RequisitionDetailsModal from "../../components/ui/RequisitionDetailsModal
 const tabs = ["All", "Open", "Draft", "Closed", "Archived"];
 
 const JobRequisition = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [requisitions, setRequisitions] = useState([]);
   const [isCreateMode, setIsCreateMode] = useState(false);
 
@@ -193,6 +197,21 @@ const handleDelete = (id) => {
   useEffect(() => {
     fetchCounts();
   }, []);
+
+  // =========================
+  // SEARCH DEEP-LINK
+  // If the user clicked a job result in the Topbar global
+  // search, land here with that requisition's details
+  // already open.
+  // =========================
+
+  useEffect(() => {
+    if (location.state?.requisitionId) {
+      handleView(location.state.requisitionId);
+      navigate(location.pathname, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   // =========================
   // UI

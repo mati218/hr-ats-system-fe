@@ -830,23 +830,12 @@ function MyInterviews() {
           handleSubmitFeedback
         }
       />
-
-      {/* ============================================= */}
-      {/* CANDIDATE PROFILE MODAL */}
-      {/* ============================================= */}
-
-      <CandidateProfile
-        isOpen={
-          showCandidateProfile
-        }
-        candidate={
-          viewCandidate
-        }
-        onClose={
-          closeCandidateProfile
-        }
-        readOnly={true}
-      />
+<CandidateProfile
+  isOpen={showCandidateProfile}
+  candidate={viewCandidate}
+  onClose={closeCandidateProfile}
+  readOnly={true}
+/>
 
     </div>
   );
