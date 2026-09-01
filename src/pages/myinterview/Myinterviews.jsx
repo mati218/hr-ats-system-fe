@@ -12,6 +12,8 @@ import {
   submitInterviewFeedback,
 } from "../../lib/api/myinterviewApi";
 
+import { getCandidate } from "../../lib/api/candidateApi";
+
 import { useAuth } from "../../context/useAuth";
 
 import SubmitFeedbackModal from "./SubmitFeedbackModal";
@@ -406,7 +408,7 @@ function MyInterviews() {
   // VIEW CANDIDATE
   // ===================================================
 
-  const handleViewCandidate = (candidate) => {
+  const handleViewCandidate = async (candidate) => {
     if (!candidate) {
       toast.error(
         "Candidate information not found."
@@ -414,8 +416,55 @@ function MyInterviews() {
       return;
     }
 
-    setViewCandidate(candidate);
-    setShowCandidateProfile(true);
+    const candidateId =
+      candidate?._id ||
+      candidate?.id;
+
+    if (!candidateId) {
+      toast.error(
+        "Candidate ID not found."
+      );
+      return;
+    }
+
+    try {
+      // ================================================
+      // GET FULL CANDIDATE PROFILE
+      // ================================================
+
+      const response = await getCandidate(
+        candidateId
+      );
+
+      const candidateData =
+        response?.data?.data ||
+        response?.data;
+
+      if (!candidateData) {
+        toast.error(
+          "Candidate information not found."
+        );
+        return;
+      }
+
+      // ================================================
+      // OPEN PROFILE MODAL WITH API DATA
+      // ================================================
+
+      setViewCandidate(candidateData);
+      setShowCandidateProfile(true);
+
+    } catch (error) {
+      console.error(
+        "GET CANDIDATE ERROR:",
+        error?.response?.data || error
+      );
+
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to load candidate profile."
+      );
+    }
   };
 
   // ===================================================
