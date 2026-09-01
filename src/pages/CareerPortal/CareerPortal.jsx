@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import ApplyModal from "./ApplyModal";
 import ApplicationSuccess from "./ApplicationSuccess";
 
-import { getRequisitions } from "../../lib/api/requisitionApi";
+import {getPublicOpenRequisitions,} from "../../lib/api/requisitionApi";
 import { applyNow } from "../../lib/api/candidateApi";
 
 const CareerPortal = () => {
@@ -16,38 +16,47 @@ const CareerPortal = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        setLoading(true);
+  const fetchJobs = async () => {
+    try {
+      setLoading(true);
 
-        const response = await getRequisitions("Open");
+      const response =
+        await getPublicOpenRequisitions();
 
-        console.log("OPEN JOBS:", response?.data);
+      console.log("OPEN JOBS:", response?.data);
 
-        const allJobs = response?.data?.data || [];
+      const allJobs =
+        response?.data?.data || [];
 
-        const availableJobs = allJobs.filter((job) => {
-          const hasOpenings = job.candidates < job.openings;
+      const availableJobs = allJobs.filter((job) => {
+        const hasOpenings =
+          job.candidates < job.openings;
 
-          const deadlineNotPassed =
-            !job.deadline || new Date(job.deadline) >= new Date();
+        const deadlineNotPassed =
+          !job.deadline ||
+          new Date(job.deadline) >= new Date();
 
-          return hasOpenings && deadlineNotPassed;
-        });
+        return hasOpenings && deadlineNotPassed;
+      });
 
-        setJobs(availableJobs);
-      } catch (error) {
-        console.error(
-          "FAILED TO FETCH OPEN JOBS:",
-          error?.response?.data || error
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+      setJobs(availableJobs);
+    } catch (error) {
+      console.error(
+        "FAILED TO FETCH OPEN JOBS:",
+        error?.response?.data || error
+      );
 
-    fetchJobs();
-  }, []);
+      toast.error(
+        error?.response?.data?.message ||
+        "Failed to load open jobs"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchJobs();
+}, []);
 
   const handleApplySubmit = async (form) => {
     if (!selectedJob) {
