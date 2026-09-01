@@ -45,9 +45,7 @@ const INITIAL_ERRORS = {
 // LOCAL DATE
 // =====================================================
 
-const getLocalDateString = (
-  date = new Date()
-) => {
+const getLocalDateString = (date = new Date()) => {
   const year = date.getFullYear();
 
   const month = String(
@@ -134,51 +132,71 @@ function ScheduleInterviewModal({
   mode = "schedule",
   interview = null,
 }) {
-  const [
-    form,
-    dispatchForm,
-  ] = useReducer(
+  // =====================================================
+  // STATE
+  // =====================================================
+
+  const [form, dispatchForm] = useReducer(
     formReducer,
     INITIAL_FORM
   );
 
-  const [
-    errors,
-    setErrors,
-  ] = useState(INITIAL_ERRORS);
+  const [errors, setErrors] = useState(
+    INITIAL_ERRORS
+  );
 
-  const [
-    candidates,
-    setCandidates,
-  ] = useState([]);
+  const [candidates, setCandidates] = useState([]);
 
-  const [
-    interviewers,
-    setInterviewers,
-  ] = useState([]);
+  const [interviewers, setInterviewers] =
+    useState([]);
 
-  const [
-    loadingCandidates,
-    setLoadingCandidates,
-  ] = useState(false);
+  const [loadingCandidates, setLoadingCandidates] =
+    useState(false);
 
   const [
     loadingInterviewers,
     setLoadingInterviewers,
   ] = useState(false);
 
-  const [
-    submitting,
-    setSubmitting,
-  ] = useState(false);
+  const [submitting, setSubmitting] =
+    useState(false);
 
-  const [
-    cancelling,
-    setCancelling,
-  ] = useState(false);
+  const [cancelling, setCancelling] =
+    useState(false);
+
+  // =====================================================
+  // MODES
+  // =====================================================
 
   const isReschedule =
     mode === "reschedule";
+
+  /*
+   * TRUE when modal is opened directly for
+   * a particular candidate.
+   *
+   * Example:
+   *
+   * Candidate Profile
+   *      ↓
+   * Schedule Interview
+   *      ↓
+   * candidate prop exists
+   *
+   * Therefore dropdown should be disabled.
+   */
+  const isDirectCandidate =
+    !isReschedule && Boolean(candidate);
+
+  /*
+   * Candidate can be selected manually only when:
+   *
+   * 1. Normal schedule mode
+   * 2. No candidate was passed directly
+   */
+  const canSelectCandidate =
+    !isReschedule &&
+    !isDirectCandidate;
 
   // =====================================================
   // ACTIVE CANDIDATE
@@ -190,75 +208,89 @@ function ScheduleInterviewModal({
     null;
 
   // =====================================================
+  // ACTIVE CANDIDATE ID
+  // =====================================================
+
+  const activeCandidateId =
+    typeof activeCandidate === "object"
+      ? activeCandidate?._id ||
+        activeCandidate?.id ||
+        activeCandidate?.candidateId ||
+        ""
+      : activeCandidate || "";
+
+  // =====================================================
   // LOAD CANDIDATES
-  // ONLY FOR NORMAL SCHEDULE
+  //
+  // ONLY NORMAL SCHEDULE
+  // AND ONLY WHEN NO DIRECT CANDIDATE
   // =====================================================
 
   useEffect(() => {
     if (
       !isOpen ||
-      isReschedule
+      isReschedule ||
+      isDirectCandidate
     ) {
       return;
     }
 
-    const loadCandidates =
-      async () => {
-        try {
-          setLoadingCandidates(true);
+    const loadCandidates = async () => {
+      try {
+        setLoadingCandidates(true);
 
-          const response =
-            await fetchAllCandidates();
+        const response =
+          await fetchAllCandidates();
 
-          const candidateData =
-            response?.data?.data ||
-            response?.data?.candidates ||
-            response?.data ||
-            [];
+        const candidateData =
+          response?.data?.data ||
+          response?.data?.candidates ||
+          response?.data ||
+          [];
 
-          const allCandidates =
-            Array.isArray(candidateData)
-              ? candidateData
-              : [];
+        const allCandidates =
+          Array.isArray(candidateData)
+            ? candidateData
+            : [];
 
-          const eligibleCandidates =
-            allCandidates.filter(
-              (item) =>
-                [
-                  "Applied",
-                  "Screening",
-                  "Shortlisted",
-                ].includes(
-                  item?.stage
-                )
-            );
-
-          setCandidates(
-            eligibleCandidates
-          );
-        } catch (error) {
-          console.error(
-            "GET CANDIDATES ERROR:",
-            error?.response?.data ||
-              error
+        /*
+         * Only candidates that are allowed
+         * to schedule interview.
+         */
+        const eligibleCandidates =
+          allCandidates.filter((item) =>
+            [
+              "Applied",
+              "Screening",
+              "Shortlisted",
+            ].includes(item?.stage)
           );
 
-          setCandidates([]);
+        setCandidates(
+          eligibleCandidates
+        );
+      } catch (error) {
+        console.error(
+          "GET CANDIDATES ERROR:",
+          error?.response?.data || error
+        );
 
-          toast.error(
-            error?.response?.data
-              ?.message ||
-              "Failed to load candidates."
-          );
-        } finally {
-          setLoadingCandidates(false);
-        }
-      };
+        setCandidates([]);
+
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to load candidates."
+        );
+      } finally {
+        setLoadingCandidates(false);
+      }
+    };
 
     loadCandidates();
   }, [
     isOpen,
     isReschedule,
+    isDirectCandidate,
   ]);
 
   // =====================================================
@@ -270,66 +302,61 @@ function ScheduleInterviewModal({
       return;
     }
 
-    const loadInterviewers =
-      async () => {
-        try {
-          setLoadingInterviewers(true);
+    const loadInterviewers = async () => {
+      try {
+        setLoadingInterviewers(true);
 
-          const response =
-            await getUsersLookup(
-              "Interviewer"
-            );
-
-          const users =
-            response?.data?.data ||
-            response?.data?.users ||
-            response?.data ||
-            [];
-
-          const normalizedUsers =
-            Array.isArray(users)
-              ? users.map(
-                  (user) => ({
-                    ...user,
-
-                    id:
-                      user?.id ||
-                      user?._id,
-
-                    _id:
-                      user?._id ||
-                      user?.id,
-
-                    name:
-                      user?.name ||
-                      user?.fullName ||
-                      user?.username ||
-                      "Unknown User",
-                  })
-                )
-              : [];
-
-          setInterviewers(
-            normalizedUsers
-          );
-        } catch (error) {
-          console.error(
-            "GET INTERVIEWERS ERROR:",
-            error?.response?.data ||
-              error
+        const response =
+          await getUsersLookup(
+            "Interviewer"
           );
 
-          setInterviewers([]);
+        const users =
+          response?.data?.data ||
+          response?.data?.users ||
+          response?.data ||
+          [];
 
-          toast.error(
-            error?.response?.data
-              ?.message ||
-              "Failed to load interviewers."
-          );
-        } finally {
-          setLoadingInterviewers(false);
-        }
-      };
+        const normalizedUsers =
+          Array.isArray(users)
+            ? users.map((user) => ({
+                ...user,
+
+                id:
+                  user?.id ||
+                  user?._id,
+
+                _id:
+                  user?._id ||
+                  user?.id,
+
+                name:
+                  user?.name ||
+                  user?.fullName ||
+                  user?.username ||
+                  "Unknown User",
+              }))
+            : [];
+
+        setInterviewers(
+          normalizedUsers
+        );
+      } catch (error) {
+        console.error(
+          "GET INTERVIEWERS ERROR:",
+          error?.response?.data || error
+        );
+
+        setInterviewers([]);
+
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to load interviewers."
+        );
+      } finally {
+        setLoadingInterviewers(false);
+      }
+    };
 
     loadInterviewers();
   }, [isOpen]);
@@ -343,7 +370,7 @@ function ScheduleInterviewModal({
       return;
     }
 
-    // Clear old validation errors
+    // Clear previous errors
     setErrors(INITIAL_ERRORS);
 
     // ===================================================
@@ -357,10 +384,8 @@ function ScheduleInterviewModal({
       const interviewerId =
         typeof interview.interviewerId ===
         "object"
-          ? interview
-              .interviewerId?._id ||
-            interview
-              .interviewerId?.id
+          ? interview.interviewerId?._id ||
+            interview.interviewerId?.id
           : interview.interviewerId;
 
       const interviewCandidate =
@@ -425,25 +450,24 @@ function ScheduleInterviewModal({
       value: {
         ...INITIAL_FORM,
 
+        /*
+         * If candidate was opened directly
+         * from Candidate Profile,
+         * automatically select its ID.
+         */
         candidateId:
-          activeCandidate?._id ||
-          activeCandidate?.id ||
-          activeCandidate?.candidateId ||
-          "",
+          activeCandidateId || "",
       },
     });
   }, [
     isOpen,
-    candidate,
     isReschedule,
     interview,
-    activeCandidate?._id,
-    activeCandidate?.id,
-    activeCandidate?.candidateId,
+    activeCandidateId,
   ]);
 
   // =====================================================
-  // UPDATE
+  // UPDATE FORM
   // =====================================================
 
   const update = (
@@ -456,7 +480,6 @@ function ScheduleInterviewModal({
       value,
     });
 
-    // Remove error when user fixes field
     if (value) {
       setErrors((previous) => ({
         ...previous,
@@ -476,9 +499,7 @@ function ScheduleInterviewModal({
 
     const candidateId =
       form.candidateId ||
-      activeCandidate?._id ||
-      activeCandidate?.id ||
-      activeCandidate?.candidateId;
+      activeCandidateId;
 
     // Candidate
     if (!candidateId) {
@@ -540,9 +561,7 @@ function ScheduleInterviewModal({
           item?._id ||
             item?.id
         ) ===
-        String(
-          form.candidateId
-        )
+        String(form.candidateId)
     ) ||
     activeCandidate;
 
@@ -550,117 +569,125 @@ function ScheduleInterviewModal({
   // SUBMIT
   // =====================================================
 
-  const handleSubmit =
-    async () => {
-      // ===============================================
-      // VALIDATION
-      // ===============================================
+  const handleSubmit = async () => {
+    // ===================================================
+    // VALIDATE
+    // ===================================================
 
-      const isValid =
-        validateForm();
+    const isValid =
+      validateForm();
 
-      if (!isValid) {
-        return;
-      }
+    if (!isValid) {
+      return;
+    }
 
-      const candidateId =
-        form.candidateId ||
-        activeCandidate?._id ||
-        activeCandidate?.id ||
-        activeCandidate?.candidateId;
+    const candidateId =
+      form.candidateId ||
+      activeCandidateId;
 
-      // ===============================================
-      // RESCHEDULE PROTECTION
-      // ===============================================
+    // ===================================================
+    // RESCHEDULE PROTECTION
+    // ===================================================
 
-      if (
-        isReschedule &&
-        interview?.status ===
-          "Completed"
-      ) {
-        toast.error(
-          "Completed interview cannot be rescheduled."
-        );
-        return;
-      }
+    if (
+      isReschedule &&
+      interview?.status ===
+        "Completed"
+    ) {
+      toast.error(
+        "Completed interview cannot be rescheduled."
+      );
 
-      if (
-        isReschedule &&
-        interview?.status ===
-          "Cancelled"
-      ) {
-        toast.error(
-          "Cancelled interview cannot be rescheduled."
-        );
-        return;
-      }
+      return;
+    }
 
-      try {
-        setSubmitting(true);
+    if (
+      isReschedule &&
+      interview?.status ===
+        "Cancelled"
+    ) {
+      toast.error(
+        "Cancelled interview cannot be rescheduled."
+      );
 
-        const candidatePayload = {
-          ...(selectedCandidate ||
-            {}),
-          _id: candidateId,
-          candidateId,
-        };
+      return;
+    }
 
-        const interviewPayload = {
-          round:
-            form.round,
+    try {
+      setSubmitting(true);
 
-          mode:
-            form.mode,
+      // =================================================
+      // CANDIDATE PAYLOAD
+      // =================================================
 
-          date:
-            form.date,
+      const candidatePayload = {
+        ...(selectedCandidate || {}),
 
-          time:
-            form.time,
+        _id: candidateId,
 
-          duration:
-            Number(
-              form.duration
-            ),
+        candidateId,
+      };
 
-          interviewerId:
-            form.interviewerId,
+      // =================================================
+      // INTERVIEW PAYLOAD
+      // =================================================
 
-          location:
-            form.location,
+      const interviewPayload = {
+        round:
+          form.round,
 
-          notes:
-            form.notes,
+        mode:
+          form.mode,
 
-          ...(isReschedule
-            ? {
-                interviewId:
-                  interview?._id ||
-                  interview?.id,
-              }
-            : {}),
-        };
+        date:
+          form.date,
 
-        await onSubmit(
-          candidatePayload,
-          interviewPayload
-        );
-      } catch (error) {
-        console.error(
-          `${mode.toUpperCase()} ERROR:`,
-          error?.response?.data ||
-            error
-        );
+        time:
+          form.time,
 
-        toast.error(
-          error?.response?.data
-            ?.message ||
-            "Failed to save interview."
-        );
-      } finally {
-        setSubmitting(false);
-      }
-    };
+        duration:
+          Number(
+            form.duration
+          ),
+
+        interviewerId:
+          form.interviewerId,
+
+        location:
+          form.location,
+
+        notes:
+          form.notes,
+
+        ...(isReschedule
+          ? {
+              interviewId:
+                interview?._id ||
+                interview?.id,
+            }
+          : {}),
+      };
+
+      await onSubmit(
+        candidatePayload,
+        interviewPayload
+      );
+    } catch (error) {
+      console.error(
+        `${mode.toUpperCase()} ERROR:`,
+        error?.response?.data ||
+          error
+      );
+
+      toast.error(
+        error?.response?.data
+          ?.message ||
+          "Failed to save interview."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // =====================================================
   // CANCEL INTERVIEW
@@ -683,6 +710,7 @@ function ScheduleInterviewModal({
         toast.error(
           "Completed interview cannot be cancelled."
         );
+
         return;
       }
 
@@ -693,6 +721,7 @@ function ScheduleInterviewModal({
         toast.error(
           "Interview is already cancelled."
         );
+
         return;
       }
 
@@ -723,7 +752,7 @@ function ScheduleInterviewModal({
     };
 
   // =====================================================
-  // HIDE
+  // HIDE MODAL
   // =====================================================
 
   if (!isOpen) {
@@ -731,7 +760,7 @@ function ScheduleInterviewModal({
   }
 
   // =====================================================
-  // RESCHEDULE CANCEL ALLOWED
+  // CAN CANCEL
   // =====================================================
 
   const canCancel =
@@ -748,7 +777,9 @@ function ScheduleInterviewModal({
 
       <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl bg-white shadow-xl">
 
-        {/* HEADER */}
+        {/* =================================================
+            HEADER
+        ================================================= */}
 
         <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4">
 
@@ -780,7 +811,9 @@ function ScheduleInterviewModal({
 
         </div>
 
-        {/* BODY */}
+        {/* =================================================
+            BODY
+        ================================================= */}
 
         <div className="space-y-4 px-5 py-4">
 
@@ -789,75 +822,90 @@ function ScheduleInterviewModal({
           ================================================= */}
 
           <div>
+
             <label className="mb-1 block text-xs font-semibold text-slate-700">
               Candidate
             </label>
 
-            {isReschedule ? (
-              <div
-                className={`rounded-lg border px-3 py-2 text-xs font-medium ${
-                  errors.candidateId
-                    ? "border-red-500 bg-red-50"
-                    : "border-slate-200 bg-slate-50"
-                } text-slate-800`}
-              >
-                {selectedCandidate?.name ||
-                  selectedCandidate?.fullName ||
-                  "Unknown Candidate"}
-              </div>
-            ) : (
-              <select
-                value={
-                  form.candidateId
-                }
-                onChange={(e) =>
-                  update(
-                    "candidateId",
-                    e.target.value
-                  )
-                }
-                disabled={
-                  submitting ||
-                  loadingCandidates
-                }
-                className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 ${
-                  errors.candidateId
-                    ? "border-red-500 focus:border-red-500"
-                    : "border-slate-200 focus:border-blue-500"
-                }`}
-              >
-                <option value="">
-                  {loadingCandidates
-                    ? "Loading candidates..."
-                    : candidates.length ===
-                        0
-                      ? "No eligible candidates found"
-                      : "Select candidate"}
-                </option>
+            <select
+              value={
+                form.candidateId
+              }
+              onChange={(e) =>
+                update(
+                  "candidateId",
+                  e.target.value
+                )
+              }
+              disabled={
+                submitting ||
+                loadingCandidates ||
+                !canSelectCandidate
+              }
+              className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${
+                errors.candidateId
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-slate-200 focus:border-blue-500"
+              }`}
+            >
 
-                {candidates.map(
-                  (item) => {
-                    const id =
-                      item?._id ||
-                      item?.id;
+              <option value="">
+                {loadingCandidates
+                  ? "Loading candidates..."
+                  : candidates.length ===
+                      0 &&
+                    canSelectCandidate
+                  ? "No eligible candidates found"
+                  : isDirectCandidate
+                  ? selectedCandidate?.name ||
+                    selectedCandidate?.fullName ||
+                    "Selected Candidate"
+                  : isReschedule
+                  ? selectedCandidate?.name ||
+                    selectedCandidate?.fullName ||
+                    "Selected Candidate"
+                  : "Select candidate"}
+              </option>
 
-                    return (
-                      <option
-                        key={id}
-                        value={id}
-                      >
-                        {item?.name ||
-                          item?.fullName ||
-                          "Unknown Candidate"}
+              {candidates.map(
+                (item) => {
+                  const id =
+                    item?._id ||
+                    item?.id;
 
-                        {item?.role
-                          ? ` — ${item.role}`
-                          : ""}
-                      </option>
-                    );
-                  }
-                )}
-              </select>
+                  return (
+                    <option
+                      key={id}
+                      value={id}
+                    >
+                      {item?.name ||
+                        item?.fullName ||
+                        "Unknown Candidate"}
+
+                      {item?.role
+                        ? ` — ${item.role}`
+                        : ""}
+                    </option>
+                  );
+                }
+              )}
+
+            </select>
+
+            {/* Direct candidate information */}
+
+            {isDirectCandidate && (
+              <p className="mt-1 text-[10px] text-slate-400">
+                Candidate is selected from
+                the candidate profile.
+              </p>
+            )}
+
+            {isReschedule && (
+              <p className="mt-1 text-[10px] text-slate-400">
+                Candidate cannot be changed
+                during rescheduling.
+              </p>
             )}
 
             {errors.candidateId && (
@@ -865,6 +913,7 @@ function ScheduleInterviewModal({
                 {errors.candidateId}
               </p>
             )}
+
           </div>
 
           {/* =================================================
@@ -876,12 +925,15 @@ function ScheduleInterviewModal({
             {/* ROUND */}
 
             <div>
+
               <label className="mb-1 block text-xs font-semibold text-slate-700">
                 Interview Round
               </label>
 
               <select
-                value={form.round}
+                value={
+                  form.round
+                }
                 onChange={(e) =>
                   update(
                     "round",
@@ -898,6 +950,7 @@ function ScheduleInterviewModal({
                     : "border-slate-200 focus:border-blue-500"
                 }`}
               >
+
                 <option value="Technical">
                   Technical
                 </option>
@@ -905,6 +958,7 @@ function ScheduleInterviewModal({
                 <option value="Final">
                   Final
                 </option>
+
               </select>
 
               {errors.round && (
@@ -912,17 +966,21 @@ function ScheduleInterviewModal({
                   {errors.round}
                 </p>
               )}
+
             </div>
 
             {/* MODE */}
 
             <div>
+
               <label className="mb-1 block text-xs font-semibold text-slate-700">
                 Mode
               </label>
 
               <select
-                value={form.mode}
+                value={
+                  form.mode
+                }
                 onChange={(e) =>
                   update(
                     "mode",
@@ -939,6 +997,7 @@ function ScheduleInterviewModal({
                     : "border-slate-200 focus:border-blue-500"
                 }`}
               >
+
                 <option value="Video Call">
                   Video Call
                 </option>
@@ -950,6 +1009,7 @@ function ScheduleInterviewModal({
                 <option value="Phone Call">
                   Phone Call
                 </option>
+
               </select>
 
               {errors.mode && (
@@ -957,6 +1017,7 @@ function ScheduleInterviewModal({
                   {errors.mode}
                 </p>
               )}
+
             </div>
 
           </div>
@@ -970,13 +1031,16 @@ function ScheduleInterviewModal({
             {/* DATE */}
 
             <div>
+
               <label className="mb-1 block text-xs font-semibold text-slate-700">
                 Date
               </label>
 
               <input
                 type="date"
-                value={form.date}
+                value={
+                  form.date
+                }
                 min={
                   getLocalDateString()
                 }
@@ -1001,18 +1065,22 @@ function ScheduleInterviewModal({
                   {errors.date}
                 </p>
               )}
+
             </div>
 
             {/* TIME */}
 
             <div>
+
               <label className="mb-1 block text-xs font-semibold text-slate-700">
                 Time
               </label>
 
               <input
                 type="time"
-                value={form.time}
+                value={
+                  form.time
+                }
                 onChange={(e) =>
                   update(
                     "time",
@@ -1034,6 +1102,7 @@ function ScheduleInterviewModal({
                   {errors.time}
                 </p>
               )}
+
             </div>
 
           </div>
@@ -1047,6 +1116,7 @@ function ScheduleInterviewModal({
             {/* DURATION */}
 
             <div>
+
               <label className="mb-1 block text-xs font-semibold text-slate-700">
                 Duration
               </label>
@@ -1071,6 +1141,7 @@ function ScheduleInterviewModal({
                     : "border-slate-200 focus:border-blue-500"
                 }`}
               >
+
                 <option value="">
                   Select duration
                 </option>
@@ -1090,6 +1161,7 @@ function ScheduleInterviewModal({
                 <option value="90">
                   90 minutes
                 </option>
+
               </select>
 
               {errors.duration && (
@@ -1097,11 +1169,13 @@ function ScheduleInterviewModal({
                   {errors.duration}
                 </p>
               )}
+
             </div>
 
             {/* INTERVIEWER */}
 
             <div>
+
               <label className="mb-1 block text-xs font-semibold text-slate-700">
                 Interviewer
               </label>
@@ -1127,6 +1201,7 @@ function ScheduleInterviewModal({
                     : "border-slate-200 focus:border-blue-500"
                 }`}
               >
+
                 <option value="">
                   {loadingInterviewers
                     ? "Loading interviewers..."
@@ -1154,6 +1229,7 @@ function ScheduleInterviewModal({
                     );
                   }
                 )}
+
               </select>
 
               {errors.interviewerId && (
@@ -1161,6 +1237,7 @@ function ScheduleInterviewModal({
                   {errors.interviewerId}
                 </p>
               )}
+
             </div>
 
           </div>
@@ -1170,6 +1247,7 @@ function ScheduleInterviewModal({
           ================================================= */}
 
           <div>
+
             <label className="mb-1 block text-xs font-semibold text-slate-700">
               Meeting Link / Location
             </label>
@@ -1198,6 +1276,7 @@ function ScheduleInterviewModal({
                 {errors.location}
               </p>
             )}
+
           </div>
 
           {/* =================================================
@@ -1205,6 +1284,7 @@ function ScheduleInterviewModal({
           ================================================= */}
 
           <div>
+
             <label className="mb-1 block text-xs font-semibold text-slate-700">
               Notes for Interviewer
             </label>
@@ -1233,6 +1313,7 @@ function ScheduleInterviewModal({
                 {errors.notes}
               </p>
             )}
+
           </div>
 
         </div>
@@ -1243,9 +1324,12 @@ function ScheduleInterviewModal({
 
         <div className="flex items-center justify-between border-t border-slate-200 px-5 py-4">
 
-          {/* CANCEL INTERVIEW */}
+          {/* =================================================
+              CANCEL INTERVIEW
+          ================================================= */}
 
           <div>
+
             {canCancel && (
               <button
                 type="button"
@@ -1263,9 +1347,12 @@ function ScheduleInterviewModal({
                   : "Cancel Interview"}
               </button>
             )}
+
           </div>
 
-          {/* RIGHT SIDE */}
+          {/* =================================================
+              RIGHT SIDE
+          ================================================= */}
 
           <div className="flex gap-2">
 
@@ -1287,7 +1374,9 @@ function ScheduleInterviewModal({
 
             <button
               type="button"
-              onClick={handleSubmit}
+              onClick={
+                handleSubmit
+              }
               disabled={
                 submitting ||
                 cancelling
@@ -1306,6 +1395,7 @@ function ScheduleInterviewModal({
         </div>
 
       </div>
+
     </div>
   );
 }
