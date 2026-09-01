@@ -34,18 +34,36 @@ function CandidateProfile({
   const [downloading, setDownloading] = useState(false);
   const [decisionLoading, setDecisionLoading] = useState(false);
 
+  // =====================================================
+  // HIDE MODAL
+  // =====================================================
+
   if (!isOpen || !candidate) {
     return null;
   }
+
+  // =====================================================
+  // CANDIDATE ID
+  // =====================================================
 
   const candidateId =
     candidate?._id ||
     candidate?.id ||
     candidate?.candidateId;
 
-  const isRejected = candidate.stage === "Rejected";
+  // =====================================================
+  // REJECTED
+  // =====================================================
 
-  const interviewStatus = candidate?.interviewStatus;
+  const isRejected =
+    candidate.stage === "Rejected";
+
+  // =====================================================
+  // INTERVIEW STATUS
+  // =====================================================
+
+  const interviewStatus =
+    candidate?.interviewStatus;
 
   const interviewPassed =
     interviewStatus === "Passed";
@@ -57,8 +75,14 @@ function CandidateProfile({
     interviewStatus === "Completed" ||
     interviewPassed;
 
+  // =====================================================
+  // PIPELINE PROGRESS
+  // =====================================================
+
   const currentStageIndex =
-    PIPELINE_STAGES.indexOf(candidate.stage);
+    PIPELINE_STAGES.indexOf(
+      candidate.stage
+    );
 
   const progressPercent =
     currentStageIndex >= 0
@@ -66,6 +90,10 @@ function CandidateProfile({
           (PIPELINE_STAGES.length - 1)) *
         100
       : 0;
+
+  // =====================================================
+  // INITIALS
+  // =====================================================
 
   const initials =
     candidate?.name
@@ -76,9 +104,15 @@ function CandidateProfile({
       .slice(0, 2)
       .toUpperCase() || "C";
 
+  // =====================================================
+  // RESUME
+  // =====================================================
+
   const resumeUrl =
     candidate?.resumeUrl &&
-    /^https?:\/\//i.test(candidate.resumeUrl)
+    /^https?:\/\//i.test(
+      candidate.resumeUrl
+    )
       ? candidate.resumeUrl
       : "";
 
@@ -87,22 +121,54 @@ function CandidateProfile({
     candidate?.resumeName ||
     "Resume.pdf";
 
+  // =====================================================
+  // ACTION CONDITIONS
+  // =====================================================
+
+  /*
+    IMPORTANT FLOW:
+
+    Applied
+       ↓
+    Screening
+       ↓
+    Pass Screening
+       ↓
+    Shortlisted
+       ↓
+    Schedule Interview
+       ↓
+    Interview
+       ↓
+    Pass Interview
+       ↓
+    Move to Offer
+       ↓
+    Offer Sent
+       ↓
+    Accept Offer
+       ↓
+    Hired
+  */
+
+  // Schedule Interview ONLY from Shortlisted
   const canScheduleInterview =
     !isRejected &&
+    candidate.stage === "Shortlisted" &&
     !interviewScheduled &&
-    !interviewCompleted &&
-    !["Offer Sent", "Hired"].includes(
-      candidate.stage
-    );
+    !interviewCompleted;
 
+  // Pass Interview ONLY when interview is scheduled
   const canPassInterview =
     candidate.stage === "Interview" &&
     interviewStatus === "Scheduled";
 
+  // Move to Offer ONLY after interview passed
   const canMoveToOffer =
     candidate.stage === "Interview" &&
     interviewPassed;
 
+  // Accept Offer ONLY from Offer Sent
   const canAcceptOffer =
     candidate.stage === "Offer Sent";
 
@@ -118,16 +184,22 @@ function CandidateProfile({
     try {
       setDownloading(true);
 
-      const response = await fetch(resumeUrl);
+      const response =
+        await fetch(resumeUrl);
 
       if (!response.ok) {
-        throw new Error(`Status: ${response.status}`);
+        throw new Error(
+          `Status: ${response.status}`
+        );
       }
 
-      const blob = await response.blob();
+      const blob =
+        await response.blob();
 
       const blobUrl =
-        window.URL.createObjectURL(blob);
+        window.URL.createObjectURL(
+          blob
+        );
 
       const link =
         document.createElement("a");
@@ -141,7 +213,9 @@ function CandidateProfile({
 
       document.body.removeChild(link);
 
-      window.URL.revokeObjectURL(blobUrl);
+      window.URL.revokeObjectURL(
+        blobUrl
+      );
     } catch (error) {
       console.error(
         "RESUME DOWNLOAD ERROR:",
@@ -157,11 +231,14 @@ function CandidateProfile({
   };
 
   // =====================================================
-  // REJECT
+  // REJECT CANDIDATE
   // =====================================================
 
   const handleReject = async () => {
-    if (isRejected || rejecting) {
+    if (
+      isRejected ||
+      rejecting
+    ) {
       return;
     }
 
@@ -176,7 +253,9 @@ function CandidateProfile({
       setRejecting(true);
 
       const response =
-        await rejectCandidate(candidateId);
+        await rejectCandidate(
+          candidateId
+        );
 
       const updatedCandidate =
         response?.data?.data || {
@@ -184,7 +263,9 @@ function CandidateProfile({
           stage: "Rejected",
         };
 
-      onReject?.(updatedCandidate);
+      onReject?.(
+        updatedCandidate
+      );
 
       await onRefresh?.();
 
@@ -196,11 +277,13 @@ function CandidateProfile({
     } catch (error) {
       console.error(
         "REJECT ERROR:",
-        error?.response?.data || error
+        error?.response?.data ||
+          error
       );
 
       toast.error(
-        error?.response?.data?.message ||
+        error?.response?.data
+          ?.message ||
           "Failed to reject candidate."
       );
     } finally {
@@ -212,221 +295,259 @@ function CandidateProfile({
   // SCHEDULE INTERVIEW
   // =====================================================
 
-  const handleScheduleInterview = () => {
-    if (!candidateId) {
-      toast.error(
-        "Candidate ID not found."
-      );
-      return;
-    }
+  const handleScheduleInterview =
+    () => {
+      if (!candidateId) {
+        toast.error(
+          "Candidate ID not found."
+        );
+        return;
+      }
 
-    if (isRejected) {
-      toast.error(
-        "Rejected candidate cannot be scheduled."
-      );
-      return;
-    }
+      if (isRejected) {
+        toast.error(
+          "Rejected candidate cannot be scheduled."
+        );
+        return;
+      }
 
-    if (interviewScheduled) {
-      toast.error(
-        "Interview is already scheduled. Use Reschedule from the Interviews page."
-      );
-      return;
-    }
+      // IMPORTANT:
+      // Interview can only be scheduled
+      // after Screening has been passed.
+      if (
+        candidate.stage !==
+        "Shortlisted"
+      ) {
+        toast.error(
+          "Interview can only be scheduled for a shortlisted candidate."
+        );
+        return;
+      }
 
-    if (interviewCompleted) {
-      toast.error(
-        "Completed interview cannot be scheduled again."
-      );
-      return;
-    }
+      if (interviewScheduled) {
+        toast.error(
+          "Interview is already scheduled."
+        );
+        return;
+      }
 
-    if (
-      ["Offer Sent", "Hired"].includes(
-        candidate.stage
-      )
-    ) {
-      toast.error(
-        "Interview cannot be scheduled at this stage."
-      );
-      return;
-    }
+      if (interviewCompleted) {
+        toast.error(
+          "Completed interview cannot be scheduled again."
+        );
+        return;
+      }
 
-    onScheduleInterview?.(candidate);
-  };
+      onScheduleInterview?.(
+        candidate
+      );
+    };
 
   // =====================================================
-  // SCREENING
+  // SCREENING DECISION
   // =====================================================
 
-  const handleScreeningDecision = async (
-    status
-  ) => {
-    if (!candidateId) {
-      toast.error(
-        "Candidate ID not found."
-      );
-      return;
-    }
+  const handleScreeningDecision =
+    async (status) => {
+      if (!candidateId) {
+        toast.error(
+          "Candidate ID not found."
+        );
+        return;
+      }
 
-    try {
-      setDecisionLoading(true);
+      // Only Screening candidate
+      // can use screening decision
+      if (
+        candidate.stage !==
+        "Screening"
+      ) {
+        toast.error(
+          "Screening decision is only available for candidates in Screening."
+        );
+        return;
+      }
 
-      await completeScreening(
-        candidateId,
-        status
-      );
+      try {
+        setDecisionLoading(true);
 
-      toast.success(
-        status === "Passed"
-          ? "Screening passed successfully."
-          : "Screening updated successfully."
-      );
+        await completeScreening(
+          candidateId,
+          status
+        );
 
-      await onRefresh?.();
+        toast.success(
+          status === "Passed"
+            ? "Screening passed successfully."
+            : "Screening updated successfully."
+        );
 
-      onClose?.();
-    } catch (error) {
-      console.error(
-        "SCREENING ERROR:",
-        error?.response?.data || error
-      );
+        await onRefresh?.();
 
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to update screening."
-      );
-    } finally {
-      setDecisionLoading(false);
-    }
-  };
+        onClose?.();
+      } catch (error) {
+        console.error(
+          "SCREENING ERROR:",
+          error?.response?.data ||
+            error
+        );
+
+        toast.error(
+          error?.response?.data
+            ?.message ||
+            "Failed to update screening."
+        );
+      } finally {
+        setDecisionLoading(false);
+      }
+    };
 
   // =====================================================
   // PASS INTERVIEW
   // =====================================================
 
-  const handlePassInterview = async () => {
-    if (!candidateId) {
-      toast.error(
-        "Candidate ID not found."
-      );
-      return;
-    }
+  const handlePassInterview =
+    async () => {
+      if (!candidateId) {
+        toast.error(
+          "Candidate ID not found."
+        );
+        return;
+      }
 
-    if (!canPassInterview) {
-      toast.error(
-        "Only a scheduled interview can be passed."
-      );
-      return;
-    }
+      if (!canPassInterview) {
+        toast.error(
+          "Only a scheduled interview can be passed."
+        );
+        return;
+      }
 
-    try {
-      setDecisionLoading(true);
+      try {
+        setDecisionLoading(true);
 
-      await passInterview(candidateId);
+        await passInterview(
+          candidateId
+        );
 
-      toast.success(
-        "Interview passed successfully. Candidate is ready to move to offer."
-      );
+        toast.success(
+          "Interview passed successfully. Candidate is ready to move to offer."
+        );
 
-      await onRefresh?.();
+        await onRefresh?.();
 
-      onClose?.();
-    } catch (error) {
-      console.error(
-        "PASS INTERVIEW ERROR:",
-        error?.response?.data || error
-      );
+        onClose?.();
+      } catch (error) {
+        console.error(
+          "PASS INTERVIEW ERROR:",
+          error?.response?.data ||
+            error
+        );
 
-      toast.error(
-        error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          "Failed to pass interview."
-      );
-    } finally {
-      setDecisionLoading(false);
-    }
-  };
+        toast.error(
+          error?.response?.data
+            ?.message ||
+            error?.response?.data
+              ?.error ||
+            "Failed to pass interview."
+        );
+      } finally {
+        setDecisionLoading(false);
+      }
+    };
 
   // =====================================================
   // MOVE TO OFFER
   // =====================================================
 
-  const handleMoveToOffer = () => {
-    if (!candidateId) {
-      toast.error(
-        "Candidate ID not found."
-      );
-      return;
-    }
+  const handleMoveToOffer =
+    () => {
+      if (!candidateId) {
+        toast.error(
+          "Candidate ID not found."
+        );
+        return;
+      }
 
-    if (!canMoveToOffer) {
-      toast.error(
-        "Interview must be passed before moving to offer."
-      );
-      return;
-    }
+      if (!canMoveToOffer) {
+        toast.error(
+          "Interview must be passed before moving to offer."
+        );
+        return;
+      }
 
-    onOpenOfferModal?.(candidate);
-  };
+      onOpenOfferModal?.(
+        candidate
+      );
+    };
 
   // =====================================================
   // OFFER DECISION
   // =====================================================
 
-  const handleOfferDecision = async (
-    status
-  ) => {
-    if (!candidateId) {
-      toast.error(
-        "Candidate ID not found."
-      );
-      return;
-    }
+  const handleOfferDecision =
+    async (status) => {
+      if (!candidateId) {
+        toast.error(
+          "Candidate ID not found."
+        );
+        return;
+      }
 
-    if (
-      status === "Accepted" &&
-      onAcceptOffer
-    ) {
-      await onAcceptOffer(candidate);
-      return;
-    }
+      if (
+        status === "Accepted" &&
+        onAcceptOffer
+      ) {
+        await onAcceptOffer(
+          candidate
+        );
+        return;
+      }
 
-    try {
-      setDecisionLoading(true);
+      try {
+        setDecisionLoading(true);
 
-      await updateOfferStatus(
-        candidateId,
-        {
-          status,
-          rejectionReason:
-            status === "Rejected"
-              ? "Candidate declined offer"
-              : "",
-        }
-      );
+        await updateOfferStatus(
+          candidateId,
+          {
+            status,
 
-      toast.success(
-        `Offer ${status.toLowerCase()} successfully.`
-      );
+            rejectionReason:
+              status ===
+              "Rejected"
+                ? "Candidate declined offer"
+                : "",
+          }
+        );
 
-      await onRefresh?.();
+        toast.success(
+          `Offer ${status.toLowerCase()} successfully.`
+        );
 
-      onClose?.();
-    } catch (error) {
-      console.error(
-        "OFFER STATUS ERROR:",
-        error?.response?.data || error
-      );
+        await onRefresh?.();
 
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to update offer status."
-      );
-    } finally {
-      setDecisionLoading(false);
-    }
-  };
+        onClose?.();
+      } catch (error) {
+        console.error(
+          "OFFER STATUS ERROR:",
+          error?.response?.data ||
+            error
+        );
+
+        toast.error(
+          error?.response?.data
+            ?.message ||
+            "Failed to update offer status."
+        );
+      } finally {
+        setDecisionLoading(
+          false
+        );
+      }
+    };
+
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -459,7 +580,9 @@ function CandidateProfile({
 
         <div className="max-h-[65vh] overflow-y-auto">
 
-          {/* HEADER PROFILE */}
+          {/* =====================================================
+              PROFILE HEADER
+          ===================================================== */}
 
           <div className="flex items-center justify-between px-6 py-5">
 
@@ -477,7 +600,9 @@ function CandidateProfile({
 
                 <p className="mt-0.5 text-sm text-slate-500">
                   Applied for{" "}
-                  {candidate.role || "—"} ·{" "}
+                  {candidate.role ||
+                    "—"}{" "}
+                  ·{" "}
                   {candidate.experience ||
                     "Experience not specified"}
                 </p>
@@ -487,7 +612,10 @@ function CandidateProfile({
             </div>
 
             <ScoreCircle
-              score={candidate.score || 0}
+              score={
+                candidate.score ||
+                0
+              }
               color={
                 isRejected
                   ? "#c83b3b"
@@ -514,7 +642,11 @@ function CandidateProfile({
             ) : (
               <div className="relative flex items-start justify-between pb-3">
 
+                {/* BASE LINE */}
+
                 <div className="absolute left-3 right-3 top-3 h-0.5 bg-slate-200" />
+
+                {/* PROGRESS LINE */}
 
                 <div
                   className="absolute left-3 top-3 h-0.5 bg-emerald-500"
@@ -523,9 +655,13 @@ function CandidateProfile({
                   }}
                 />
 
-                {PIPELINE_STAGES.map(
-                  (stage, index) => {
+                {/* STAGES */}
 
+                {PIPELINE_STAGES.map(
+                  (
+                    stage,
+                    index
+                  ) => {
                     const isDone =
                       index <
                       currentStageIndex;
@@ -554,7 +690,8 @@ function CandidateProfile({
                             ? "✓"
                             : isCurrent
                             ? "•"
-                            : index + 1}
+                            : index +
+                              1}
                         </div>
 
                         <span className="mt-1.5 text-[11px] font-medium text-slate-500">
@@ -572,7 +709,7 @@ function CandidateProfile({
           </div>
 
           {/* =====================================================
-              CONTACT
+              CONTACT & DOCUMENTS
           ===================================================== */}
 
           <div className="mt-6 px-6">
@@ -583,6 +720,8 @@ function CandidateProfile({
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 
+              {/* EMAIL */}
+
               <div>
 
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
@@ -590,10 +729,13 @@ function CandidateProfile({
                 </label>
 
                 <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600">
-                  {candidate.email || "—"}
+                  {candidate.email ||
+                    "—"}
                 </div>
 
               </div>
+
+              {/* PHONE */}
 
               <div>
 
@@ -602,12 +744,15 @@ function CandidateProfile({
                 </label>
 
                 <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600">
-                  {candidate.phone || "—"}
+                  {candidate.phone ||
+                    "—"}
                 </div>
 
               </div>
 
             </div>
+
+            {/* RESUME */}
 
             <div className="mt-3">
 
@@ -616,16 +761,24 @@ function CandidateProfile({
 
                   <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
 
-                    <span>📄</span>
+                    <span>
+                      📄
+                    </span>
 
                     <span className="truncate text-xs font-semibold text-slate-700">
-                      {resumeName}
+                      {
+                        resumeName
+                      }
                     </span>
 
                   </div>
 
+                  {/* VIEW */}
+
                   <a
-                    href={resumeUrl}
+                    href={
+                      resumeUrl
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
@@ -633,12 +786,16 @@ function CandidateProfile({
                     View
                   </a>
 
+                  {/* DOWNLOAD */}
+
                   <button
                     type="button"
                     onClick={
                       handleDownloadResume
                     }
-                    disabled={downloading}
+                    disabled={
+                      downloading
+                    }
                     className="shrink-0 rounded-lg bg-blue-600 px-3 py-2.5 text-xs font-semibold text-white disabled:opacity-60"
                   >
                     {downloading
@@ -669,9 +826,13 @@ function CandidateProfile({
 
             <div className="flex flex-wrap gap-2">
 
-              {candidate.skills?.length ? (
+              {candidate.skills
+                ?.length ? (
                 candidate.skills.map(
-                  (skill, index) => (
+                  (
+                    skill,
+                    index
+                  ) => (
                     <span
                       key={`${skill}-${index}`}
                       className="rounded-md bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600"
@@ -700,21 +861,31 @@ function CandidateProfile({
               Recruiter Notes
             </h4>
 
-            {candidate.notes?.length ? (
+            {candidate.notes
+              ?.length ? (
               <div className="space-y-2">
 
                 {candidate.notes.map(
-                  (note, index) => (
+                  (
+                    note,
+                    index
+                  ) => (
                     <div
                       key={
-                        note._id || index
+                        note._id ||
+                        index
                       }
                       className="rounded-xl bg-slate-100 px-3.5 py-3 text-sm text-slate-500"
                     >
                       <span className="font-semibold text-slate-800">
-                        {note.author}
+                        {
+                          note.author
+                        }
                       </span>{" "}
-                      — {note.text}
+                      —{" "}
+                      {
+                        note.text
+                      }
                     </div>
                   )
                 )}
@@ -729,131 +900,210 @@ function CandidateProfile({
           </div>
 
         </div>
-{/* =====================================================
-    FOOTER
-    ===================================================== */}
 
-<div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white px-6 py-4">
+        {/* =====================================================
+            FOOTER
+        ===================================================== */}
 
-  {!readOnly && (
-    <>
-      {/* LEFT SIDE ACTIONS */}
-      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white px-6 py-4">
 
-        {!isRejected && (
-          <button
-            type="button"
-            onClick={handleReject}
-            disabled={rejecting || decisionLoading}
-            className="rounded-lg bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50"
-          >
-            {rejecting
-              ? "Rejecting..."
-              : "Reject Candidate"}
-          </button>
-        )}
+          {/* =====================================================
+              NORMAL MODE
+          ===================================================== */}
 
-        {candidate.stage === "Screening" && (
-          <button
-            type="button"
-            disabled={decisionLoading}
-            onClick={() =>
-              handleScreeningDecision("Passed")
-            }
-            className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-          >
-            {decisionLoading
-              ? "Processing..."
-              : "Pass Screening"}
-          </button>
-        )}
+          {!readOnly && (
+            <>
 
-        {canPassInterview && (
-          <button
-            type="button"
-            disabled={decisionLoading}
-            onClick={handlePassInterview}
-            className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-          >
-            {decisionLoading
-              ? "Processing..."
-              : "Pass Interview"}
-          </button>
-        )}
+              {/* =================================================
+                  LEFT ACTIONS
+              ================================================= */}
 
-        {canMoveToOffer && (
-          <button
-            type="button"
-            disabled={decisionLoading}
-            onClick={handleMoveToOffer}
-            className="rounded-lg bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
-          >
-            Move to Offer Letter
-          </button>
-        )}
+              <div className="flex flex-wrap items-center gap-2">
 
-        {canAcceptOffer && (
-          <button
-            type="button"
-            disabled={decisionLoading}
-            onClick={() =>
-              handleOfferDecision("Accepted")
-            }
-            className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-          >
-            Accept Offer
-          </button>
-        )}
+                {/* REJECT */}
 
-      </div>
+                {!isRejected && (
+                  <button
+                    type="button"
+                    onClick={
+                      handleReject
+                    }
+                    disabled={
+                      rejecting ||
+                      decisionLoading
+                    }
+                    className="rounded-lg bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50"
+                  >
+                    {rejecting
+                      ? "Rejecting..."
+                      : "Reject Candidate"}
+                  </button>
+                )}
 
-      {/* RIGHT SIDE: SCHEDULE + CLOSE */}
-      <div className="ml-auto flex items-center gap-2">
+                {/* =================================================
+                    SCREENING
+                    ONLY SHOW PASS SCREENING
+                ================================================= */}
 
-        {canScheduleInterview && (
-          <button
-            type="button"
-            onClick={handleScheduleInterview}
-            className="rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700"
-          >
-            Schedule Interview
-          </button>
-        )}
+                {candidate.stage ===
+                  "Screening" && (
+                  <button
+                    type="button"
+                    disabled={
+                      decisionLoading
+                    }
+                    onClick={() =>
+                      handleScreeningDecision(
+                        "Passed"
+                      )
+                    }
+                    className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    {decisionLoading
+                      ? "Processing..."
+                      : "Pass Screening"}
+                  </button>
+                )}
 
-        {candidate.stage === "Interview" &&
-          interviewScheduled && (
-            <span className="rounded-lg bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-700">
-              Interview Scheduled
-            </span>
+                {/* =================================================
+                    PASS INTERVIEW
+                ================================================= */}
+
+                {canPassInterview && (
+                  <button
+                    type="button"
+                    disabled={
+                      decisionLoading
+                    }
+                    onClick={
+                      handlePassInterview
+                    }
+                    className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    {decisionLoading
+                      ? "Processing..."
+                      : "Pass Interview"}
+                  </button>
+                )}
+
+                {/* =================================================
+                    MOVE TO OFFER
+                ================================================= */}
+
+                {canMoveToOffer && (
+                  <button
+                    type="button"
+                    disabled={
+                      decisionLoading
+                    }
+                    onClick={
+                      handleMoveToOffer
+                    }
+                    className="rounded-lg bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    Move to Offer Letter
+                  </button>
+                )}
+
+                {/* =================================================
+                    ACCEPT OFFER
+                ================================================= */}
+
+                {canAcceptOffer && (
+                  <button
+                    type="button"
+                    disabled={
+                      decisionLoading
+                    }
+                    onClick={() =>
+                      handleOfferDecision(
+                        "Accepted"
+                      )
+                    }
+                    className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    Accept Offer
+                  </button>
+                )}
+
+              </div>
+
+              {/* =================================================
+                  RIGHT ACTIONS
+              ================================================= */}
+
+              <div className="ml-auto flex items-center gap-2">
+
+                {/* =================================================
+                    SCHEDULE INTERVIEW
+
+                    IMPORTANT:
+                    This only renders when:
+                    candidate.stage === "Shortlisted"
+                ================================================= */}
+
+                {canScheduleInterview && (
+                  <button
+                    type="button"
+                    onClick={
+                      handleScheduleInterview
+                    }
+                    className="rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700"
+                  >
+                    Schedule Interview
+                  </button>
+                )}
+
+                {/* =================================================
+                    INTERVIEW SCHEDULED
+                ================================================= */}
+
+                {candidate.stage ===
+                  "Interview" &&
+                  interviewScheduled && (
+                    <span className="rounded-lg bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-700">
+                      Interview Scheduled
+                    </span>
+                  )}
+
+                {/* CLOSE */}
+
+                <button
+                  type="button"
+                  onClick={
+                    onClose
+                  }
+                  className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Close
+                </button>
+
+              </div>
+
+            </>
           )}
 
-        {/* CLOSE BUTTON */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-        >
-          Close
-        </button>
+          {/* =====================================================
+              READ ONLY MODE
+          ===================================================== */}
 
-      </div>
-    </>
-  )}
+          {readOnly && (
+            <div className="ml-auto">
 
-  {/* READ ONLY MODE */}
-  {readOnly && (
-    <div className="ml-auto">
-      <button
-        type="button"
-        onClick={onClose}
-        className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-      >
-        Close
-      </button>
-    </div>
-  )}
+              <button
+                type="button"
+                onClick={
+                  onClose
+                }
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Close
+              </button>
 
-</div>
+            </div>
+          )}
+
+        </div>
 
       </div>
 
