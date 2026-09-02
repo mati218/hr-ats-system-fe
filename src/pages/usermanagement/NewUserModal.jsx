@@ -321,19 +321,19 @@ const NewUserModal = ({
           </label>
 
           <FormInput
-            type="text"
-            placeholder="+923xxxxxxxxx"
-            name="phoneNumber"
-            register={register}
-            errors={errors}
-            rules={{
-              required: "Phone number is required",
-              pattern: {
-                value: /^\+923\d{2}\d{7}$/,
-                message: "Use format +923xxxxxxxxx",
-              },
-            }}
-          />
+  type="text"
+  placeholder="+923xxxxxxxxx"
+  name="phoneNumber"
+  register={register}
+  errors={errors}
+  rules={{
+    required: "Phone number is required",
+    pattern: {
+      value: /^\+923\d{2}\d{7}$/,
+      message: "Use format +923xxxxxxxxx",
+    },
+  }}
+/>
         </div>
 
         {/* ROLE */}
