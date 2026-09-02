@@ -138,33 +138,11 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
-        {/* =================================================
-            NORMAL INTERVIEWS
-            Schedule / Reschedule / Cancel / Complete
-            ================================================= */}
-
-        <Route
-          element={
-            <PrivateRoute module="interviews" />
-          }
-        >
-          <Route
-            path="/interviews"
-            element={<Interviews />}
-          />
-        </Route>
-
-        {/* =================================================
-            MY INTERVIEWS
-            ONLY INTERVIEWER
-            Feedback only
-            ================================================= */}
-
-        <Route
-          element={
-            <PrivateRoute interviewerOnly />
-          }
-        >
+<Route
+  element={
+    <PrivateRoute interviewerOnly={true} />
+  }
+>
           <Route
             path="/my-interviews"
             element={<Myinterviews />}
