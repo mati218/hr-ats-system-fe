@@ -321,7 +321,7 @@ const NewUserModal = ({
           </label>
 
           <FormInput
-            type="text"
+            type="number"
             placeholder="+92 3xx xxxxxxx"
             name="phoneNumber"
             register={register}
@@ -329,12 +329,12 @@ const NewUserModal = ({
             rules={{
               required:
                 "Phone number is required",
-              pattern: {
-                value:
-                  /^\+92\s3\d{2}\s\d{7}$/,
-                message:
-                  "Use format +92 3xx xxxxxxx",
-              },
+              // pattern: {
+              //   value:
+              //     /^\+92\s3\d{2}\s\d{7}$/,
+              //   message:    
+              //     "Use format +92 3xx xxxxxxx",
+              // },
             }}
           />
         </div>
