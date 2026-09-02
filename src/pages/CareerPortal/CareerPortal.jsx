@@ -57,71 +57,65 @@ const CareerPortal = () => {
 
   fetchJobs();
 }, []);
+const handleApplySubmit = async (form) => {
+  if (!selectedJob) {
+    toast.error("Please select a job first.");
+    throw new Error("Please select a job first.");
+  }
 
-  const handleApplySubmit = async (form) => {
-    if (!selectedJob) {
-      toast.error("Please select a job first.");
-      return;
-    }
+  if (!(form.resume instanceof File)) {
+    toast.error("Please select your PDF resume.");
+    throw new Error("Please select your PDF resume.");
+  }
 
-    if (!(form.resume instanceof File)) {
-      toast.error("Please select your PDF resume.");
-      return;
-    }
+  const jobId = selectedJob._id || selectedJob.id;
 
-    const jobId = selectedJob._id || selectedJob.id;
+  if (!jobId) {
+    toast.error("Job ID not found.");
+    throw new Error("Job ID not found.");
+  }
 
-    if (!jobId) {
-      toast.error("Job ID not found.");
-      return;
-    }
+  try {
+    console.log("CAREER PORTAL APPLICATION");
 
-    try {
+    const response = await applyNow({
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      role: selectedJob.role,
+      requisitionId: jobId,
+      experience: form.experience,
+      coverNote: form.coverNote,
+      resume: form.resume,
+    });
 
-      console.log("CAREER PORTAL APPLICATION");
+    console.log("APPLICATION RESPONSE:", response?.data);
+    console.log("APPLICATION SUBMITTED SUCCESSFULLY");
 
+    // ONLY SUCCESS:
+    // close ApplyModal and show success screen
+    setSubmittedJob(selectedJob);
+    setSelectedJob(null);
+    setShowSuccess(true);
 
-      console.log("Candidate Name:", form.name);
-      console.log("Candidate Email:", form.email);
-      console.log("Candidate Phone:", form.phone);
-      console.log("Experience:", form.experience);
-      console.log("Resume:", form.resume);
-      console.log("Resume Is File:", form.resume instanceof File);
-      console.log("Role:", selectedJob.role);
-      console.log("Requisition ID:", jobId);
+    return response;
+  } catch (error) {
+    console.error(
+      "APPLICATION ERROR:",
+      error?.response?.data || error
+    );
 
-
-
-      const response = await applyNow({
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        role: selectedJob.role,
-        requisitionId: jobId,
-        experience: form.experience,
-        coverNote: form.coverNote,
-        resume: form.resume,
-      });
-
-      console.log("APPLICATION RESPONSE:", response?.data);
-      console.log("APPLICATION SUBMITTED SUCCESSFULLY");
-
-      setSubmittedJob(selectedJob);
-      setSelectedJob(null);
-      setShowSuccess(true);
-    } catch (error) {
-
-      console.error("APPLICATION ERROR");
-      console.error(error?.response?.data || error);
-
-
-      toast.error(
-        error?.response?.data?.message ||
-        "Failed to submit application. Please try again."
-      );
-    }
-  };
-
+    /*
+     * IMPORTANT:
+     * Do NOT show toast here.
+     * Do NOT clear selectedJob.
+     * Do NOT close modal.
+     *
+     * Throw the error back to ApplyModal.
+     */
+    throw error;
+  }
+};
   const handleSuccessClose = () => {
     setShowSuccess(false);
     setSubmittedJob(null);
