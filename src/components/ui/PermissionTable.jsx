@@ -1,68 +1,284 @@
-import Checkbox from "./Checkbox";
+function PermissionTable({
+  modules,
+  register,
+  disabled,
+  watch,
+  setValue,
+}) {
+  const permissions = watch("permissions") || {};
 
-function PermissionTable({ modules, register, errors, disabled = false }) {
+  // =========================================
+  // CHECK IF ONE MODULE IS FULLY SELECTED
+  // =========================================
+
+  const isModuleSelected = (moduleKey) => {
+    const permission = permissions[moduleKey];
+
+    if (!permission) {
+      return false;
+    }
+
+    return (
+      permission.view === true &&
+      permission.create === true &&
+      permission.edit === true &&
+      permission.delete === true
+    );
+  };
+
+  // =========================================
+  // CHECK IF ALL MODULES ARE SELECTED
+  // =========================================
+
+  const isAllSelected = modules.every((module) =>
+    isModuleSelected(module.key)
+  );
+
+  // =========================================
+  // SELECT / UNSELECT ONE MODULE
+  // =========================================
+
+  const handleModuleSelect = (moduleKey) => {
+    const selected = isModuleSelected(moduleKey);
+    const newValue = !selected;
+
+    setValue(
+      `permissions.${moduleKey}.view`,
+      newValue,
+      { shouldDirty: true }
+    );
+
+    setValue(
+      `permissions.${moduleKey}.create`,
+      newValue,
+      { shouldDirty: true }
+    );
+
+    setValue(
+      `permissions.${moduleKey}.edit`,
+      newValue,
+      { shouldDirty: true }
+    );
+
+    setValue(
+      `permissions.${moduleKey}.delete`,
+      newValue,
+      { shouldDirty: true }
+    );
+  };
+
+  // =========================================
+  // SELECT / UNSELECT ALL MODULES
+  // =========================================
+
+  const handleSelectAll = () => {
+    const newValue = !isAllSelected;
+
+    modules.forEach((module) => {
+      setValue(
+        `permissions.${module.key}.view`,
+        newValue,
+        { shouldDirty: true }
+      );
+
+      setValue(
+        `permissions.${module.key}.create`,
+        newValue,
+        { shouldDirty: true }
+      );
+
+      setValue(
+        `permissions.${module.key}.edit`,
+        newValue,
+        { shouldDirty: true }
+      );
+
+      setValue(
+        `permissions.${module.key}.delete`,
+        newValue,
+        { shouldDirty: true }
+      );
+    });
+  };
+
   return (
-    <div className="w-full">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="border-b border-slate-200">
-            <th className="py-2.5 pl-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              Module
-            </th>
+    <div>
 
-            <th className="w-[100px] py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              View
-            </th>
+      {/* =====================================
+          PERMISSIONS HEADER
+      ===================================== */}
 
-            <th className="w-[100px] py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              Create
-            </th>
+      <div className="mb-2 flex items-center justify-between">
+        
 
-            <th className="w-[100px] py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              Edit
-            </th>
+        <h3 className="text-[13px] font-semibold text-slate-500">
+          PERMISSIONS
+        </h3>
 
-            <th className="w-[100px] py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              Delete
-            </th>
-          </tr>
-        </thead>
+        {/* SELECT ALL */}
 
-        <tbody>
-          {modules.map((module) => (
-            <tr
-              key={module.key}
-              className="border-b border-slate-200 last:border-b-0"
-            >
-              <td className="py-2.5 pl-2 text-sm font-semibold text-slate-800">
-                {module.label}
+        <label className="flex cursor-pointer items-center gap-2 text-[11px] text-slate-500">
+          <input
+            type="checkbox"
+            checked={isAllSelected}
+            disabled={disabled}
+            onChange={handleSelectAll}
+            className="h-[16px] w-[16px] cursor-pointer accent-blue-600 disabled:cursor-not-allowed"
+          />
 
-                <input
-                  type="hidden"
-                  value={module.key}
-                  {...register(`permissions.${module.key}.module`)}
-                />
-              </td>
+          Select all
+        </label>
 
-              {["view", "create", "edit", "delete"].map((action) => (
-                <td
-                  key={action}
-                  className="py-2.5 text-center"
-                >
-                  <div className="flex justify-center">
-                    <Checkbox
-                      name={`permissions.${module.key}.${action}`}
-                      register={register}
-                      errors={errors}
-                      disabled={disabled}
-                    />
-                  </div>
-                </td>
-              ))}
+      </div>
+
+      {/* =====================================
+          PERMISSION TABLE
+      ===================================== */}
+
+      <div className="overflow-hidden rounded-lg border border-slate-200">
+
+        <table className="w-full border-collapse">
+
+          {/* TABLE HEADER */}
+
+          <thead>
+            <tr className="border-b border-slate-200 bg-white">
+
+              {/* MODULE */}
+
+              <th className="px-2 py-2 text-left text-[12px] font-semibold text-slate-500">
+                MODULE
+              </th>
+
+              {/* ALL */}
+
+              <th className="w-[55px] px-1 py-2 text-center text-[12px] font-semibold text-slate-500">
+                ALL
+              </th>
+
+              {/* VIEW */}
+
+              <th className="w-[65px] px-1 py-2 text-center text-[12px] font-semibold text-slate-500">
+                VIEW
+              </th>
+
+              {/* CREATE */}
+
+              <th className="w-[75px] px-1 py-2 text-center text-[12px] font-semibold text-slate-500">
+                CREATE
+              </th>
+
+              {/* EDIT */}
+
+              <th className="w-[65px] px-1 py-2 text-center text-[12px] font-semibold text-slate-500">
+                EDIT
+              </th>
+
+              {/* DELETE */}
+
+              <th className="w-[70px] px-1 py-2 text-center text-[12px] font-semibold text-slate-500">
+                DELETE
+              </th>
+
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          {/* TABLE BODY */}
+
+          <tbody>
+
+            {modules.map((module) => {
+              const moduleSelected =
+                isModuleSelected(module.key);
+
+              return (
+                <tr
+                  key={module.key}
+                  className="border-b border-slate-200 last:border-b-0"
+                >
+
+                  {/* MODULE NAME */}
+
+                  <td className="px-2 py-2.5 text-[12px] font-medium text-slate-700">
+                    {module.label}
+                  </td>
+
+                  {/* MODULE ALL */}
+
+                  <td className="px-1 py-2.5 text-center">
+                    <input
+                      type="checkbox"
+                      checked={moduleSelected}
+                      disabled={disabled}
+                      onChange={() =>
+                        handleModuleSelect(module.key)
+                      }
+                      className="h-[18px] w-[18px] cursor-pointer accent-blue-600 disabled:cursor-not-allowed"
+                    />
+                  </td>
+
+                  {/* VIEW */}
+
+                  <td className="px-1 py-2.5 text-center">
+                    <input
+                      type="checkbox"
+                      {...register(
+                        `permissions.${module.key}.view`
+                      )}
+                      disabled={disabled}
+                      className="h-[18px] w-[18px] cursor-pointer accent-blue-600 disabled:cursor-not-allowed"
+                    />
+                  </td>
+
+                  {/* CREATE */}
+
+                  <td className="px-1 py-2.5 text-center">
+                    <input
+                      type="checkbox"
+                      {...register(
+                        `permissions.${module.key}.create`
+                      )}
+                      disabled={disabled}
+                      className="h-[18px] w-[18px] cursor-pointer accent-blue-600 disabled:cursor-not-allowed"
+                    />
+                  </td>
+
+                  {/* EDIT */}
+
+                  <td className="px-1 py-2.5 text-center">
+                    <input
+                      type="checkbox"
+                      {...register(
+                        `permissions.${module.key}.edit`
+                      )}
+                      disabled={disabled}
+                      className="h-[18px] w-[18px] cursor-pointer accent-blue-600 disabled:cursor-not-allowed"
+                    />
+                  </td>
+
+                  {/* DELETE */}
+
+                  <td className="px-1 py-2.5 text-center">
+                    <input
+                      type="checkbox"
+                      {...register(
+                        `permissions.${module.key}.delete`
+                      )}
+                      disabled={disabled}
+                      className="h-[18px] w-[18px] cursor-pointer accent-blue-600 disabled:cursor-not-allowed"
+                    />
+                  </td>
+
+                </tr>
+              );
+            })}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
     </div>
   );
 }
