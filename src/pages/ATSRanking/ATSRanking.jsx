@@ -72,9 +72,7 @@ function ATSRanking() {
         return false;
       }
 
-      const normalizedValue = value
-        .trim()
-        .toLowerCase();
+      const normalizedValue = value.trim().toLowerCase();
 
       return (
         normalizedValue === "passed" ||
@@ -133,9 +131,7 @@ function ATSRanking() {
           return;
         }
 
-        const response = await getATSRanking(
-          selectedRequisition
-        );
+        const response = await getATSRanking(selectedRequisition);
 
         if (response.success) {
           setCandidates(response.data || []);
@@ -539,7 +535,6 @@ function ATSRanking() {
       });
 
       setOpenModal(true);
-
     } catch (error) {
       console.error(
         "CHECK INTERVIEW STATUS ERROR:",
@@ -699,7 +694,6 @@ function ATSRanking() {
         response?.data?.message ||
           "Offer sent successfully."
       );
-
     } catch (error) {
       console.error(
         "SEND OFFER ERROR:",
@@ -923,6 +917,9 @@ function ATSRanking() {
         }
         onScheduleInterview={
           handleScheduleInterview
+        }
+        onOpenOfferModal={
+          handleOpenOffer
         }
       />
 
