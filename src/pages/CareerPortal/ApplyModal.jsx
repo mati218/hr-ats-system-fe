@@ -146,9 +146,6 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
         role: job.role,
         requisitionId,
       });
-
-      // SUCCESS ONLY:
-      // Now clear the complete form.
       setForm(INITIAL_FORM);
 
       toast.success("Application submitted successfully.");
@@ -159,8 +156,6 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
       );
 
       const responseData = error?.response?.data;
-
-      // Get backend error message
       const message =
         responseData?.message ||
         responseData?.error ||
@@ -168,13 +163,6 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
         "Application submission failed.";
 
       const normalizedMessage = String(message).toLowerCase();
-
-      /*
-       * IMPORTANT:
-       * Only clear the field that caused the error.
-       */
-
-      // EMAIL ALREADY EXISTS
       if (
         normalizedMessage.includes("email") &&
         (
@@ -188,8 +176,6 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
         toast.error("This email already exists. Please use another email.");
         return;
       }
-
-      // PHONE ALREADY EXISTS
       if (
         normalizedMessage.includes("phone") &&
         (
@@ -203,8 +189,6 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
         toast.error("This phone number already exists. Please use another phone number.");
         return;
       }
-
-      // RESUME ERROR
       if (
         normalizedMessage.includes("resume") ||
         normalizedMessage.includes("cv")
@@ -214,16 +198,12 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
         toast.error(message);
         return;
       }
-
-      // NAME ERROR
       if (normalizedMessage.includes("name")) {
         clearOnlyField("name");
 
         toast.error(message);
         return;
       }
-
-      // EXPERIENCE ERROR
       if (
         normalizedMessage.includes("experience") ||
         normalizedMessage.includes("years")
@@ -233,8 +213,6 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
         toast.error(message);
         return;
       }
-
-      // COVER NOTE ERROR
       if (
         normalizedMessage.includes("cover") ||
         normalizedMessage.includes("note")
@@ -244,13 +222,6 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
         toast.error(message);
         return;
       }
-
-      /*
-       * Unknown error:
-       * DO NOT CLEAR ANYTHING.
-       *
-       * User can retry without filling the form again.
-       */
       toast.error(message);
     } finally {
       setSubmitting(false);

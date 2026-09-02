@@ -25,7 +25,7 @@ const PrivateRoute = ({
   }
 
   // ==========================================
-  // GET ROLE NAME
+  // ROLE
   // ==========================================
 
   const roleName =
@@ -47,19 +47,14 @@ const PrivateRoute = ({
     normalizedRole === "interviewer";
 
   // ==========================================
-  // INTERVIEWER
-  // ==========================================
-  //
-  // Interviewer can ONLY access routes that
-  // explicitly have interviewerOnly={true}
-  //
+  // INTERVIEWER ONLY
   // ==========================================
 
-  if (isInterviewer) {
-    if (!interviewerOnly) {
+  if (interviewerOnly) {
+    if (!isInterviewer) {
       return (
         <Navigate
-          to="/my-interviews"
+          to="/dashboard"
           replace
         />
       );
@@ -77,29 +72,18 @@ const PrivateRoute = ({
   }
 
   // ==========================================
-  // OTHER ROLES
+  // PERMISSIONS
   // ==========================================
 
-  const permissions = Array.isArray(
-    user?.role?.permissions
-  )
-    ? user.role.permissions
-    : [];
+  const permissions =
+    Array.isArray(user?.role?.permissions)
+      ? user.role.permissions
+      : [];
 
   const modulesToCheck = [
     module,
     ...requires,
   ].filter(Boolean);
-
-  // If no module is provided, deny access
-  if (modulesToCheck.length === 0) {
-    return (
-      <Navigate
-        to="/dashboard"
-        replace
-      />
-    );
-  }
 
   const hasPermission =
     modulesToCheck.every(
@@ -123,7 +107,7 @@ const PrivateRoute = ({
     );
 
   // ==========================================
-  // ACCESS DENIED
+  // DENIED
   // ==========================================
 
   if (!hasPermission) {
