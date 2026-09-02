@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-const ApplyModal = ({ job, onClose, onSubmit }) => {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    experience: "",
-    resume: null,
-    coverNote: "",
-  });
+const INITIAL_FORM = {
+  name: "",
+  email: "",
+  phone: "",
+  experience: "",
+  resume: null,
+  coverNote: "",
+};
 
+const ApplyModal = ({ job, onClose, onSubmit }) => {
+  const [form, setForm] = useState(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
 
   if (!job) {
@@ -25,7 +26,7 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
 
       setForm((prev) => ({
         ...prev,
-        [name]: cleanedValue,
+        name: cleanedValue,
       }));
 
       return;
@@ -36,7 +37,7 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
 
       setForm((prev) => ({
         ...prev,
-        [name]: cleanedValue,
+        phone: cleanedValue,
       }));
 
       return;
@@ -47,7 +48,7 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
 
       setForm((prev) => ({
         ...prev,
-        [name]: cleanedValue,
+        experience: cleanedValue,
       }));
 
       return;
@@ -67,18 +68,37 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
     if (file.type !== "application/pdf") {
       toast.error("Only PDF resume is allowed.");
       e.target.value = "";
+
+      setForm((prev) => ({
+        ...prev,
+        resume: null,
+      }));
+
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Resume size must be less than 5MB.");
       e.target.value = "";
+
+      setForm((prev) => ({
+        ...prev,
+        resume: null,
+      }));
+
       return;
     }
 
     setForm((prev) => ({
       ...prev,
       resume: file,
+    }));
+  };
+
+  const clearOnlyField = (field) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: field === "resume" ? null : "",
     }));
   };
 
@@ -89,6 +109,27 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
 
     if (!requisitionId) {
       toast.error("Job ID not found.");
+      return;
+    }
+
+    // Basic frontend validation
+    if (!form.name.trim()) {
+      toast.error("Please enter your full name.");
+      return;
+    }
+
+    if (!form.email.trim()) {
+      toast.error("Please enter your email.");
+      return;
+    }
+
+    if (!form.phone.trim()) {
+      toast.error("Please enter your phone number.");
+      return;
+    }
+
+    if (!form.resume) {
+      toast.error("Please upload your resume.");
       return;
     }
 
@@ -106,19 +147,111 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
         requisitionId,
       });
 
-      setForm({
-        name: "",
-        email: "",
-        phone: "",
-        experience: "",
-        resume: null,
-        coverNote: "",
-      });
+      // SUCCESS ONLY:
+      // Now clear the complete form.
+      setForm(INITIAL_FORM);
+
+      toast.success("Application submitted successfully.");
     } catch (error) {
       console.error(
         "APPLICATION ERROR:",
         error?.response?.data || error
       );
+
+      const responseData = error?.response?.data;
+
+      // Get backend error message
+      const message =
+        responseData?.message ||
+        responseData?.error ||
+        error?.message ||
+        "Application submission failed.";
+
+      const normalizedMessage = String(message).toLowerCase();
+
+      /*
+       * IMPORTANT:
+       * Only clear the field that caused the error.
+       */
+
+      // EMAIL ALREADY EXISTS
+      if (
+        normalizedMessage.includes("email") &&
+        (
+          normalizedMessage.includes("already") ||
+          normalizedMessage.includes("exist") ||
+          normalizedMessage.includes("duplicate")
+        )
+      ) {
+        clearOnlyField("email");
+
+        toast.error("This email already exists. Please use another email.");
+        return;
+      }
+
+      // PHONE ALREADY EXISTS
+      if (
+        normalizedMessage.includes("phone") &&
+        (
+          normalizedMessage.includes("already") ||
+          normalizedMessage.includes("exist") ||
+          normalizedMessage.includes("duplicate")
+        )
+      ) {
+        clearOnlyField("phone");
+
+        toast.error("This phone number already exists. Please use another phone number.");
+        return;
+      }
+
+      // RESUME ERROR
+      if (
+        normalizedMessage.includes("resume") ||
+        normalizedMessage.includes("cv")
+      ) {
+        clearOnlyField("resume");
+
+        toast.error(message);
+        return;
+      }
+
+      // NAME ERROR
+      if (normalizedMessage.includes("name")) {
+        clearOnlyField("name");
+
+        toast.error(message);
+        return;
+      }
+
+      // EXPERIENCE ERROR
+      if (
+        normalizedMessage.includes("experience") ||
+        normalizedMessage.includes("years")
+      ) {
+        clearOnlyField("experience");
+
+        toast.error(message);
+        return;
+      }
+
+      // COVER NOTE ERROR
+      if (
+        normalizedMessage.includes("cover") ||
+        normalizedMessage.includes("note")
+      ) {
+        clearOnlyField("coverNote");
+
+        toast.error(message);
+        return;
+      }
+
+      /*
+       * Unknown error:
+       * DO NOT CLEAR ANYTHING.
+       *
+       * User can retry without filling the form again.
+       */
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -155,10 +288,7 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
         </div>
 
         {/* FORM */}
-        <form
-          onSubmit={handleSubmit}
-          className="px-7 py-5"
-        >
+        <form onSubmit={handleSubmit} className="px-7 py-5">
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
 
             {/* FULL NAME */}
@@ -317,4 +447,3 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
 };
 
 export default ApplyModal;
-
