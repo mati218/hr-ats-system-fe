@@ -20,48 +20,72 @@ const Sidebar = () => {
 
   const userName = user?.name || "User";
 
+  // =========================================
+  // ROLE
+  // =========================================
+
   const roleName =
     typeof user?.role === "object"
-      ? user?.role?.roleName || "No Role"
-      : user?.role || "No Role";
-
-  const permissions = Array.isArray(user?.role?.permissions)
-    ? user.role.permissions
-    : [];
+      ? user?.role?.roleName ||
+        user?.role?.name ||
+        ""
+      : user?.role || "";
 
   const normalizedRole = String(roleName)
     .toLowerCase()
     .replace(/\s+/g, "")
     .trim();
 
-  const isSuperAdmin = normalizedRole === "superadmin";
-  const isInterviewer = normalizedRole === "interviewer";
+  const isSuperAdmin =
+    normalizedRole === "superadmin";
+
+  const isInterviewer =
+    normalizedRole === "interviewer";
+
+  // =========================================
+  // PERMISSIONS
+  // =========================================
+
+  const permissions = Array.isArray(
+    user?.role?.permissions
+  )
+    ? user.role.permissions
+    : [];
 
   const canView = (module, requires = []) => {
-    // Super Admin has access to everything
     if (isSuperAdmin) {
       return true;
     }
 
-    const modulesToCheck = [module, ...requires];
+    const modulesToCheck = [
+      module,
+      ...requires,
+    ];
 
-    return modulesToCheck.every((requiredModule) => {
-      const permission = permissions.find(
-        (item) =>
-          String(item?.module || "")
-            .toLowerCase()
-            .trim() ===
-          String(requiredModule || "")
-            .toLowerCase()
-            .trim()
-      );
+    return modulesToCheck.every(
+      (requiredModule) => {
+        const permission =
+          permissions.find(
+            (item) =>
+              String(item?.module || "")
+                .toLowerCase()
+                .trim() ===
+              String(requiredModule || "")
+                .toLowerCase()
+                .trim()
+          );
 
-      return (
-        permission?.view === true ||
-        permission?.view === "true"
-      );
-    });
+        return (
+          permission?.view === true ||
+          permission?.view === "true"
+        );
+      }
+    );
   };
+
+  // =========================================
+  // RECRUITMENT
+  // =========================================
 
   const recruitment = [
     {
@@ -70,14 +94,12 @@ const Sidebar = () => {
       path: "/job-requisitions",
       module: "jobRequisitions",
     },
-
     {
       name: "Candidate Pipeline",
       icon: <FaSliders />,
       path: "/candidate-pipeline",
       module: "candidates",
     },
-
     {
       name: "ATS Ranking",
       icon: <FaChartLine />,
@@ -85,21 +107,18 @@ const Sidebar = () => {
       module: "atsRanking",
       requires: ["candidates"],
     },
-
     {
       name: "Interviews",
       icon: <FaCalendarDays />,
       path: "/interviews",
       module: "interviews",
     },
-
     {
       name: "Offer Letters",
       icon: <FaFileLines />,
       path: "/offer-letters",
       module: "offerLetters",
     },
-
     {
       name: "Report",
       icon: <FaClock />,
@@ -108,6 +127,10 @@ const Sidebar = () => {
     },
   ];
 
+  // =========================================
+  // ADMINISTRATION
+  // =========================================
+
   const administration = [
     {
       name: "User Management",
@@ -115,21 +138,18 @@ const Sidebar = () => {
       path: "/user-management",
       module: "users",
     },
-
     {
       name: "Roles & Permissions",
       icon: <FaShield />,
       path: "/roles-permissions",
       module: "roles",
     },
-
     {
       name: "Departments & Types",
       icon: <FaBuilding />,
       path: "/departments",
       module: "departments",
     },
-
     {
       name: "Audit Log",
       icon: <FaClock />,
@@ -138,38 +158,52 @@ const Sidebar = () => {
     },
   ];
 
-  const showDashboard = canView("dashboard");
+  // =========================================
+  // SIDEBAR VISIBILITY
+  // =========================================
 
-  const visibleRecruitment = recruitment.filter((item) => {
-    if (
-      item.path === "/interviews" &&
-      isInterviewer
-    ) {
-      return false;
-    }
+  const showDashboard =
+    !isInterviewer &&
+    canView("dashboard");
 
-    return canView(
-      item.module,
-      item.requires || []
-    );
-  });
+  /*
+   * IMPORTANT:
+   * Interviewer ke liye Recruitment ke
+   * tamam items completely hide hain.
+   */
+  const visibleRecruitment =
+    isInterviewer
+      ? []
+      : recruitment.filter((item) =>
+          canView(
+            item.module,
+            item.requires || []
+          )
+        );
 
-  const visibleAdministration = administration.filter(
-    (item) => canView(item.module)
-  );
+  /*
+   * Interviewer ke liye Administration
+   * completely hide hai.
+   */
+  const visibleAdministration =
+    isInterviewer
+      ? []
+      : administration.filter((item) =>
+          canView(item.module)
+        );
 
-  // =====================================================
+  // =========================================
   // LOGOUT
-  // =====================================================
+  // =========================================
 
   const handleLogout = () => {
     logout();
     window.location.href = "/login";
   };
 
-  // =====================================================
+  // =========================================
   // UI
-  // =====================================================
+  // =========================================
 
   return (
     <aside className="flex h-screen w-63 flex-col overflow-y-auto bg-[#11131d] text-white">
@@ -240,56 +274,63 @@ const Sidebar = () => {
         )}
 
         {/* RECRUITMENT */}
-        {visibleRecruitment.length > 0 && (
-          <>
-            <p className="mb-3 mt-3 flex text-[11px] font-semibold uppercase text-gray-500">
-              Recruitment
-            </p>
+        {!isInterviewer &&
+          visibleRecruitment.length > 0 && (
+            <>
+              <p className="mb-3 mt-3 flex text-[11px] font-semibold uppercase text-gray-500">
+                Recruitment
+              </p>
 
-            {visibleRecruitment.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  `mb-1 flex items-center gap-3 rounded-lg p-1.5 text-sm font-semibold ${
-                    isActive
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-300 hover:bg-gray-800"
-                  }`
-                }
-              >
-                {item.icon}
-                {item.name}
-              </NavLink>
-            ))}
-          </>
-        )}
+              {visibleRecruitment.map(
+                (item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `mb-1 flex items-center gap-3 rounded-lg p-1.5 text-sm font-semibold ${
+                        isActive
+                          ? "bg-blue-600 text-white"
+                          : "text-gray-300 hover:bg-gray-800"
+                      }`
+                    }
+                  >
+                    {item.icon}
+                    {item.name}
+                  </NavLink>
+                )
+              )}
+            </>
+          )}
 
         {/* ADMINISTRATION */}
-        {visibleAdministration.length > 0 && (
-          <>
-            <p className="mb-1 mt-4 flex text-[11px] font-semibold uppercase text-gray-500">
-              Administration
-            </p>
+        {!isInterviewer &&
+          visibleAdministration.length > 0 && (
+            <>
+              <p className="mb-1 mt-4 flex text-[11px] font-semibold uppercase text-gray-500">
+                Administration
+              </p>
 
-            {visibleAdministration.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  `mb-1 flex items-center gap-3 rounded-lg p-1.5 text-sm font-semibold ${
-                    isActive
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-300 hover:bg-gray-800"
-                  }`
-                }
-              >
-                {item.icon}
-                {item.name}
-              </NavLink>
-            ))}
-          </>
-        )}
+              {visibleAdministration.map(
+                (item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `mb-1 flex items-center gap-3 rounded-lg p-1.5 text-sm font-semibold ${
+                        isActive
+                          ? "bg-blue-600 text-white"
+                          : "text-gray-300 hover:bg-gray-800"
+                      }`
+                    }
+                  >
+                    {item.icon}
+                    {item.name}
+                  </NavLink>
+                )
+              )}
+            </>
+          )}
+
       </div>
 
       {/* USER */}
@@ -306,9 +347,10 @@ const Sidebar = () => {
             </h3>
 
             <p className="text-xs text-gray-400">
-              {roleName}
+              {roleName || "No Role"}
             </p>
           </div>
+
         </div>
 
         <button
@@ -319,6 +361,7 @@ const Sidebar = () => {
           Log out →
         </button>
       </div>
+
     </aside>
   );
 };

@@ -11,9 +11,9 @@ const PrivateRoute = ({
     isAuthenticated,
   } = useAuth();
 
-  // ==========================================
+  // ==============================
   // NOT LOGGED IN
-  // ==========================================
+  // ==============================
 
   if (!isAuthenticated) {
     return (
@@ -24,9 +24,9 @@ const PrivateRoute = ({
     );
   }
 
-  // ==========================================
-  // GET ROLE NAME
-  // ==========================================
+  // ==============================
+  // GET ROLE
+  // ==============================
 
   const roleName =
     typeof user?.role === "object"
@@ -40,45 +40,54 @@ const PrivateRoute = ({
     .replace(/\s+/g, "")
     .trim();
 
-  const isSuperAdmin =
-    normalizedRole === "superadmin";
-
   const isInterviewer =
     normalizedRole === "interviewer";
 
-  // ==========================================
+  const isSuperAdmin =
+    normalizedRole === "superadmin";
+
+  console.log("PRIVATE ROUTE");
+  console.log("ROLE:", roleName);
+  console.log("NORMALIZED:", normalizedRole);
+  console.log("INTERVIEWER:", isInterviewer);
+  console.log("MODULE:", module);
+  console.log("INTERVIEWER ONLY:", interviewerOnly);
+
+  // ==============================
   // INTERVIEWER
-  // ==========================================
-  //
-  // Interviewer can ONLY access routes that
-  // explicitly have interviewerOnly={true}
-  //
-  // ==========================================
+  // ==============================
 
   if (isInterviewer) {
-    if (!interviewerOnly) {
-      return (
-        <Navigate
-          to="/my-interviews"
-          replace
-        />
-      );
+    // Only routes specifically marked
+    // interviewerOnly can be opened.
+
+    if (interviewerOnly === true) {
+      return <Outlet />;
     }
 
-    return <Outlet />;
+    // Candidate Pipeline, Dashboard,
+    // ATS, Users, Roles, etc.
+    // ALL blocked for interviewer.
+
+    return (
+      <Navigate
+        to="/my-interviews"
+        replace
+      />
+    );
   }
 
-  // ==========================================
+  // ==============================
   // SUPER ADMIN
-  // ==========================================
+  // ==============================
 
   if (isSuperAdmin) {
     return <Outlet />;
   }
 
-  // ==========================================
-  // OTHER ROLES
-  // ==========================================
+  // ==============================
+  // NORMAL USER PERMISSIONS
+  // ==============================
 
   const permissions = Array.isArray(
     user?.role?.permissions
@@ -91,7 +100,6 @@ const PrivateRoute = ({
     ...requires,
   ].filter(Boolean);
 
-  // If no module is provided, deny access
   if (modulesToCheck.length === 0) {
     return (
       <Navigate
@@ -122,10 +130,6 @@ const PrivateRoute = ({
       }
     );
 
-  // ==========================================
-  // ACCESS DENIED
-  // ==========================================
-
   if (!hasPermission) {
     return (
       <Navigate
@@ -134,10 +138,6 @@ const PrivateRoute = ({
       />
     );
   }
-
-  // ==========================================
-  // ALLOWED
-  // ==========================================
 
   return <Outlet />;
 };
