@@ -60,7 +60,7 @@ const NewUserModal = ({
 
         toast.error(
           error.response?.data?.message ||
-            "Failed to load roles and departments"
+          "Failed to load roles and departments"
         );
       }
     };
@@ -149,15 +149,15 @@ const NewUserModal = ({
           departments.find(
             (department) =>
               department._id ===
-                user.department ||
+              user.department ||
               department.id ===
-                user.department ||
+              user.department ||
               department.name ===
-                user.department ||
+              user.department ||
               department.label ===
-                user.department ||
+              user.department ||
               department.title ===
-                user.department
+              user.department
           );
 
         departmentId =
@@ -211,7 +211,7 @@ const NewUserModal = ({
 
       toast.error(
         error.response?.data?.message ||
-          "Failed to create user"
+        "Failed to create user"
       );
     }
   };
@@ -240,7 +240,7 @@ const NewUserModal = ({
 
       toast.error(
         error.response?.data?.message ||
-          "Failed to update user"
+        "Failed to update user"
       );
     }
   };
@@ -321,22 +321,19 @@ const NewUserModal = ({
           </label>
 
           <FormInput
-            type="number"
-            placeholder="+92 3xx xxxxxxx"
-            name="phoneNumber"
-            register={register}
-            errors={errors}
-            rules={{
-              required:
-                "Phone number is required",
-              // pattern: {
-              //   value:
-              //     /^\+92\s3\d{2}\s\d{7}$/,
-              //   message:    
-              //     "Use format +92 3xx xxxxxxx",
-              // },
-            }}
-          />
+  type="text"
+  placeholder="+923xxxxxxxxx"
+  name="phoneNumber"
+  register={register}
+  errors={errors}
+  rules={{
+    required: "Phone number is required",
+    pattern: {
+      value: /^\+923\d{2}\d{7}$/,
+      message: "Use format +923xxxxxxxxx",
+    },
+  }}
+/>
         </div>
 
         {/* ROLE */}
