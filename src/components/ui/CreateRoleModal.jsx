@@ -11,7 +11,6 @@ const modules = [
   {
     label: "Dashboard",
     key: "dashboard",
-
   },
   {
     label: "Job Requisitions",
@@ -23,7 +22,7 @@ const modules = [
   },
   {
     label: "ATS Ranking",
-    key: "atsRanking"
+    key: "atsRanking",
   },
   {
     label: "Interviews",
@@ -43,11 +42,11 @@ const modules = [
   },
   {
     label: "Roles & Permissions",
-    key: "roles"
+    key: "roles",
   },
   {
     label: "Audit Logs",
-    key: "auditLogs"
+    key: "auditLogs",
   },
   {
     label: "Reports",
@@ -95,12 +94,16 @@ function CreateRoleModal({
   // =====================================
   // CURRENT LOGGED-IN USER ROLE
   // =====================================
-  const canEditPermissions = isSuperAdmin(currentUser);
+
+  const canEditPermissions =
+    isSuperAdmin(currentUser);
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: {
       errors,
       isSubmitting,
@@ -109,40 +112,63 @@ function CreateRoleModal({
     defaultValues: {
       roleName: "",
       description: "",
-      permissions: buildDefaultPermissions(null),
+      permissions:
+        buildDefaultPermissions(null),
     },
   });
 
   // =====================================
   // LOAD ROLE DATA
   // =====================================
+
   useEffect(() => {
     if (!isOpen || loading) return;
 
     reset({
       roleName: role?.roleName || "",
       description: role?.description || "",
-      permissions: buildDefaultPermissions(role),
+      permissions:
+        buildDefaultPermissions(role),
     });
-  }, [isOpen, loading, role, reset]);
+  }, [
+    isOpen,
+    loading,
+    role,
+    reset,
+  ]);
 
   if (!isOpen) return null;
 
   // =====================================
   // SUBMIT
   // =====================================
+
   const submitHandler = async (data) => {
-    const permissions = modules.map((module) => ({
-      module: module.key,
-      view:
-        data.permissions?.[module.key]?.view || false,
-      create:
-        data.permissions?.[module.key]?.create || false,
-      edit:
-        data.permissions?.[module.key]?.edit || false,
-      delete:
-        data.permissions?.[module.key]?.delete || false,
-    }));
+    const permissions = modules.map(
+      (module) => ({
+        module: module.key,
+
+        view:
+          data.permissions?.[
+            module.key
+          ]?.view || false,
+
+        create:
+          data.permissions?.[
+            module.key
+          ]?.create || false,
+
+        edit:
+          data.permissions?.[
+            module.key
+          ]?.edit || false,
+
+        delete:
+          data.permissions?.[
+            module.key
+          ]?.delete || false,
+      })
+    );
 
     const payload = isEditing
       ? {
@@ -164,11 +190,14 @@ function CreateRoleModal({
       <div className="flex max-h-[calc(90vh-30px)] w-full max-w-[800px] flex-col overflow-hidden rounded-[18px] bg-white shadow-2xl">
 
         {/* ================= HEADER ================= */}
+
         <div className="flex items-start justify-between border-b border-slate-200 px-7 py-3">
 
           <div>
             <h2 className="text-[18px] font-bold leading-6 text-slate-900">
-              {isEditing ? "Edit Role" : "Create Role"}
+              {isEditing
+                ? "Edit Role"
+                : "Create Role"}
             </h2>
 
             <p className="mt-0.5 text-[12px] text-slate-500">
@@ -191,19 +220,23 @@ function CreateRoleModal({
         </div>
 
         {/* ================= LOADING ================= */}
+
         {loading ? (
           <div className="px-7 py-8 text-center text-sm text-slate-400">
             Loading...
           </div>
         ) : (
           <form
-            onSubmit={handleSubmit(submitHandler)}
+            onSubmit={handleSubmit(
+              submitHandler
+            )}
             className="flex min-h-0 flex-1 flex-col"
           >
 
             <div className="min-h-0 flex-1 overflow-y-auto px-7 py-5">
 
               {/* ================= ERROR ================= */}
+
               {errorMessage && (
                 <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-600">
                   {errorMessage}
@@ -211,19 +244,22 @@ function CreateRoleModal({
               )}
 
               {/* ================= PERMISSION INFO ================= */}
+
               {!canEditPermissions && (
                 <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
 
                   <Lock className="h-3 w-3 shrink-0" />
 
                   <span>
-                    Only Super Admin can change role permissions.
+                    Only Super Admin can change
+                    role permissions.
                   </span>
 
                 </div>
               )}
 
               {/* ================= ROLE NAME ================= */}
+
               <div className="mb-4">
 
                 <label className="mb-1.5 block text-[12px] font-semibold text-slate-800">
@@ -238,19 +274,22 @@ function CreateRoleModal({
                   errors={errors}
                   disabled={isEditing}
                   rules={{
-                    required: "Role Name is required",
+                    required:
+                      "Role Name is required",
                   }}
                 />
 
                 {isEditing && (
                   <p className="mt-1 text-[11px] text-slate-400">
-                    Role name cannot be changed after creation.
+                    Role name cannot be changed
+                    after creation.
                   </p>
                 )}
 
               </div>
 
               {/* ================= DESCRIPTION ================= */}
+
               <div className="mb-5">
 
                 <label className="mb-1.5 block text-[13px] font-semibold text-slate-800">
@@ -265,31 +304,36 @@ function CreateRoleModal({
                   errors={errors}
                   disabled={false}
                   rules={{
-                    required: "Description is required",
+                    required:
+                      "Description is required",
                   }}
                 />
 
               </div>
 
               {/* ================= PERMISSIONS ================= */}
+
               <div>
 
-                <h3 className="mb-3 text-[12px] font-bold uppercase tracking-wide text-slate-500">
-                  Permissions
-                </h3>
+              
 
                 <PermissionTable
-  modules={modules}
-  register={register}
-  errors={errors}
-  disabled={!canEditPermissions}
-/>
+                  modules={modules}
+                  register={register}
+                  errors={errors}
+                  disabled={
+                    !canEditPermissions
+                  }
+                  watch={watch}
+                  setValue={setValue}
+                />
 
               </div>
 
             </div>
 
             {/* ================= FOOTER ================= */}
+
             <div className="flex shrink-0 justify-end gap-2 border-t border-slate-200 bg-white px-7 py-4">
 
               <Button
