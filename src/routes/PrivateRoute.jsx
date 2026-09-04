@@ -11,9 +11,9 @@ const PrivateRoute = ({
     isAuthenticated,
   } = useAuth();
 
-  // ==========================================
+  // ==============================
   // NOT LOGGED IN
-  // ==========================================
+  // ==============================
 
   if (!isAuthenticated) {
     return (
@@ -40,9 +40,6 @@ const PrivateRoute = ({
     .replace(/\s+/g, "")
     .trim();
 
-  const isSuperAdmin =
-    normalizedRole === "superadmin";
-
   const isInterviewer =
     normalizedRole === "interviewer";
 
@@ -60,12 +57,21 @@ const PrivateRoute = ({
       );
     }
 
-    return <Outlet />;
+    // Candidate Pipeline, Dashboard,
+    // ATS, Users, Roles, etc.
+    // ALL blocked for interviewer.
+
+    return (
+      <Navigate
+        to="/my-interviews"
+        replace
+      />
+    );
   }
 
-  // ==========================================
+  // ==============================
   // SUPER ADMIN
-  // ==========================================
+  // ==============================
 
   if (isSuperAdmin) {
     return <Outlet />;
@@ -118,10 +124,6 @@ const PrivateRoute = ({
       />
     );
   }
-
-  // ==========================================
-  // ALLOWED
-  // ==========================================
 
   return <Outlet />;
 };
