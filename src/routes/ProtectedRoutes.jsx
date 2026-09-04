@@ -129,7 +129,8 @@ const ProtectedRoutes = () => {
 
         <Route
           element={
-            <PrivateRoute module="candidates" />
+            <PrivateRoute module="candidates"
+            />
           }
         >
           <Route
@@ -138,11 +139,26 @@ const ProtectedRoutes = () => {
           />
         </Route>
 
-<Route
-  element={
-    <PrivateRoute interviewerOnly={true} />
-  }
->
+        {/* ================= INTERVIEWS ================= */}
+
+        <Route
+          element={
+            <PrivateRoute module="interviews" />
+          }
+        >
+          <Route
+            path="/interviews"
+            element={<Interviews />}
+          />
+        </Route>
+
+        {/* ================= MY INTERVIEWS ================= */}
+
+        <Route
+          element={
+            <PrivateRoute interviewerOnly={true} />
+          }
+        >
           <Route
             path="/my-interviews"
             element={<Myinterviews />}
@@ -181,3 +197,4 @@ const ProtectedRoutes = () => {
 };
 
 export default ProtectedRoutes;
+
