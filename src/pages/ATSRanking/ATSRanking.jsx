@@ -213,53 +213,86 @@ function ATSRanking() {
   // REJECT CANDIDATE
   // =====================================================
 
-  const handleRejectCandidate = async (candidate) => {
-    try {
-      const candidateId =
-        candidate?.candidateId ||
-        candidate?._id;
+  const handleRejectCandidate = (updatedCandidate) => {
+  try {
+    const candidateId =
+      updatedCandidate?.candidateId ||
+      updatedCandidate?._id ||
+      updatedCandidate?.id;
 
-      if (!candidateId) {
-        toast.error("Candidate ID not found.");
-        return;
+    if (!candidateId) {
+      toast.error("Candidate ID not found.");
+      return;
+    }
+
+    // Immediately update the candidate in local state
+    setCandidates((prev) =>
+      prev.map((item) => {
+        const itemId =
+          item?.candidateId ||
+          item?._id ||
+          item?.id;
+
+        if (
+          String(itemId) ===
+          String(candidateId)
+        ) {
+          return {
+            ...item,
+            stage: "Rejected",
+            status: "Rejected",
+          };
+        }
+
+        return item;
+      })
+    );
+
+    // Update selected candidate as well
+    setSelectedCandidate((prev) => {
+      if (!prev) {
+        return prev;
       }
 
-      await rejectCandidate(candidateId);
+      const prevId =
+        prev?.candidateId ||
+        prev?._id ||
+        prev?.id;
 
-      setCandidates((prev) =>
-        prev.filter((item) => {
-          const itemId =
-            item?.candidateId ||
-            item?._id;
+      if (
+        String(prevId) ===
+        String(candidateId)
+      ) {
+        return {
+          ...prev,
+          stage: "Rejected",
+          status: "Rejected",
+        };
+      }
 
-          return (
-            String(itemId) !==
-            String(candidateId)
-          );
-        })
-      );
+      return prev;
+    });
 
-      setSelectedCandidate(null);
-      setOfferCandidate(null);
-      setOpenModal(false);
-      setScheduleModalOpen(false);
-      setScheduleCandidate(null);
+    setOfferCandidate(null);
+    setOpenModal(false);
+    setScheduleModalOpen(false);
+    setScheduleCandidate(null);
 
-      toast.success(
-        "Candidate rejected successfully."
-      );
-    } catch (error) {
-      console.error(
-        "REJECT CANDIDATE ERROR:",
-        error?.response?.data || error
-      );
+    toast.success(
+      "Candidate rejected successfully."
+    );
+  } catch (error) {
+    console.error(
+      "REJECT CANDIDATE ERROR:",
+      error?.response?.data || error
+    );
 
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to reject candidate."
-      );
-    }
-  };
+    toast.error(
+      error?.response?.data?.message ||
+        "Failed to update candidate."
+    );
+  }
+};
 
   // =====================================================
   // SCHEDULE INTERVIEW
@@ -918,6 +951,9 @@ function ATSRanking() {
         onScheduleInterview={
           handleScheduleInterview
         }
+          onReject={
+            handleRejectCandidate}
+
         onOpenOfferModal={
           handleOpenOffer
         }
