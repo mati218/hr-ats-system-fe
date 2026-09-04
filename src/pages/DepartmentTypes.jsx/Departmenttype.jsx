@@ -297,7 +297,10 @@ const Departmenttype = () => {
 
                 <div>
                   <label className="mb-1 block text-sm font-semibold text-slate-800">
-                    Department Name
+                    Department Name{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
                   </label>
 
                   <input
@@ -335,7 +338,10 @@ const Departmenttype = () => {
 
                 <div>
                   <label className="mb-1 block text-sm font-semibold text-slate-800">
-                    Department Head
+                    Department Head{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
                   </label>
 
                   <input

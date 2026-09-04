@@ -257,7 +257,10 @@ function OfferLetter({
 
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                  Joining Date
+                  Joining Date{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
                 </label>
 
                 <input

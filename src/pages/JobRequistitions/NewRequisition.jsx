@@ -195,7 +195,10 @@ const NewRequisition = ({
 
         <div>
           <label className="flex text-sm font-semibold text-gray-800">
-            Job Title
+            Job Title{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
           </label>
 
           <FormInput
@@ -213,7 +216,10 @@ const NewRequisition = ({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="flex text-sm font-semibold text-gray-800">
-              Department
+              Department{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
             </label>
 
             <select
@@ -256,7 +262,10 @@ const NewRequisition = ({
               })}
             >
               <option value="" disabled>
-                Select Employment Type
+                Select Employment Type{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
               </option>
 
               {employmentTypes.map((type) => (
@@ -280,7 +289,10 @@ const NewRequisition = ({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="flex text-sm font-semibold text-gray-800">
-              Location
+              Location{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
             </label>
 
             <FormInput
@@ -323,7 +335,10 @@ const NewRequisition = ({
               })}
             >
               <option value="" disabled>
-                Select Experience Level
+                Select Experience Level{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
               </option>
 
               <option value="Entry">Entry</option>
@@ -341,7 +356,10 @@ const NewRequisition = ({
 
           <div>
             <label className="flex text-sm font-semibold text-gray-800">
-              Application Deadline
+              Application Deadline{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
             </label>
 
             <FormInput
@@ -398,7 +416,10 @@ const NewRequisition = ({
 
         <div>
           <label className="flex text-sm font-semibold text-gray-800">
-            Job Description
+            Job Description{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
           </label>
 
           <textarea
@@ -420,7 +441,10 @@ const NewRequisition = ({
 
         <div>
           <label className="flex text-sm font-semibold text-gray-800">
-            Requirements / Must-have Skills
+            Requirements / Must-have Skills{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
           </label>
 
           <textarea

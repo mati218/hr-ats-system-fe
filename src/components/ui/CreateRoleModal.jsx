@@ -263,7 +263,10 @@ function CreateRoleModal({
               <div className="mb-4">
 
                 <label className="mb-1.5 block text-[12px] font-semibold text-slate-800">
-                  Role Name
+                  Role Name{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
                 </label>
 
                 <FormInput
@@ -293,7 +296,10 @@ function CreateRoleModal({
               <div className="mb-5">
 
                 <label className="mb-1.5 block text-[13px] font-semibold text-slate-800">
-                  Description
+                  Description{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
                 </label>
 
                 <FormInput

@@ -265,7 +265,10 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
             {/* FULL NAME */}
             <div>
               <label className="block text-[13px] font-semibold text-[#111827]">
-                Full Name
+                Full Name{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
               </label>
 
               <input
@@ -286,7 +289,10 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
             {/* EMAIL */}
             <div>
               <label className="block text-[13px] font-semibold text-[#111827]">
-                Email
+                Email{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
               </label>
 
               <input
@@ -345,7 +351,10 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
           {/* RESUME */}
           <div className="mt-4">
             <label className="block text-[12px] font-semibold text-[#111827]">
-              Resume / CV
+              Resume / CV{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
             </label>
 
             <input
