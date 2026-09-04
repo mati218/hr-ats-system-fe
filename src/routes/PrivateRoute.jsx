@@ -24,9 +24,9 @@ const PrivateRoute = ({
     );
   }
 
-  // ==============================
-  // GET ROLE
-  // ==============================
+  // ==========================================
+  // ROLE
+  // ==========================================
 
   const roleName =
     typeof user?.role === "object"
@@ -43,26 +43,18 @@ const PrivateRoute = ({
   const isInterviewer =
     normalizedRole === "interviewer";
 
-  const isSuperAdmin =
-    normalizedRole === "superadmin";
+  // ==========================================
+  // INTERVIEWER ONLY
+  // ==========================================
 
-  console.log("PRIVATE ROUTE");
-  console.log("ROLE:", roleName);
-  console.log("NORMALIZED:", normalizedRole);
-  console.log("INTERVIEWER:", isInterviewer);
-  console.log("MODULE:", module);
-  console.log("INTERVIEWER ONLY:", interviewerOnly);
-
-  // ==============================
-  // INTERVIEWER
-  // ==============================
-
-  if (isInterviewer) {
-    // Only routes specifically marked
-    // interviewerOnly can be opened.
-
-    if (interviewerOnly === true) {
-      return <Outlet />;
+  if (interviewerOnly) {
+    if (!isInterviewer) {
+      return (
+        <Navigate
+          to="/dashboard"
+          replace
+        />
+      );
     }
 
     // Candidate Pipeline, Dashboard,
@@ -85,29 +77,19 @@ const PrivateRoute = ({
     return <Outlet />;
   }
 
-  // ==============================
-  // NORMAL USER PERMISSIONS
-  // ==============================
+  // ==========================================
+  // PERMISSIONS
+  // ==========================================
 
-  const permissions = Array.isArray(
-    user?.role?.permissions
-  )
-    ? user.role.permissions
-    : [];
+  const permissions =
+    Array.isArray(user?.role?.permissions)
+      ? user.role.permissions
+      : [];
 
   const modulesToCheck = [
     module,
     ...requires,
   ].filter(Boolean);
-
-  if (modulesToCheck.length === 0) {
-    return (
-      <Navigate
-        to="/dashboard"
-        replace
-      />
-    );
-  }
 
   const hasPermission =
     modulesToCheck.every(
@@ -129,6 +111,10 @@ const PrivateRoute = ({
         );
       }
     );
+
+  // ==========================================
+  // DENIED
+  // ==========================================
 
   if (!hasPermission) {
     return (

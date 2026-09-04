@@ -91,9 +91,6 @@ const handleApplySubmit = async (form) => {
 
     console.log("APPLICATION RESPONSE:", response?.data);
     console.log("APPLICATION SUBMITTED SUCCESSFULLY");
-
-    // ONLY SUCCESS:
-    // close ApplyModal and show success screen
     setSubmittedJob(selectedJob);
     setSelectedJob(null);
     setShowSuccess(true);
@@ -104,15 +101,6 @@ const handleApplySubmit = async (form) => {
       "APPLICATION ERROR:",
       error?.response?.data || error
     );
-
-    /*
-     * IMPORTANT:
-     * Do NOT show toast here.
-     * Do NOT clear selectedJob.
-     * Do NOT close modal.
-     *
-     * Throw the error back to ApplyModal.
-     */
     throw error;
   }
 };
