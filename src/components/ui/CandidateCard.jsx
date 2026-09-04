@@ -15,8 +15,19 @@ function CandidateCard({
     candidate?.offer?.status === "Sent" ||
     candidate?.offer?.status === "Accepted";
 
+  // REJECTED CHECK
+  const candidateRejected =
+    candidate?.stage === "Rejected" ||
+    candidate?.status === "Rejected";
+
   const handleOfferClick = (e) => {
     e.stopPropagation();
+
+    // Rejected candidate cannot move to offer
+    if (candidateRejected) {
+      return;
+    }
+
     onMoveOffer();
   };
 
@@ -67,9 +78,7 @@ function CandidateCard({
       {/* RIGHT SIDE */}
       <div className="flex gap-4">
 
-        {/* VIEW CANDIDATE
-            MyInterview mein show hoga
-            ATS Ranking mein hide hoga */}
+        {/* VIEW CANDIDATE */}
         {showViewCandidate && (
           <button
             type="button"
@@ -92,18 +101,20 @@ function CandidateCard({
           View Resume
         </button>
 
-        {/* MOVE TO OFFER */}
+        {/* MOVE TO OFFER / REJECTED */}
         <button
           type="button"
           onClick={handleOfferClick}
-          disabled={offerAlreadySent}
+          disabled={offerAlreadySent || candidateRejected}
           className={`rounded-xl px-6 py-3 font-semibold text-white ${
-            offerAlreadySent
+            candidateRejected || offerAlreadySent
               ? "cursor-not-allowed bg-slate-400 opacity-70"
               : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
-          {offerAlreadySent
+          {candidateRejected
+            ? "Rejected"
+            : offerAlreadySent
             ? "Offer Sent"
             : "Move to Offer"}
         </button>
