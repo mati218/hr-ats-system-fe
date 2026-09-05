@@ -1,5 +1,6 @@
 ﻿import { Link, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import InputField from "../components/InputField";
 import Button from "../components/ui/Button";
 import { ResetPasswordApi } from "../lib/api/authApi";
@@ -25,12 +26,17 @@ function ResetPassword() {
         confirmPassword: data.confirmPassword,
       });
 
-      alert(response.data.message);
+      toast.success(
+        response.data.message || "Password reset successfully."
+      );
       
        navigate("/login");
       reset();
     } catch (error) {
-      alert(error.response?.data?.message);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to reset password."
+      );
     }
   };
 
