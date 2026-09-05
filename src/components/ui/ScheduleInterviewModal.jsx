@@ -842,7 +842,10 @@ function ScheduleInterviewModal({
           <div>
 
             <label className="mb-1 block text-xs font-semibold text-slate-700">
-              Candidate
+              Candidate{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
             </label>
 
             <select
@@ -1051,7 +1054,10 @@ function ScheduleInterviewModal({
             <div>
 
               <label className="mb-1 block text-xs font-semibold text-slate-700">
-                Date
+                Date{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
               </label>
 
               <input
@@ -1091,7 +1097,10 @@ function ScheduleInterviewModal({
             <div>
 
               <label className="mb-1 block text-xs font-semibold text-slate-700">
-                Time
+                Time{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
               </label>
 
               <input
@@ -1136,7 +1145,10 @@ function ScheduleInterviewModal({
             <div>
 
               <label className="mb-1 block text-xs font-semibold text-slate-700">
-                Duration
+                Duration{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
               </label>
 
               <select
@@ -1195,7 +1207,10 @@ function ScheduleInterviewModal({
             <div>
 
               <label className="mb-1 block text-xs font-semibold text-slate-700">
-                Interviewer
+                Interviewer{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
               </label>
 
               <select
@@ -1267,7 +1282,10 @@ function ScheduleInterviewModal({
           <div>
 
             <label className="mb-1 block text-xs font-semibold text-slate-700">
-              Meeting Link / Location
+              Meeting Link / Location{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
             </label>
 
             <input

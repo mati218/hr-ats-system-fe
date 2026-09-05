@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -149,15 +150,15 @@ const NewUserModal = ({
           departments.find(
             (department) =>
               department._id ===
-              user.department ||
+                user.department ||
               department.id ===
-              user.department ||
+                user.department ||
               department.name ===
-              user.department ||
+                user.department ||
               department.label ===
-              user.department ||
+                user.department ||
               department.title ===
-              user.department
+                user.department
           );
 
         departmentId =
@@ -268,7 +269,10 @@ const NewUserModal = ({
 
         <div>
           <label className="text-sm font-semibold text-gray-800 flex">
-            Full Name
+            Full Name{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
           </label>
 
           <FormInput
@@ -292,7 +296,10 @@ const NewUserModal = ({
 
         <div>
           <label className="text-sm font-semibold text-gray-800 flex">
-            Work Email
+            Work Email{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
           </label>
 
           <FormInput
@@ -317,30 +324,37 @@ const NewUserModal = ({
 
         <div>
           <label className="text-sm font-semibold text-gray-800 flex">
-            Phone
+            Phone{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
           </label>
 
           <FormInput
-  type="text"
-  placeholder="+923xxxxxxxxx"
-  name="phoneNumber"
-  register={register}
-  errors={errors}
-  rules={{
-    required: "Phone number is required",
-    pattern: {
-      value: /^\+923\d{2}\d{7}$/,
-      message: "Use format +923xxxxxxxxx",
-    },
-  }}
-/>
+            type="text"
+            placeholder="+923xxxxxxxxx"
+            name="phoneNumber"
+            register={register}
+            errors={errors}
+            rules={{
+              required: "Phone number is required",
+              pattern: {
+                value: /^\+923\d{2}\d{7}$/,
+                message:
+                  "Use format +923xxxxxxxxx",
+              },
+            }}
+          />
         </div>
 
         {/* ROLE */}
 
         <div>
           <label className="text-sm font-semibold text-gray-800 flex">
-            Role
+            Role{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
           </label>
 
           <select
@@ -383,7 +397,10 @@ const NewUserModal = ({
 
         <div>
           <label className="text-sm font-semibold text-gray-800 flex">
-            Department
+            Department{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
           </label>
 
           <select
