@@ -174,16 +174,6 @@ function ScheduleInterviewModal({
   /*
    * TRUE when modal is opened directly for
    * a particular candidate.
-   *
-   * Example:
-   *
-   * Candidate Profile
-   *      ↓
-   * Schedule Interview
-   *      ↓
-   * candidate prop exists
-   *
-   * Therefore dropdown should be disabled.
    */
   const isDirectCandidate =
     !isReschedule && Boolean(candidate);
@@ -489,6 +479,50 @@ function ScheduleInterviewModal({
   };
 
   // =====================================================
+  // MODE CHANGE
+  // =====================================================
+
+  const handleModeChange = (newMode) => {
+    /*
+     * Change mode normally.
+     */
+    dispatchForm({
+      type: "update",
+      field: "mode",
+      value: newMode,
+    });
+
+    /*
+     * Clear previous meeting link/location/phone.
+     *
+     * Example:
+     *
+     * Video Call
+     * Google Meet link
+     *
+     * ↓ change to
+     *
+     * Onsite
+     *
+     * Old Google Meet link is removed.
+     */
+    dispatchForm({
+      type: "update",
+      field: "location",
+      value: "",
+    });
+
+    /*
+     * Clear location validation error.
+     */
+    setErrors((previous) => ({
+      ...previous,
+      mode: "",
+      location: "",
+    }));
+  };
+
+  // =====================================================
   // VALIDATE FORM
   // =====================================================
 
@@ -501,46 +535,116 @@ function ScheduleInterviewModal({
       form.candidateId ||
       activeCandidateId;
 
+    // ===================================================
     // Candidate
+    // ===================================================
+
     if (!candidateId) {
       newErrors.candidateId =
         "Candidate is required.";
     }
 
+    // ===================================================
     // Round
+    // ===================================================
+
     if (!form.round) {
       newErrors.round =
         "Interview round is required.";
     }
 
+    // ===================================================
     // Mode
+    // ===================================================
+
     if (!form.mode) {
       newErrors.mode =
         "Interview mode is required.";
     }
 
+    // ===================================================
     // Date
+    // ===================================================
+
     if (!form.date) {
       newErrors.date =
         "Interview date is required.";
     }
 
+    // ===================================================
     // Time
+    // ===================================================
+
     if (!form.time) {
       newErrors.time =
         "Interview time is required.";
     }
 
+    // ===================================================
     // Duration
+    // ===================================================
+
     if (!form.duration) {
       newErrors.duration =
         "Interview duration is required.";
     }
 
+    // ===================================================
     // Interviewer
+    // ===================================================
+
     if (!form.interviewerId) {
       newErrors.interviewerId =
         "Interviewer is required.";
+    }
+
+    // ===================================================
+    // MODE-SPECIFIC LOCATION
+    // ===================================================
+
+    if (!form.location.trim()) {
+      if (form.mode === "Video Call") {
+        newErrors.location =
+          "Meeting link is required for video call.";
+      } else if (form.mode === "Onsite") {
+        newErrors.location =
+          "Office location is required for onsite interview.";
+      } else if (form.mode === "Phone Call") {
+        newErrors.location =
+          "Phone number is required for phone call.";
+      } else {
+        newErrors.location =
+          "Meeting link or location is required.";
+      }
+    }
+
+    // ===================================================
+    // PHONE CALL VALIDATION
+    // ===================================================
+
+    if (
+      form.mode === "Phone Call" &&
+      form.location.trim()
+    ) {
+      const phoneNumber =
+        form.location.trim();
+
+      const onlyNumbers =
+        /^\d+$/.test(phoneNumber);
+
+      if (!onlyNumbers) {
+        newErrors.location =
+          "Phone number should contain numbers only.";
+      }
+
+      if (
+        onlyNumbers &&
+        (phoneNumber.length < 10 ||
+          phoneNumber.length > 15)
+      ) {
+        newErrors.location =
+          "Please enter a valid phone number.";
+      }
     }
 
     setErrors(newErrors);
@@ -654,7 +758,7 @@ function ScheduleInterviewModal({
           form.interviewerId,
 
         location:
-          form.location,
+          form.location.trim(),
 
         notes:
           form.notes,
@@ -691,17 +795,6 @@ function ScheduleInterviewModal({
 
   // =====================================================
   // CANCEL INTERVIEW
-  // =====================================================
-
-  // =====================================================
-  // CANCEL INTERVIEW
-  //
-  // Phase 4 fix: this used to call window.confirm(), which
-  // is a jarring native browser dialog and inconsistent
-  // with every other confirmation in this app — the rest
-  // of the codebase (e.g. JobRequisition.jsx's delete flow)
-  // uses a toast.warning(...) with an action button instead.
-  // Same pattern applied here for consistency.
   // =====================================================
 
   const handleCancelInterview =
@@ -743,6 +836,7 @@ function ScheduleInterviewModal({
 
           action: {
             label: "Cancel Interview",
+
             onClick: async () => {
               try {
                 setCancelling(true);
@@ -785,6 +879,32 @@ function ScheduleInterviewModal({
     isReschedule &&
     interview?.status ===
       "Confirmed";
+
+  // =====================================================
+  // MODE LABEL
+  // =====================================================
+
+  const locationLabel =
+    form.mode === "Video Call"
+      ? "Meeting Link"
+      : form.mode === "Onsite"
+      ? "Office Location"
+      : form.mode === "Phone Call"
+      ? "Phone Number"
+      : "Meeting Link / Location";
+
+  // =====================================================
+  // MODE PLACEHOLDER
+  // =====================================================
+
+  const locationPlaceholder =
+    form.mode === "Video Call"
+      ? "Google Meet / Zoom meeting link"
+      : form.mode === "Onsite"
+      ? "e.g. Meeting Room 2, Office Floor 1"
+      : form.mode === "Phone Call"
+      ? "e.g. 03001234567"
+      : "Meeting link or office location";
 
   // =====================================================
   // UI
@@ -843,9 +963,9 @@ function ScheduleInterviewModal({
 
             <label className="mb-1 block text-xs font-semibold text-slate-700">
               Candidate{" "}
-            <span className="text-red-500 ml-1">
-              *
-            </span>
+              <span className="ml-1 text-red-500">
+                *
+              </span>
             </label>
 
             <select
@@ -912,8 +1032,6 @@ function ScheduleInterviewModal({
               )}
 
             </select>
-
-            {/* Direct candidate information */}
 
             {isDirectCandidate && (
               <p className="mt-1 text-[10px] text-slate-400">
@@ -1003,8 +1121,7 @@ function ScheduleInterviewModal({
                   form.mode
                 }
                 onChange={(e) =>
-                  update(
-                    "mode",
+                  handleModeChange(
                     e.target.value
                   )
                 }
@@ -1055,9 +1172,9 @@ function ScheduleInterviewModal({
 
               <label className="mb-1 block text-xs font-semibold text-slate-700">
                 Date{" "}
-            <span className="text-red-500 ml-1">
-              *
-            </span>
+                <span className="ml-1 text-red-500">
+                  *
+                </span>
               </label>
 
               <input
@@ -1098,9 +1215,9 @@ function ScheduleInterviewModal({
 
               <label className="mb-1 block text-xs font-semibold text-slate-700">
                 Time{" "}
-            <span className="text-red-500 ml-1">
-              *
-            </span>
+                <span className="ml-1 text-red-500">
+                  *
+                </span>
               </label>
 
               <input
@@ -1146,9 +1263,9 @@ function ScheduleInterviewModal({
 
               <label className="mb-1 block text-xs font-semibold text-slate-700">
                 Duration{" "}
-            <span className="text-red-500 ml-1">
-              *
-            </span>
+                <span className="ml-1 text-red-500">
+                  *
+                </span>
               </label>
 
               <select
@@ -1208,9 +1325,9 @@ function ScheduleInterviewModal({
 
               <label className="mb-1 block text-xs font-semibold text-slate-700">
                 Interviewer{" "}
-            <span className="text-red-500 ml-1">
-              *
-            </span>
+                <span className="ml-1 text-red-500">
+                  *
+                </span>
               </label>
 
               <select
@@ -1276,35 +1393,72 @@ function ScheduleInterviewModal({
           </div>
 
           {/* =================================================
-              LOCATION
+              LOCATION / MEETING LINK / PHONE
           ================================================= */}
 
           <div>
 
             <label className="mb-1 block text-xs font-semibold text-slate-700">
-              Meeting Link / Location{" "}
-            <span className="text-red-500 ml-1">
-              *
-            </span>
+
+              {locationLabel}
+
+              <span className="ml-1 text-red-500">
+                *
+              </span>
+
             </label>
 
             <input
-              type="text"
+              type={
+                form.mode === "Phone Call"
+                  ? "tel"
+                  : "text"
+              }
               value={
                 form.location
               }
-              onChange={(e) =>
+              onChange={(e) => {
+                let value =
+                  e.target.value;
+
+                /*
+                 * Phone Call:
+                 * only numbers are allowed.
+                 */
+                if (
+                  form.mode ===
+                  "Phone Call"
+                ) {
+                  value =
+                    value.replace(
+                      /\D/g,
+                      ""
+                    );
+                }
+
                 update(
                   "location",
-                  e.target.value
-                )
-              }
+                  value
+                );
+              }}
               disabled={
                 submitting ||
                 isReschedule
               }
-              placeholder="Google Meet link or office room"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
+              placeholder={
+                locationPlaceholder
+              }
+              inputMode={
+                form.mode ===
+                "Phone Call"
+                  ? "numeric"
+                  : undefined
+              }
+              className={`w-full rounded-lg border px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${
+                errors.location
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-slate-200 focus:border-blue-500"
+              }`}
             />
 
             {errors.location && (
