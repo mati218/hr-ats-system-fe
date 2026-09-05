@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -217,9 +218,9 @@ const NewRequisition = ({
           <div>
             <label className="flex text-sm font-semibold text-gray-800">
               Department{" "}
-            <span className="text-red-500 ml-1">
-              *
-            </span>
+              <span className="text-red-500 ml-1">
+                *
+              </span>
             </label>
 
             <select
@@ -251,7 +252,10 @@ const NewRequisition = ({
 
           <div>
             <label className="flex text-sm font-semibold text-gray-800">
-              Employment Type
+              Employment Type{" "}
+              <span className="text-red-500 ml-1">
+                *
+              </span>
             </label>
 
             <select
@@ -262,10 +266,7 @@ const NewRequisition = ({
               })}
             >
               <option value="" disabled>
-                Select Employment Type{" "}
-            <span className="text-red-500 ml-1">
-              *
-            </span>
+                Select Employment Type
               </option>
 
               {employmentTypes.map((type) => (
@@ -290,9 +291,9 @@ const NewRequisition = ({
           <div>
             <label className="flex text-sm font-semibold text-gray-800">
               Location{" "}
-            <span className="text-red-500 ml-1">
-              *
-            </span>
+              <span className="text-red-500 ml-1">
+                *
+              </span>
             </label>
 
             <FormInput
@@ -309,7 +310,10 @@ const NewRequisition = ({
 
           <div>
             <label className="flex text-sm font-semibold text-gray-800">
-              Number of Openings
+              Number of Openings{" "}
+              <span className="text-red-500 ml-1">
+                *
+              </span>
             </label>
 
             <FormInput
@@ -317,6 +321,10 @@ const NewRequisition = ({
               name="openings"
               register={register}
               errors={errors}
+              rules={{
+                required:
+                  "Number of openings is required",
+              }}
             />
           </div>
         </div>
@@ -324,7 +332,10 @@ const NewRequisition = ({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="flex text-sm font-semibold text-gray-800">
-              Experience Level
+              Experience Level{" "}
+              <span className="text-red-500 ml-1">
+                *
+              </span>
             </label>
 
             <select
@@ -335,10 +346,7 @@ const NewRequisition = ({
               })}
             >
               <option value="" disabled>
-                Select Experience Level{" "}
-            <span className="text-red-500 ml-1">
-              *
-            </span>
+                Select Experience Level
               </option>
 
               <option value="Entry">Entry</option>
@@ -357,9 +365,9 @@ const NewRequisition = ({
           <div>
             <label className="flex text-sm font-semibold text-gray-800">
               Application Deadline{" "}
-            <span className="text-red-500 ml-1">
-              *
-            </span>
+              <span className="text-red-500 ml-1">
+                *
+              </span>
             </label>
 
             <FormInput
@@ -383,7 +391,10 @@ const NewRequisition = ({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="flex text-sm font-semibold text-gray-800">
-              Salary Range — Min (PKR)
+              Salary Range — Min (PKR){" "}
+              <span className="text-red-500 ml-1">
+                *
+              </span>
             </label>
 
             <FormInput
@@ -392,12 +403,19 @@ const NewRequisition = ({
               name="salaryMin"
               register={register}
               errors={errors}
+              rules={{
+                required:
+                  "Minimum salary is required",
+              }}
             />
           </div>
 
           <div>
             <label className="flex text-sm font-semibold text-gray-800">
-              Salary Range — Max (PKR)
+              Salary Range — Max (PKR){" "}
+              <span className="text-red-500 ml-1">
+                *
+              </span>
             </label>
 
             <FormInput
@@ -406,6 +424,10 @@ const NewRequisition = ({
               name="salaryMax"
               register={register}
               errors={errors}
+              rules={{
+                required:
+                  "Maximum salary is required",
+              }}
             />
           </div>
         </div>
@@ -522,3 +544,4 @@ const NewRequisition = ({
 };
 
 export default NewRequisition;
+

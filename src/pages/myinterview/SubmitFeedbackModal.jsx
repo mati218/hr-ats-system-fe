@@ -1,3 +1,4 @@
+
 import {
   useEffect,
   useState,
@@ -62,7 +63,7 @@ function SubmitFeedbackModal({
   // =====================================================
 
   const [overallRating, setOverallRating] =
-    useState(3);
+    useState("");
 
   const [recommendation, setRecommendation] =
     useState("");
@@ -89,6 +90,16 @@ function SubmitFeedbackModal({
     useState(false);
 
   // =====================================================
+  // VALIDATION STATES
+  // =====================================================
+
+  const [ratingError, setRatingError] =
+    useState("");
+
+  const [recommendationError, setRecommendationError] =
+    useState("");
+
+  // =====================================================
   // UPDATE FORM WHEN INTERVIEW CHANGES
   // =====================================================
 
@@ -103,7 +114,7 @@ function SubmitFeedbackModal({
     setOverallRating(
       feedback?.overallRating
         ? Number(feedback.overallRating)
-        : 3
+        : ""
     );
 
     setRecommendation(
@@ -117,6 +128,10 @@ function SubmitFeedbackModal({
     setConcerns(
       feedback?.concerns || ""
     );
+
+    // Clear validation messages
+    setRatingError("");
+    setRecommendationError("");
   }, [
     isOpen,
     interview,
@@ -159,14 +174,19 @@ function SubmitFeedbackModal({
            * Existing feedback hai to
            * uski recommendation ko change
            * nahi karna.
+           *
+           * New feedback ke liye empty rahegi
+           * taake required message show ho sake.
            */
           if (
-            !interview?.feedback
+            interview?.feedback
               ?.recommendation
           ) {
             setRecommendation(
-              options[0]?.value || ""
+              interview.feedback.recommendation
             );
+          } else {
+            setRecommendation("");
           }
         } else {
           setRecommendationOptions(
@@ -174,12 +194,14 @@ function SubmitFeedbackModal({
           );
 
           if (
-            !interview?.feedback
+            interview?.feedback
               ?.recommendation
           ) {
             setRecommendation(
-              "Strong Hire"
+              interview.feedback.recommendation
             );
+          } else {
+            setRecommendation("");
           }
         }
       } catch (error) {
@@ -198,12 +220,14 @@ function SubmitFeedbackModal({
         );
 
         if (
-          !interview?.feedback
+          interview?.feedback
             ?.recommendation
         ) {
           setRecommendation(
-            "Strong Hire"
+            interview.feedback.recommendation
           );
+        } else {
+          setRecommendation("");
         }
       } finally {
         if (!cancelled) {
@@ -243,21 +267,41 @@ function SubmitFeedbackModal({
   // =====================================================
 
   const handleSubmit = async () => {
-    if (!recommendation) {
-      toast.error(
-        "Please select a recommendation."
-      );
-      return;
-    }
+    let hasError = false;
 
+    // Clear old errors
+    setRatingError("");
+    setRecommendationError("");
+
+    // Overall Rating Required Validation
     if (
-      !overallRating ||
-      overallRating < 1 ||
-      overallRating > 5
+      overallRating === "" ||
+      overallRating === null ||
+      overallRating === undefined
     ) {
-      toast.error(
+      setRatingError(
+        "Overall rating is required."
+      );
+      hasError = true;
+    } else if (
+      Number(overallRating) < 1 ||
+      Number(overallRating) > 5
+    ) {
+      setRatingError(
         "Please select a valid rating."
       );
+      hasError = true;
+    }
+
+    // Recommendation Required Validation
+    if (!recommendation) {
+      setRecommendationError(
+        "Recommendation is required."
+      );
+      hasError = true;
+    }
+
+    if (hasError) {
       return;
     }
 
@@ -370,22 +414,37 @@ function SubmitFeedbackModal({
           <div>
 
             <label className="mb-1 block text-sm font-semibold text-slate-700">
-              Overall Rating
+              Overall Rating{" "}
+              <span className="text-red-500 ml-1">
+                *
+              </span>
             </label>
 
             <select
               value={overallRating}
-              onChange={(e) =>
+              onChange={(e) => {
                 setOverallRating(
-                  Number(e.target.value)
-                )
-              }
+                  e.target.value === ""
+                    ? ""
+                    : Number(e.target.value)
+                );
+
+                setRatingError("");
+              }}
               disabled={
                 hasExistingFeedback ||
                 submitting
               }
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
+              className={`w-full rounded-lg border px-3 py-2 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500 ${
+                ratingError
+                  ? "border-red-500"
+                  : "border-slate-200"
+              }`}
             >
+
+              <option value="">
+                Select Overall Rating
+              </option>
 
               {RATING_OPTIONS.map(
                 (option) => (
@@ -400,6 +459,12 @@ function SubmitFeedbackModal({
 
             </select>
 
+            {ratingError && (
+              <p className="mt-1 text-xs text-red-500">
+                {ratingError}
+              </p>
+            )}
+
           </div>
 
           {/* RECOMMENDATION */}
@@ -407,26 +472,39 @@ function SubmitFeedbackModal({
           <div>
 
             <label className="mb-1 block text-sm font-semibold text-slate-700">
-              Recommendation
+              Recommendation{" "}
+              <span className="text-red-500 ml-1">
+                *
+              </span>
             </label>
 
             <select
               value={recommendation}
-              onChange={(e) =>
+              onChange={(e) => {
                 setRecommendation(
                   e.target.value
-                )
-              }
+                );
+
+                setRecommendationError("");
+              }}
               disabled={
                 loadingOptions ||
                 hasExistingFeedback ||
                 submitting
               }
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
+              className={`w-full rounded-lg border px-3 py-2 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500 ${
+                recommendationError
+                  ? "border-red-500"
+                  : "border-slate-200"
+              }`}
             >
 
+              <option value="">
+                Select Recommendation
+              </option>
+
               {loadingOptions ? (
-                <option value="">
+                <option value="" disabled>
                   Loading...
                 </option>
               ) : (
@@ -443,6 +521,12 @@ function SubmitFeedbackModal({
               )}
 
             </select>
+
+            {recommendationError && (
+              <p className="mt-1 text-xs text-red-500">
+                {recommendationError}
+              </p>
+            )}
 
           </div>
 
@@ -536,9 +620,9 @@ function SubmitFeedbackModal({
         </div>
 
       </div>
-
     </div>
   );
 }
 
 export default SubmitFeedbackModal;
+
