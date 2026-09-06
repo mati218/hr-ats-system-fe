@@ -122,8 +122,8 @@ const Sidebar = () => {
     {
       name: "Report",
       icon: <FaClock />,
-      path: "/report",
-      module: "report",
+      path: "/reports",
+      module: "reports",
     },
   ];
 

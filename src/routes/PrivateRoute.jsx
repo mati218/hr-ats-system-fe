@@ -40,6 +40,8 @@ const PrivateRoute = ({
     .replace(/\s+/g, "")
     .trim();
 
+    const isSuperAdmin =
+  normalizedRole === "superadmin";
   const isInterviewer =
     normalizedRole === "interviewer";
 
