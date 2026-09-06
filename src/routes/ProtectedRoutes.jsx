@@ -182,11 +182,11 @@ const ProtectedRoutes = () => {
 
         <Route
           element={
-            <PrivateRoute module="report" />
+            <PrivateRoute module="reports" />
           }
         >
           <Route
-            path="/report"
+            path="/reports"
             element={<ReportsAnalytics />}
           />
         </Route>
