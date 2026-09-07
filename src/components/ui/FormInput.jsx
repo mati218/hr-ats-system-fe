@@ -4,7 +4,8 @@ const FormInput = (props) => {
       <input
         type={props.type}
         placeholder={props.placeholder}
-        className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none"
+        min={props.min}
+        className="w-full rounded-lg border border-gray-300 px-2 py-2 focus:border-blue-500 focus:outline-none text-gray-600"
         {...props.register(props.name, props.rules)}
       />
 

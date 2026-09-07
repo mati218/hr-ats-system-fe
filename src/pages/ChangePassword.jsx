@@ -1,6 +1,8 @@
 import { useState } from "react";
-import FormInput from "../components/ui/FormInput";
+import { toast } from "sonner";
+import InputField from "../components/InputField";
 import Button from "../components/ui/Button";
+import { changePassword } from "../lib/api/authApi";
 
 function ChangePassword() {
   const [formData, setFormData] = useState({
@@ -9,20 +11,65 @@ function ChangePassword() {
     confirmPassword: "",
   });
 
+  const [submitting, setSubmitting] = useState(false);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  // =====================================================
+  // Phase 4 fix: this used to be a fully mock form —
+  // handleSubmit never called any API, it just showed an
+  // alert(). It now calls the real
+  // POST /auth/change-password endpoint (which already
+  // existed on the backend, unused) and uses toast for
+  // feedback like the rest of the app.
+  // =====================================================
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.newPassword !== formData.confirmPassword) {
-      alert("New password and confirm password must match");
+    if (!formData.currentPassword || !formData.newPassword) {
+      toast.error("Current and new password are required.");
       return;
     }
 
-    alert("Password changed successfully");
+    if (formData.newPassword !== formData.confirmPassword) {
+      toast.error("New password and confirm password must match.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const response = await changePassword({
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+      });
+
+      toast.success(
+        response?.data?.message || "Password changed successfully."
+      );
+
+      setFormData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      console.error(
+        "CHANGE PASSWORD ERROR:",
+        error?.response?.data || error
+      );
+
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to change password."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -63,9 +110,10 @@ function ChangePassword() {
           />
 
           <Button
-            text="Update Password"
+            text={submitting ? "Updating..." : "Update Password"}
             type="submit"
-            className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700"
+            disabled={submitting}
+            className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
           />
         </form>
       </div>

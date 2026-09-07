@@ -3,13 +3,21 @@ const Checkbox = ({
   name,
   register,
   errors,
+  disabled = false,
 }) => {
   return (
     <div className="flex justify-center">
-      <label className="flex items-center gap-2">
+      <label
+        className={`flex items-center gap-2 ${
+          disabled
+            ? "cursor-not-allowed opacity-50"
+            : "cursor-pointer"
+        }`}
+      >
         <input
           type="checkbox"
-          className="w-5 h-5 cursor-pointer accent-blue-600"
+          disabled={disabled}
+          className="h-5 w-5 accent-blue-600"
           {...register(name)}
         />
 
