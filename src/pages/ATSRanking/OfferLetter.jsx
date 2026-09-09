@@ -13,6 +13,7 @@ function OfferLetter({
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
@@ -20,6 +21,8 @@ function OfferLetter({
       joiningDate: "",
       salary: "385000",
       probation: "3 months",
+      workingType: "On-Site",
+      acknowledgeByDate: "",
       personalNote: "",
     },
   });
@@ -48,6 +51,13 @@ function OfferLetter({
     String(today.getMonth() + 1).padStart(2, "0"),
     String(today.getDate()).padStart(2, "0"),
   ].join("-");
+
+  // =====================================================
+  // WATCH JOINING DATE (so Acknowledge By Date can be
+  // validated against it)
+  // =====================================================
+
+  const joiningDateValue = watch("joiningDate");
 
   // =====================================================
   // SUBMIT OFFER
@@ -96,6 +106,31 @@ function OfferLetter({
       if (data.joiningDate < todayString) {
         toast.error(
           "Joining date cannot be in the past."
+        );
+        return;
+      }
+
+      // -----------------------------------------------
+      // ACKNOWLEDGE BY DATE VALIDATION
+      // -----------------------------------------------
+
+      if (!data.acknowledgeByDate) {
+        toast.error(
+          "Acknowledge by date is required."
+        );
+        return;
+      }
+
+      if (data.acknowledgeByDate < todayString) {
+        toast.error(
+          "Acknowledge by date cannot be in the past."
+        );
+        return;
+      }
+
+      if (data.acknowledgeByDate > data.joiningDate) {
+        toast.error(
+          "Acknowledge by date should be on or before the joining date."
         );
         return;
       }
@@ -219,7 +254,10 @@ function OfferLetter({
 
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                  Offer Template
+                  Offer Template{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
                 </label>
 
                 <select
@@ -304,7 +342,10 @@ function OfferLetter({
 
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                  Offered Salary (PKR)
+                  Offered Salary (PKR){" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
                 </label>
 
                 <input
@@ -331,7 +372,10 @@ function OfferLetter({
 
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                  Probation Period
+                  Probation Period{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
                 </label>
 
                 <select
@@ -361,6 +405,102 @@ function OfferLetter({
                 {errors.probation && (
                   <p className="mt-1 text-xs text-red-500">
                     {errors.probation.message}
+                  </p>
+                )}
+              </div>
+
+            </div>
+
+            {/* =================================================
+                WORKING TYPE + ACKNOWLEDGE BY DATE
+            ================================================= */}
+
+            <div className="grid grid-cols-2 gap-3">
+
+              {/* WORKING TYPE */}
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Working Type{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
+                </label>
+
+                <select
+                  {...register("workingType", {
+                    required:
+                      "Working type is required",
+                  })}
+                  disabled={
+                    isRejected ||
+                    isOfferSent
+                  }
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                >
+                  <option value="On-Site">
+                    On-Site
+                  </option>
+
+                  <option value="Remote">
+                    Remote
+                  </option>
+
+                  <option value="Hybrid">
+                    Hybrid
+                  </option>
+                </select>
+
+                {errors.workingType && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.workingType.message}
+                  </p>
+                )}
+              </div>
+
+              {/* ACKNOWLEDGE BY DATE */}
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Acknowledge By{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
+                </label>
+
+                <input
+                  type="date"
+                  min={todayString}
+                  max={joiningDateValue || undefined}
+                  {...register("acknowledgeByDate", {
+                    required:
+                      "Acknowledge by date is required",
+
+                    validate: (value) => {
+                      if (value < todayString) {
+                        return "This date cannot be in the past.";
+                      }
+
+                      if (
+                        joiningDateValue &&
+                        value > joiningDateValue
+                      ) {
+                        return "This should be on or before the joining date.";
+                      }
+
+                      return true;
+                    },
+                  })}
+                  disabled={
+                    isRejected ||
+                    isOfferSent
+                  }
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                />
+
+                {errors.acknowledgeByDate && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.acknowledgeByDate.message}
                   </p>
                 )}
               </div>
