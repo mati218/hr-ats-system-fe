@@ -45,6 +45,27 @@ export const applyNow = async (data) => {
     data.coverNote || ""
   );
 
+  formData.append(
+    "currentSalary",
+    data.currentSalary || ""
+  );
+  formData.append(
+    "expectedSalary",
+    data.expectedSalary || ""
+  );
+  formData.append(
+    "noticePeriod",
+    data.noticePeriod || "Immediate"
+  );
+  formData.append(
+    "currentCity",
+    data.currentCity || ""
+  );
+  formData.append(
+    "willingToRelocate",
+    data.willingToRelocate ? "true" : "false"
+  );
+
   if (data.resume instanceof File) {
     formData.append("resume", data.resume);
   } else {

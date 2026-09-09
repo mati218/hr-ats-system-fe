@@ -119,6 +119,27 @@ function formReducer(form, action) {
   }
 }
 
+function errorsReducer(errors, action) {
+  switch (action.type) {
+    case "reset":
+      return {
+        ...INITIAL_ERRORS,
+      };
+
+    case "set":
+      return action.value;
+
+    case "clear":
+      return {
+        ...errors,
+        [action.field]: "",
+      };
+
+    default:
+      return errors;
+  }
+}
+
 // =====================================================
 // COMPONENT
 // =====================================================
@@ -141,7 +162,8 @@ function ScheduleInterviewModal({
     INITIAL_FORM
   );
 
-  const [errors, setErrors] = useState(
+  const [errors, dispatchErrors] = useReducer(
+    errorsReducer,
     INITIAL_ERRORS
   );
 
@@ -204,9 +226,9 @@ function ScheduleInterviewModal({
   const activeCandidateId =
     typeof activeCandidate === "object"
       ? activeCandidate?._id ||
-        activeCandidate?.id ||
-        activeCandidate?.candidateId ||
-        ""
+      activeCandidate?.id ||
+      activeCandidate?.candidateId ||
+      ""
       : activeCandidate || "";
 
   // =====================================================
@@ -269,7 +291,7 @@ function ScheduleInterviewModal({
 
         toast.error(
           error?.response?.data?.message ||
-            "Failed to load candidates."
+          "Failed to load candidates."
         );
       } finally {
         setLoadingCandidates(false);
@@ -310,22 +332,27 @@ function ScheduleInterviewModal({
         const normalizedUsers =
           Array.isArray(users)
             ? users.map((user) => ({
-                ...user,
+              ...user,
 
-                id:
-                  user?.id ||
-                  user?._id,
+              id:
+                user?.id ||
+                user?._id,
 
-                _id:
-                  user?._id ||
-                  user?.id,
+              _id:
+                user?._id ||
+                user?.id,
 
-                name:
-                  user?.name ||
-                  user?.fullName ||
-                  user?.username ||
-                  "Unknown User",
-              }))
+              name:
+                user?.name ||
+                user?.fullName ||
+                user?.username ||
+                "Unknown User",
+
+              department:
+                user?.department ||
+                "No Department",
+
+            }))
             : [];
 
         setInterviewers(
@@ -341,7 +368,7 @@ function ScheduleInterviewModal({
 
         toast.error(
           error?.response?.data?.message ||
-            "Failed to load interviewers."
+          "Failed to load interviewers."
         );
       } finally {
         setLoadingInterviewers(false);
@@ -361,7 +388,9 @@ function ScheduleInterviewModal({
     }
 
     // Clear previous errors
-    setErrors(INITIAL_ERRORS);
+    dispatchErrors({
+      type: "reset",
+    });
 
     // ===================================================
     // RESCHEDULE
@@ -373,9 +402,9 @@ function ScheduleInterviewModal({
     ) {
       const interviewerId =
         typeof interview.interviewerId ===
-        "object"
+          "object"
           ? interview.interviewerId?._id ||
-            interview.interviewerId?.id
+          interview.interviewerId?.id
           : interview.interviewerId;
 
       const interviewCandidate =
@@ -383,9 +412,9 @@ function ScheduleInterviewModal({
 
       const candidateId =
         typeof interviewCandidate ===
-        "object"
+          "object"
           ? interviewCandidate?._id ||
-            interviewCandidate?.id
+          interviewCandidate?.id
           : interviewCandidate;
 
       dispatchForm({
@@ -413,8 +442,8 @@ function ScheduleInterviewModal({
           duration:
             interview.duration
               ? String(
-                  interview.duration
-                )
+                interview.duration
+              )
               : "",
 
           interviewerId:
@@ -471,10 +500,10 @@ function ScheduleInterviewModal({
     });
 
     if (value) {
-      setErrors((previous) => ({
-        ...previous,
-        [field]: "",
-      }));
+      dispatchErrors({
+        type: "clear",
+        field,
+      });
     }
   };
 
@@ -515,11 +544,14 @@ function ScheduleInterviewModal({
     /*
      * Clear location validation error.
      */
-    setErrors((previous) => ({
-      ...previous,
-      mode: "",
-      location: "",
-    }));
+    dispatchErrors({
+      type: "set",
+      value: {
+        ...errors,
+        mode: "",
+        location: "",
+      },
+    });
   };
 
   // =====================================================
@@ -647,7 +679,10 @@ function ScheduleInterviewModal({
       }
     }
 
-    setErrors(newErrors);
+    dispatchErrors({
+      type: "set",
+      value: newErrors,
+    });
 
     return !Object.values(
       newErrors
@@ -663,7 +698,7 @@ function ScheduleInterviewModal({
       (item) =>
         String(
           item?._id ||
-            item?.id
+          item?.id
         ) ===
         String(form.candidateId)
     ) ||
@@ -696,7 +731,7 @@ function ScheduleInterviewModal({
     if (
       isReschedule &&
       interview?.status ===
-        "Completed"
+      "Completed"
     ) {
       toast.error(
         "Completed interview cannot be rescheduled."
@@ -708,7 +743,7 @@ function ScheduleInterviewModal({
     if (
       isReschedule &&
       interview?.status ===
-        "Cancelled"
+      "Cancelled"
     ) {
       toast.error(
         "Cancelled interview cannot be rescheduled."
@@ -765,10 +800,10 @@ function ScheduleInterviewModal({
 
         ...(isReschedule
           ? {
-              interviewId:
-                interview?._id ||
-                interview?.id,
-            }
+            interviewId:
+              interview?._id ||
+              interview?.id,
+          }
           : {}),
       };
 
@@ -780,13 +815,13 @@ function ScheduleInterviewModal({
       console.error(
         `${mode.toUpperCase()} ERROR:`,
         error?.response?.data ||
-          error
+        error
       );
 
       toast.error(
         error?.response?.data
           ?.message ||
-          "Failed to save interview."
+        "Failed to save interview."
       );
     } finally {
       setSubmitting(false);
@@ -848,7 +883,7 @@ function ScheduleInterviewModal({
                 console.error(
                   "CANCEL INTERVIEW ERROR:",
                   error?.response?.data ||
-                    error
+                  error
                 );
               } finally {
                 setCancelling(false);
@@ -878,7 +913,7 @@ function ScheduleInterviewModal({
   const canCancel =
     isReschedule &&
     interview?.status ===
-      "Confirmed";
+      "Scheduled";
 
   // =====================================================
   // MODE LABEL
@@ -888,10 +923,10 @@ function ScheduleInterviewModal({
     form.mode === "Video Call"
       ? "Meeting Link"
       : form.mode === "Onsite"
-      ? "Office Location"
-      : form.mode === "Phone Call"
-      ? "Phone Number"
-      : "Meeting Link / Location";
+        ? "Office Location"
+        : form.mode === "Phone Call"
+          ? "Phone Number"
+          : "Meeting Link / Location";
 
   // =====================================================
   // MODE PLACEHOLDER
@@ -901,10 +936,10 @@ function ScheduleInterviewModal({
     form.mode === "Video Call"
       ? "Google Meet / Zoom meeting link"
       : form.mode === "Onsite"
-      ? "e.g. Meeting Room 2, Office Floor 1"
-      : form.mode === "Phone Call"
-      ? "e.g. 03001234567"
-      : "Meeting link or office location";
+        ? "e.g. Meeting Room 2, Office Floor 1"
+        : form.mode === "Phone Call"
+          ? "e.g. 03001234567"
+          : "Meeting link or office location";
 
   // =====================================================
   // UI
@@ -983,29 +1018,28 @@ function ScheduleInterviewModal({
                 loadingCandidates ||
                 !canSelectCandidate
               }
-              className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${
-                errors.candidateId
-                  ? "border-red-500 focus:border-red-500"
-                  : "border-slate-200 focus:border-blue-500"
-              }`}
+              className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${errors.candidateId
+                ? "border-red-500 focus:border-red-500"
+                : "border-slate-200 focus:border-blue-500"
+                }`}
             >
 
               <option value="">
                 {loadingCandidates
                   ? "Loading candidates..."
                   : candidates.length ===
-                      0 &&
+                    0 &&
                     canSelectCandidate
-                  ? "No eligible candidates found"
-                  : isDirectCandidate
-                  ? selectedCandidate?.name ||
-                    selectedCandidate?.fullName ||
-                    "Selected Candidate"
-                  : isReschedule
-                  ? selectedCandidate?.name ||
-                    selectedCandidate?.fullName ||
-                    "Selected Candidate"
-                  : "Select candidate"}
+                    ? "No eligible candidates found"
+                    : isDirectCandidate
+                      ? selectedCandidate?.name ||
+                      selectedCandidate?.fullName ||
+                      "Selected Candidate"
+                      : isReschedule
+                        ? selectedCandidate?.name ||
+                        selectedCandidate?.fullName ||
+                        "Selected Candidate"
+                        : "Select candidate"}
               </option>
 
               {candidates.map(
@@ -1083,11 +1117,10 @@ function ScheduleInterviewModal({
                   submitting ||
                   isReschedule
                 }
-                className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${
-                  errors.round
-                    ? "border-red-500"
-                    : "border-slate-200 focus:border-blue-500"
-                }`}
+                className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${errors.round
+                  ? "border-red-500"
+                  : "border-slate-200 focus:border-blue-500"
+                  }`}
               >
 
                 <option value="Technical">
@@ -1129,11 +1162,10 @@ function ScheduleInterviewModal({
                   submitting ||
                   isReschedule
                 }
-                className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${
-                  errors.mode
-                    ? "border-red-500"
-                    : "border-slate-200 focus:border-blue-500"
-                }`}
+                className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${errors.mode
+                  ? "border-red-500"
+                  : "border-slate-200 focus:border-blue-500"
+                  }`}
               >
 
                 <option value="Video Call">
@@ -1194,11 +1226,10 @@ function ScheduleInterviewModal({
                 disabled={
                   submitting
                 }
-                className={`w-full rounded-lg border px-3 py-2 text-xs outline-none disabled:bg-slate-100 ${
-                  errors.date
-                    ? "border-red-500 focus:border-red-500"
-                    : "border-slate-200 focus:border-blue-500"
-                }`}
+                className={`w-full rounded-lg border px-3 py-2 text-xs outline-none disabled:bg-slate-100 ${errors.date
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-slate-200 focus:border-blue-500"
+                  }`}
               />
 
               {errors.date && (
@@ -1234,11 +1265,10 @@ function ScheduleInterviewModal({
                 disabled={
                   submitting
                 }
-                className={`w-full rounded-lg border px-3 py-2 text-xs outline-none disabled:bg-slate-100 ${
-                  errors.time
-                    ? "border-red-500 focus:border-red-500"
-                    : "border-slate-200 focus:border-blue-500"
-                }`}
+                className={`w-full rounded-lg border px-3 py-2 text-xs outline-none disabled:bg-slate-100 ${errors.time
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-slate-200 focus:border-blue-500"
+                  }`}
               />
 
               {errors.time && (
@@ -1282,11 +1312,10 @@ function ScheduleInterviewModal({
                   submitting ||
                   isReschedule
                 }
-                className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${
-                  errors.duration
-                    ? "border-red-500"
-                    : "border-slate-200 focus:border-blue-500"
-                }`}
+                className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${errors.duration
+                  ? "border-red-500"
+                  : "border-slate-200 focus:border-blue-500"
+                  }`}
               >
 
                 <option value="">
@@ -1345,18 +1374,17 @@ function ScheduleInterviewModal({
                   submitting ||
                   isReschedule
                 }
-                className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${
-                  errors.interviewerId
-                    ? "border-red-500"
-                    : "border-slate-200 focus:border-blue-500"
-                }`}
+                className={`w-full rounded-lg border bg-white px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${errors.interviewerId
+                  ? "border-red-500"
+                  : "border-slate-200 focus:border-blue-500"
+                  }`}
               >
 
                 <option value="">
                   {loadingInterviewers
                     ? "Loading interviewers..."
                     : interviewers.length ===
-                        0
+                      0
                       ? "No interviewers found"
                       : "Select interviewer"}
                 </option>
@@ -1372,9 +1400,7 @@ function ScheduleInterviewModal({
                         key={id}
                         value={id}
                       >
-                        {
-                          interviewer.name
-                        }
+                        {interviewer.name} — {interviewer.department}
                       </option>
                     );
                   }
@@ -1450,15 +1476,14 @@ function ScheduleInterviewModal({
               }
               inputMode={
                 form.mode ===
-                "Phone Call"
+                  "Phone Call"
                   ? "numeric"
                   : undefined
               }
-              className={`w-full rounded-lg border px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${
-                errors.location
-                  ? "border-red-500 focus:border-red-500"
-                  : "border-slate-200 focus:border-blue-500"
-              }`}
+              className={`w-full rounded-lg border px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-500 ${errors.location
+                ? "border-red-500 focus:border-red-500"
+                : "border-slate-200 focus:border-blue-500"
+                }`}
             />
 
             {errors.location && (
@@ -1576,8 +1601,8 @@ function ScheduleInterviewModal({
               {submitting
                 ? "Saving..."
                 : isReschedule
-                ? "Reschedule Interview"
-                : "Schedule Interview"}
+                  ? "Reschedule Interview"
+                  : "Schedule Interview"}
             </button>
 
           </div>
