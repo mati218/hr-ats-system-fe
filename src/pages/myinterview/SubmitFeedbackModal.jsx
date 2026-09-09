@@ -108,30 +108,36 @@ function SubmitFeedbackModal({
       return;
     }
 
-    const feedback =
-      interview?.feedback;
+    const timeoutId = window.setTimeout(() => {
+      const feedback =
+        interview?.feedback;
 
-    setOverallRating(
-      feedback?.overallRating
-        ? Number(feedback.overallRating)
-        : ""
-    );
+      setOverallRating(
+        feedback?.overallRating
+          ? Number(feedback.overallRating)
+          : ""
+      );
 
-    setRecommendation(
-      feedback?.recommendation || ""
-    );
+      setRecommendation(
+        feedback?.recommendation || ""
+      );
 
-    setTechnicalStrengths(
-      feedback?.technicalStrengths || ""
-    );
+      setTechnicalStrengths(
+        feedback?.technicalStrengths || ""
+      );
 
-    setConcerns(
-      feedback?.concerns || ""
-    );
+      setConcerns(
+        feedback?.concerns || ""
+      );
 
-    // Clear validation messages
-    setRatingError("");
-    setRecommendationError("");
+      // Clear validation messages
+      setRatingError("");
+      setRecommendationError("");
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [
     isOpen,
     interview,
@@ -625,4 +631,3 @@ function SubmitFeedbackModal({
 }
 
 export default SubmitFeedbackModal;
-

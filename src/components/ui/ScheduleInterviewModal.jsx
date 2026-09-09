@@ -119,6 +119,27 @@ function formReducer(form, action) {
   }
 }
 
+function errorsReducer(errors, action) {
+  switch (action.type) {
+    case "reset":
+      return {
+        ...INITIAL_ERRORS,
+      };
+
+    case "set":
+      return action.value;
+
+    case "clear":
+      return {
+        ...errors,
+        [action.field]: "",
+      };
+
+    default:
+      return errors;
+  }
+}
+
 // =====================================================
 // COMPONENT
 // =====================================================
@@ -141,7 +162,8 @@ function ScheduleInterviewModal({
     INITIAL_FORM
   );
 
-  const [errors, setErrors] = useState(
+  const [errors, dispatchErrors] = useReducer(
+    errorsReducer,
     INITIAL_ERRORS
   );
 
@@ -366,7 +388,9 @@ function ScheduleInterviewModal({
     }
 
     // Clear previous errors
-    setErrors(INITIAL_ERRORS);
+    dispatchErrors({
+      type: "reset",
+    });
 
     // ===================================================
     // RESCHEDULE
@@ -476,10 +500,10 @@ function ScheduleInterviewModal({
     });
 
     if (value) {
-      setErrors((previous) => ({
-        ...previous,
-        [field]: "",
-      }));
+      dispatchErrors({
+        type: "clear",
+        field,
+      });
     }
   };
 
@@ -520,11 +544,14 @@ function ScheduleInterviewModal({
     /*
      * Clear location validation error.
      */
-    setErrors((previous) => ({
-      ...previous,
-      mode: "",
-      location: "",
-    }));
+    dispatchErrors({
+      type: "set",
+      value: {
+        ...errors,
+        mode: "",
+        location: "",
+      },
+    });
   };
 
   // =====================================================
@@ -652,7 +679,10 @@ function ScheduleInterviewModal({
       }
     }
 
-    setErrors(newErrors);
+    dispatchErrors({
+      type: "set",
+      value: newErrors,
+    });
 
     return !Object.values(
       newErrors
@@ -883,7 +913,7 @@ function ScheduleInterviewModal({
   const canCancel =
     isReschedule &&
     interview?.status ===
-    "Confirmed";
+      "Scheduled";
 
   // =====================================================
   // MODE LABEL

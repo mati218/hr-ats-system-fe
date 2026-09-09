@@ -7,16 +7,16 @@ import CandidateProfile from "../../components/ui/CandidateProfile";
 import ScheduleInterviewModal from "../../components/ui/ScheduleInterviewModal";
 
 import { getATSRanking } from "../../lib/api/atsApi";
-import { getRequisitions } from "../../lib/api/requisitionApi";
 
 import {
   fetchAllCandidates,
-  rejectCandidate,
   getCandidate,
   scheduleInterview,
   moveCandidateStage,
   sendOffer,
 } from "../../lib/api/candidateApi";
+
+import { getRequisitions } from "../../lib/api/requisitionApi";
 
 function ATSRanking() {
   const [candidates, setCandidates] = useState([]);
@@ -31,11 +31,8 @@ function ATSRanking() {
   const [scheduleCandidate, setScheduleCandidate] = useState(null);
 
   const [loading, setLoading] = useState(false);
+  const [requisitionLoading, setRequisitionLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // =====================================================
-  // CHECK WHETHER INTERVIEW IS PASSED
-  // =====================================================
 
   const isInterviewPassed = (candidate) => {
     if (!candidate) return false;
@@ -81,39 +78,40 @@ function ATSRanking() {
     });
   };
 
-  // =====================================================
-  // GET REQUISITIONS
-  // =====================================================
-
   useEffect(() => {
-    const fetchRequisitions = async () => {
+    const fetchRequisitionList = async () => {
       try {
-        const response = await getRequisitions("Open");
+        setRequisitionLoading(true);
 
-        if (response.data.success) {
-          const jobs = response.data.data || [];
+        const response = await getRequisitions();
 
-          setRequisitions(jobs);
-          setSelectedRequisition("");
-        }
+        const data =
+          response?.data?.data ||
+          response?.data ||
+          [];
+
+        setRequisitions(
+          Array.isArray(data) ? data : []
+        );
       } catch (error) {
         console.error(
           "GET REQUISITIONS ERROR:",
           error?.response?.data || error
         );
 
-        setError("Failed to load job requisitions");
+        setRequisitions([]);
 
-        toast.error("Failed to load job requisitions.");
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to load jobs."
+        );
+      } finally {
+        setRequisitionLoading(false);
       }
     };
 
-    fetchRequisitions();
+    fetchRequisitionList();
   }, []);
-
-  // =====================================================
-  // GET CANDIDATES
-  // =====================================================
 
   useEffect(() => {
     const fetchCandidates = async () => {
@@ -121,30 +119,45 @@ function ATSRanking() {
         setLoading(true);
         setError("");
 
-        if (!selectedRequisition) {
-          const response = await fetchAllCandidates();
+        const response = await getATSRanking(
+          selectedRequisition || undefined
+        );
 
-          const data = response?.data?.data || [];
-
-          setCandidates(data);
-
-          return;
-        }
-
-        const response = await getATSRanking(selectedRequisition);
-
-        if (response.success) {
+        if (response?.success) {
           setCandidates(response.data || []);
         } else {
-          setCandidates([]);
+          const fallbackResponse =
+            await fetchAllCandidates();
 
-          const message =
-            response.message ||
-            "Failed to load ATS ranking";
+          const data =
+            fallbackResponse?.data?.data || [];
 
-          setError(message);
+          let filteredData = data;
 
-          toast.error(message);
+          if (selectedRequisition) {
+            filteredData = data.filter((candidate) => {
+              const candidateRequisitionId =
+                candidate?.requisitionId?._id ||
+                candidate?.requisitionId ||
+                candidate?.jobId?._id ||
+                candidate?.jobId;
+
+              return (
+                String(candidateRequisitionId) ===
+                String(selectedRequisition)
+              );
+            });
+          }
+
+          setCandidates(filteredData);
+
+          if (!filteredData.length) {
+            const message =
+              response?.message ||
+              "No candidates found.";
+
+            setError(message);
+          }
         }
       } catch (error) {
         console.error(
@@ -152,15 +165,56 @@ function ATSRanking() {
           error?.response?.data || error
         );
 
-        setCandidates([]);
+        try {
+          const fallbackResponse =
+            await fetchAllCandidates();
 
-        const message =
-          error?.response?.data?.message ||
-          "Failed to load candidates";
+          const data =
+            fallbackResponse?.data?.data || [];
 
-        setError(message);
+          let filteredData = data;
 
-        toast.error(message);
+          if (selectedRequisition) {
+            filteredData = data.filter((candidate) => {
+              const candidateRequisitionId =
+                candidate?.requisitionId?._id ||
+                candidate?.requisitionId ||
+                candidate?.jobId?._id ||
+                candidate?.jobId;
+
+              return (
+                String(candidateRequisitionId) ===
+                String(selectedRequisition)
+              );
+            });
+          }
+
+          setCandidates(filteredData);
+
+          if (!filteredData.length) {
+            const message =
+              error?.response?.data?.message ||
+              "No candidates found.";
+
+            setError(message);
+          }
+        } catch (fallbackError) {
+          console.error(
+            "GET CANDIDATES ERROR:",
+            fallbackError?.response?.data ||
+              fallbackError
+          );
+
+          setCandidates([]);
+
+          const message =
+            error?.response?.data?.message ||
+            "Failed to load candidates";
+
+          setError(message);
+
+          toast.error(message);
+        }
       } finally {
         setLoading(false);
       }
@@ -169,9 +223,9 @@ function ATSRanking() {
     fetchCandidates();
   }, [selectedRequisition]);
 
-  // =====================================================
-  // VIEW CANDIDATE
-  // =====================================================
+  const handleRequisitionChange = (event) => {
+    setSelectedRequisition(event.target.value);
+  };
 
   const handleViewCandidate = async (candidate) => {
     const candidateId =
@@ -184,7 +238,8 @@ function ATSRanking() {
     }
 
     try {
-      const response = await getCandidate(candidateId);
+      const response =
+        await getCandidate(candidateId);
 
       const fullCandidate =
         response?.data?.data;
@@ -209,96 +264,90 @@ function ATSRanking() {
     }
   };
 
-  // =====================================================
-  // REJECT CANDIDATE
-  // =====================================================
+  const handleRejectCandidate = (
+    updatedCandidate
+  ) => {
+    try {
+      const candidateId =
+        updatedCandidate?.candidateId ||
+        updatedCandidate?._id ||
+        updatedCandidate?.id;
 
-  const handleRejectCandidate = (updatedCandidate) => {
-  try {
-    const candidateId =
-      updatedCandidate?.candidateId ||
-      updatedCandidate?._id ||
-      updatedCandidate?.id;
+      if (!candidateId) {
+        toast.error("Candidate ID not found.");
+        return;
+      }
 
-    if (!candidateId) {
-      toast.error("Candidate ID not found.");
-      return;
-    }
+      setCandidates((prev) =>
+        prev.map((item) => {
+          const itemId =
+            item?.candidateId ||
+            item?._id ||
+            item?.id;
 
-    // Immediately update the candidate in local state
-    setCandidates((prev) =>
-      prev.map((item) => {
-        const itemId =
-          item?.candidateId ||
-          item?._id ||
-          item?.id;
+          if (
+            String(itemId) ===
+            String(candidateId)
+          ) {
+            return {
+              ...item,
+              stage: "Rejected",
+              status: "Rejected",
+            };
+          }
+
+          return item;
+        })
+      );
+
+      setSelectedCandidate((prev) => {
+        if (!prev) {
+          return prev;
+        }
+
+        const prevId =
+          prev?.candidateId ||
+          prev?._id ||
+          prev?.id;
 
         if (
-          String(itemId) ===
+          String(prevId) ===
           String(candidateId)
         ) {
           return {
-            ...item,
+            ...prev,
             stage: "Rejected",
             status: "Rejected",
           };
         }
 
-        return item;
-      })
-    );
-
-    // Update selected candidate as well
-    setSelectedCandidate((prev) => {
-      if (!prev) {
         return prev;
-      }
+      });
 
-      const prevId =
-        prev?.candidateId ||
-        prev?._id ||
-        prev?.id;
+      setOfferCandidate(null);
+      setOpenModal(false);
+      setScheduleModalOpen(false);
+      setScheduleCandidate(null);
 
-      if (
-        String(prevId) ===
-        String(candidateId)
-      ) {
-        return {
-          ...prev,
-          stage: "Rejected",
-          status: "Rejected",
-        };
-      }
+      toast.success(
+        "Candidate rejected successfully."
+      );
+    } catch (error) {
+      console.error(
+        "REJECT CANDIDATE ERROR:",
+        error?.response?.data || error
+      );
 
-      return prev;
-    });
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to update candidate."
+      );
+    }
+  };
 
-    setOfferCandidate(null);
-    setOpenModal(false);
-    setScheduleModalOpen(false);
-    setScheduleCandidate(null);
-
-    toast.success(
-      "Candidate rejected successfully."
-    );
-  } catch (error) {
-    console.error(
-      "REJECT CANDIDATE ERROR:",
-      error?.response?.data || error
-    );
-
-    toast.error(
-      error?.response?.data?.message ||
-        "Failed to update candidate."
-    );
-  }
-};
-
-  // =====================================================
-  // SCHEDULE INTERVIEW
-  // =====================================================
-
-  const handleScheduleInterview = (candidate) => {
+  const handleScheduleInterview = (
+    candidate
+  ) => {
     if (!candidate) {
       toast.error("Candidate not found.");
       return;
@@ -342,10 +391,6 @@ function ATSRanking() {
     setSelectedCandidate(null);
     setScheduleModalOpen(true);
   };
-
-  // =====================================================
-  // SUBMIT INTERVIEW
-  // =====================================================
 
   const handleSubmitInterview = async (
     candidate,
@@ -473,11 +518,9 @@ function ATSRanking() {
     }
   };
 
-  // =====================================================
-  // OPEN OFFER MODAL
-  // =====================================================
-
-  const handleOpenOffer = async (candidate) => {
+  const handleOpenOffer = async (
+    candidate
+  ) => {
     if (!candidate) {
       toast.error("Candidate not found.");
       return;
@@ -492,10 +535,6 @@ function ATSRanking() {
       return;
     }
 
-    // -----------------------------------------------
-    // CHECK OFFER ALREADY SENT
-    // -----------------------------------------------
-
     const offerAlreadySent =
       candidate?.stage === "Offer Sent" ||
       candidate?.offer?.status === "Sent";
@@ -509,10 +548,6 @@ function ATSRanking() {
     }
 
     try {
-      // -----------------------------------------------
-      // GET LATEST CANDIDATE DATA
-      // -----------------------------------------------
-
       const response =
         await getCandidate(candidateId);
 
@@ -527,15 +562,6 @@ function ATSRanking() {
         return;
       }
 
-      console.log(
-        "LATEST CANDIDATE:",
-        latestCandidate
-      );
-
-      // -----------------------------------------------
-      // CHECK INTERVIEW PASS
-      // -----------------------------------------------
-
       const interviewPassed =
         isInterviewPassed(
           latestCandidate
@@ -548,10 +574,6 @@ function ATSRanking() {
 
         return;
       }
-
-      // -----------------------------------------------
-      // OPEN OFFER MODAL
-      // -----------------------------------------------
 
       setSelectedCandidate(null);
 
@@ -580,10 +602,6 @@ function ATSRanking() {
       );
     }
   };
-
-  // =====================================================
-  // SEND OFFER
-  // =====================================================
 
   const handleSendOffer = async (
     candidate,
@@ -618,10 +636,6 @@ function ATSRanking() {
         return;
       }
 
-      // -----------------------------------------------
-      // GET LATEST CANDIDATE
-      // -----------------------------------------------
-
       const candidateResponse =
         await getCandidate(candidateId);
 
@@ -636,10 +650,6 @@ function ATSRanking() {
         return;
       }
 
-      // -----------------------------------------------
-      // OFFER ALREADY SENT
-      // -----------------------------------------------
-
       const offerAlreadySent =
         latestCandidate?.stage === "Offer Sent" ||
         latestCandidate?.offer?.status === "Sent";
@@ -651,10 +661,6 @@ function ATSRanking() {
 
         return;
       }
-
-      // -----------------------------------------------
-      // INTERVIEW PASS CHECK
-      // -----------------------------------------------
 
       const interviewPassed =
         isInterviewPassed(
@@ -669,28 +675,16 @@ function ATSRanking() {
         return;
       }
 
-      // -----------------------------------------------
-      // SEND OFFER API
-      // -----------------------------------------------
-
       const response =
         await sendOffer(
           candidateId,
           offerData
         );
 
-      // -----------------------------------------------
-      // MOVE CANDIDATE TO OFFER SENT
-      // -----------------------------------------------
-
       await moveCandidateStage(
         candidateId,
         "Offer Sent"
       );
-
-      // -----------------------------------------------
-      // UPDATE UI
-      // -----------------------------------------------
 
       setCandidates((prev) =>
         prev.map((item) => {
@@ -743,68 +737,61 @@ function ATSRanking() {
     }
   };
 
-  // =====================================================
-  // UI
-  // =====================================================
-
   return (
     <div className="min-h-screen bg-[#f5f6fa] px-6 py-7 sm:px-8">
 
-      {/* HEADER */}
-
       <div className="mb-5 flex items-start justify-between gap-5 text-left">
-
         <div>
           <h1 className="text-[22px] font-medium leading-tight text-slate-900">
             ATS Ranking
           </h1>
 
           <p className="mt-1 text-sm text-slate-500">
-            Candidates auto-scored against role requirements
+            Candidates ranked based on CV ATS-friendliness
           </p>
         </div>
 
-        {/* JOB SELECT */}
-
         <select
           value={selectedRequisition}
-          onChange={(e) => {
-            setSelectedRequisition(
-              e.target.value
-            );
-
-            setSelectedCandidate(null);
-            setOfferCandidate(null);
-            setOpenModal(false);
-            setScheduleModalOpen(false);
-            setScheduleCandidate(null);
-          }}
-          className="h-9 min-w-42.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          onChange={handleRequisitionChange}
+          disabled={requisitionLoading}
+          className="w-50 rounded-lg font-bold border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500"
         >
           <option value="">
-            Select Job
+            {requisitionLoading
+              ? "Loading jobs..."
+              : "Show All"}
           </option>
 
-          {requisitions.map(
-            (requisition) => (
+          {requisitions.map((requisition) => {
+            const requisitionId =
+              requisition?._id ||
+              requisition?.id;
+
+            const requisitionTitle =
+              requisition?.title ||
+              requisition?.jobTitle ||
+              requisition?.position ||
+              requisition?.role ||
+              "Untitled Job";
+
+            return (
               <option
-                key={requisition._id}
-                value={requisition._id}
+                key={requisitionId}
+                value={requisitionId}
               >
-                {requisition.role}
+                {requisitionTitle}
               </option>
-            )
-          )}
+            );
+          })}
         </select>
       </div>
-
-      {/* CANDIDATES */}
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
 
         {loading && (
           <div className="px-6 py-8 text-center text-sm text-slate-500">
-            Loading candidates...
+            Calculating ATS scores...
           </div>
         )}
 
@@ -827,7 +814,6 @@ function ATSRanking() {
           candidates.length > 0 &&
           candidates.map(
             (candidate, index) => {
-
               const offerAlreadySent =
                 candidate?.stage === "Offer Sent" ||
                 candidate?.offer?.status === "Sent";
@@ -836,6 +822,11 @@ function ATSRanking() {
                 isInterviewPassed(
                   candidate
                 );
+
+              const candidateExperience =
+                candidate?.candidateExperience ??
+                candidate?.experience ??
+                0;
 
               return (
                 <CandidateCard
@@ -861,9 +852,9 @@ function ATSRanking() {
                       candidate?.score || 0,
 
                     color:
-                      candidate?.score >= 90
+                      candidate?.score >= 75
                         ? "green"
-                        : candidate?.score >= 75
+                        : candidate?.score >= 50
                         ? "yellow"
                         : "red",
 
@@ -871,14 +862,15 @@ function ATSRanking() {
                       candidate?.name,
 
                     experience:
-                      candidate?.experienceMatch
-                        ? "Experience matches"
-                        : "Experience does not match",
+                      candidateExperience
+                        ? `${candidateExperience} years experience`
+                        : "Experience information not detected",
 
                     role:
-                      candidate?.role,
+                      candidate?.role || "",
 
                     skills:
+                      candidate?.detectedSkills ||
                       candidate?.matchedSkills ||
                       [],
 
@@ -893,7 +885,6 @@ function ATSRanking() {
                     interviewPassed,
                   }}
 
-                  // VIEW CANDIDATE
                   onViewResume={() => {
                     setOfferCandidate(null);
                     setOpenModal(false);
@@ -903,14 +894,12 @@ function ATSRanking() {
                     );
                   }}
 
-                  // MOVE TO OFFER
                   onMoveOffer={() => {
                     handleOpenOffer(
                       candidate
                     );
                   }}
 
-                  // REJECT
                   onReject={() => {
                     handleRejectCandidate(
                       candidate
@@ -921,8 +910,6 @@ function ATSRanking() {
             }
           )}
       </div>
-
-      {/* OFFER LETTER MODAL */}
 
       <OfferLetterModal
         isOpen={openModal}
@@ -935,8 +922,6 @@ function ATSRanking() {
           handleSendOffer
         }
       />
-
-      {/* CANDIDATE PROFILE */}
 
       <CandidateProfile
         isOpen={
@@ -951,15 +936,13 @@ function ATSRanking() {
         onScheduleInterview={
           handleScheduleInterview
         }
-          onReject={
-            handleRejectCandidate}
-
+        onReject={
+          handleRejectCandidate
+        }
         onOpenOfferModal={
           handleOpenOffer
         }
       />
-
-      {/* SCHEDULE INTERVIEW */}
 
       <ScheduleInterviewModal
         isOpen={
@@ -976,7 +959,6 @@ function ATSRanking() {
           handleSubmitInterview
         }
       />
-
     </div>
   );
 }

@@ -1,10 +1,11 @@
 import api from "./axios";
 
-// Get ATS ranking for a specific requisition
-export const getATSRanking = async (requisitionId) => {
-  const response = await api.get(
-    `/ats/ranking/${requisitionId}`
-  );
+export const getATSRanking = async (requisitionId = "") => {
+  const url = requisitionId
+    ? `/ats/ranking/${requisitionId}`
+    : `/ats/ranking`;
+
+  const response = await api.get(url);
 
   return response.data;
 };
