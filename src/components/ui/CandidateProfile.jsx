@@ -888,6 +888,75 @@ useEffect(() => {
           </div>
 
           {/* =================================================
+              APPLICATION DETAILS
+          ================================================= */}
+
+          <div className="mt-6 px-6">
+
+            <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
+              Application Details
+            </h4>
+
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Current Salary (PKR)
+                </label>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600">
+                  {candidate.currentSalary != null
+                    ? candidate.currentSalary
+                    : "—"}
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Expected Salary (PKR)
+                </label>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600">
+                  {candidate.expectedSalary != null
+                    ? candidate.expectedSalary
+                    : "—"}
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Notice Period
+                </label>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600">
+                  {candidate.noticePeriod || "—"}
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Current Resident City
+                </label>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600">
+                  {candidate.currentCity || "—"}
+                </div>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Willing to Relocate / Onsite Role
+                </label>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600">
+                  {candidate.willingToRelocate === true
+                    ? "Yes"
+                    : candidate.willingToRelocate === false
+                    ? "No"
+                    : "—"}
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* =================================================
               SKILLS
           ================================================= */}
 

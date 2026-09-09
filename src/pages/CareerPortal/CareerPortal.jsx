@@ -87,6 +87,11 @@ const handleApplySubmit = async (form) => {
       experience: form.experience,
       coverNote: form.coverNote,
       resume: form.resume,
+      currentSalary: form.currentSalary,
+      expectedSalary: form.expectedSalary,
+      noticePeriod: form.noticePeriod,
+      currentCity: form.currentCity,
+      willingToRelocate: form.willingToRelocate,
     });
 
     console.log("APPLICATION RESPONSE:", response?.data);
