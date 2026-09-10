@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -13,6 +14,7 @@ function OfferLetter({
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
@@ -25,6 +27,13 @@ function OfferLetter({
       personalNote: "",
     },
   });
+
+  // Extra guard against double submission — isSubmitting
+  // from react-hook-form updates on the next render, so a
+  // very fast double-click can slip through before the
+  // button actually becomes disabled. This ref blocks that
+  // instantly, and also stops a second toast from firing.
+  const isSendingRef = useRef(false);
 
   if (!isOpen) return null;
 
@@ -52,10 +61,23 @@ function OfferLetter({
   ].join("-");
 
   // =====================================================
+  // WATCH JOINING DATE (so Acknowledge By Date can be
+  // validated against it)
+  // =====================================================
+
+  const joiningDateValue = watch("joiningDate");
+
+  // =====================================================
   // SUBMIT OFFER
   // =====================================================
 
   const onSubmit = async (data) => {
+    // Block instantly if a send is already in flight —
+    // this catches double-clicks faster than React state.
+    if (isSendingRef.current) {
+      return;
+    }
+
     try {
       // -----------------------------------------------
       // CANDIDATE CHECK
@@ -118,13 +140,24 @@ function OfferLetter({
       }
 
       // -----------------------------------------------
-      // ACKNOWLEDGE DATE VALIDATION
+      // ACKNOWLEDGE BY DATE VALIDATION
       // -----------------------------------------------
 
-      if (
-        data.acknowledgeByDate >
-        data.joiningDate
-      ) {
+      if (!data.acknowledgeByDate) {
+        toast.error(
+          "Acknowledge by date is required."
+        );
+        return;
+      }
+
+      if (data.acknowledgeByDate < todayString) {
+        toast.error(
+          "Acknowledge by date cannot be in the past."
+        );
+        return;
+      }
+
+      if (data.acknowledgeByDate > data.joiningDate) {
         toast.error(
           "Acknowledge by date should be on or before the joining date."
         );
@@ -136,6 +169,8 @@ function OfferLetter({
       // -----------------------------------------------
 
       if (onSendOffer) {
+        isSendingRef.current = true;
+
         await onSendOffer(candidate, {
           ...data,
 
@@ -156,6 +191,8 @@ function OfferLetter({
           error?.message ||
           "Failed to send offer. Please try again."
       );
+    } finally {
+      isSendingRef.current = false;
     }
   };
 
@@ -169,9 +206,11 @@ function OfferLetter({
   const candidateRole =
     candidate?.role || "Selected Candidate";
 
-  // =====================================================
-  // UI
-  // =====================================================
+  const isSendDisabled =
+    isRejected ||
+    isOfferSent ||
+    isSubmitting ||
+    isSendingRef.current;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -191,7 +230,8 @@ function OfferLetter({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md text-slate-400 transition hover:text-slate-700"
+            disabled={isSubmitting}
+            className="rounded-md text-slate-400 transition hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <X className="h-5 w-5" />
           </button>
@@ -220,6 +260,17 @@ function OfferLetter({
         )}
 
         {/* =================================================
+            SENDING MESSAGE
+        ================================================= */}
+
+        {isSubmitting && (
+          <div className="mx-6 mt-4 rounded-lg bg-blue-50 px-3 py-2.5 text-xs font-semibold text-blue-600">
+            Generating and sending the offer letter — this can
+            take a few seconds. Please don't close this window.
+          </div>
+        )}
+
+        {/* =================================================
             FORM
         ================================================= */}
 
@@ -233,6 +284,8 @@ function OfferLetter({
             }
           )}
         >
+
+          <fieldset disabled={isSubmitting}>
 
           <div className="space-y-4 p-6">
 
@@ -261,9 +314,9 @@ function OfferLetter({
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
                   Offer Template{" "}
-                  <span className="ml-1 text-red-500">
-                    *
-                  </span>
+            <span className="text-red-500 ml-1">
+              *
+            </span>
                 </label>
 
                 <select
@@ -349,9 +402,9 @@ function OfferLetter({
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
                   Offered Salary (PKR){" "}
-                  <span className="ml-1 text-red-500">
-                    *
-                  </span>
+            <span className="text-red-500 ml-1">
+              *
+            </span>
                 </label>
 
                 <input
@@ -389,9 +442,9 @@ function OfferLetter({
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
                   Probation Period{" "}
-                  <span className="ml-1 text-red-500">
-                    *
-                  </span>
+            <span className="text-red-500 ml-1">
+              *
+            </span>
                 </label>
 
                 <select
@@ -428,7 +481,7 @@ function OfferLetter({
             </div>
 
             {/* =================================================
-                WORKING TYPE + ACKNOWLEDGE DATE
+                WORKING TYPE + ACKNOWLEDGE BY DATE
             ================================================= */}
 
             <div className="grid grid-cols-2 gap-3">
@@ -438,9 +491,9 @@ function OfferLetter({
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
                   Working Type{" "}
-                  <span className="ml-1 text-red-500">
-                    *
-                  </span>
+            <span className="text-red-500 ml-1">
+              *
+            </span>
                 </label>
 
                 <select
@@ -452,7 +505,7 @@ function OfferLetter({
                     isRejected ||
                     isOfferSent
                   }
-                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
                 >
                   <option value="On-Site">
                     On-Site
@@ -482,28 +535,35 @@ function OfferLetter({
                   <span className="ml-1 text-red-500">
                     *
                   </span>
+                  Acknowledge By{" "}
+            <span className="text-red-500 ml-1">
+              *
+            </span>
                 </label>
 
                 <input
                   type="date"
                   min={todayString}
-                  {...register(
-                    "acknowledgeByDate",
-                    {
-                      required:
-                        "Acknowledge by date is required",
+                  max={joiningDateValue || undefined}
+                  {...register("acknowledgeByDate", {
+                    required:
+                      "Acknowledge by date is required",
 
-                      validate: (value) => {
-                        if (
-                          value < todayString
-                        ) {
-                          return "Acknowledge by date cannot be in the past.";
-                        }
+                    validate: (value) => {
+                      if (value < todayString) {
+                        return "This date cannot be in the past.";
+                      }
 
-                        return true;
-                      },
-                    }
-                  )}
+                      if (
+                        joiningDateValue &&
+                        value > joiningDateValue
+                      ) {
+                        return "This should be on or before the joining date.";
+                      }
+
+                      return true;
+                    },
+                  })}
                   disabled={
                     isRejected ||
                     isOfferSent
@@ -513,11 +573,7 @@ function OfferLetter({
 
                 {errors.acknowledgeByDate && (
                   <p className="mt-1 text-xs text-red-500">
-                    {
-                      errors
-                        .acknowledgeByDate
-                        .message
-                    }
+                    {errors.acknowledgeByDate.message}
                   </p>
                 )}
               </div>
@@ -547,6 +603,8 @@ function OfferLetter({
 
           </div>
 
+          </fieldset>
+
           {/* =================================================
               BUTTONS
           ================================================= */}
@@ -570,11 +628,7 @@ function OfferLetter({
                   : "Send Offer"
               }
               type="submit"
-              disabled={
-                isRejected ||
-                isOfferSent ||
-                isSubmitting
-              }
+              disabled={isSendDisabled}
             />
 
           </div>
