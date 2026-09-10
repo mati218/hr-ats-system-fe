@@ -34,6 +34,9 @@ function ATSRanking() {
   const [requisitionLoading, setRequisitionLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // ==========================================
+  // CHECK INTERVIEW PASSED
+  // ==========================================
   const isInterviewPassed = (candidate) => {
     if (!candidate) return false;
 
@@ -58,6 +61,7 @@ function ATSRanking() {
       candidate?.interviewFeedback?.result,
       candidate?.interviewFeedback?.outcome,
       candidate?.interviewFeedback?.recommendation,
+      candidate?.interviewFeedback?.decision,
     ];
 
     return possibleValues.some((value) => {
@@ -73,17 +77,192 @@ function ATSRanking() {
 
       return (
         normalizedValue === "passed" ||
-        normalizedValue === "pass"
+        normalizedValue === "pass" ||
+        normalizedValue === "hire" ||
+        normalizedValue === "strong hire"
       );
     });
   };
 
+  // ==========================================
+  // GET LATEST INTERVIEW STATUS
+  // ==========================================
+  const enrichCandidatesWithInterviewStatus = async (
+    candidateList
+  ) => {
+    if (!Array.isArray(candidateList) || !candidateList.length) {
+      return [];
+    }
+
+    const enrichedCandidates = await Promise.all(
+      candidateList.map(async (candidate) => {
+        const candidateId =
+          candidate?.candidateId ||
+          candidate?._id ||
+          candidate?.id;
+
+        if (!candidateId) {
+          return {
+            ...candidate,
+            interviewPassed: false,
+          };
+        }
+
+        try {
+          const response = await getCandidate(candidateId);
+
+          const latestCandidate =
+            response?.data?.data || response?.data;
+
+          if (!latestCandidate) {
+            return {
+              ...candidate,
+              interviewPassed: isInterviewPassed(candidate),
+            };
+          }
+
+          return {
+            ...candidate,
+            ...latestCandidate,
+            interviewPassed:
+              isInterviewPassed(latestCandidate),
+          };
+        } catch (error) {
+          console.error(
+            `GET LATEST CANDIDATE ERROR (${candidateId}):`,
+            error?.response?.data || error
+          );
+
+          return {
+            ...candidate,
+            interviewPassed: isInterviewPassed(candidate),
+          };
+        }
+      })
+    );
+
+    return enrichedCandidates;
+  };
+
+  // ==========================================
+  // REFRESH ATS CANDIDATES
+  // ==========================================
+  const refreshATSCandidates = async () => {
+    try {
+      const response = await getATSRanking(
+        selectedRequisition || undefined
+      );
+
+      if (response?.success) {
+        const atsCandidates = response.data || [];
+
+        const enrichedCandidates =
+          await enrichCandidatesWithInterviewStatus(
+            atsCandidates
+          );
+
+        setCandidates(enrichedCandidates);
+        return;
+      }
+
+      // Fallback
+      const fallbackResponse =
+        await fetchAllCandidates();
+
+      const data =
+        fallbackResponse?.data?.data || [];
+
+      let filteredData = data;
+
+      if (selectedRequisition) {
+        filteredData = data.filter((candidate) => {
+          const candidateRequisitionId =
+            candidate?.requisitionId?._id ||
+            candidate?.requisitionId ||
+            candidate?.jobId?._id ||
+            candidate?.jobId;
+
+          return (
+            String(candidateRequisitionId) ===
+            String(selectedRequisition)
+          );
+        });
+      }
+
+      const enrichedCandidates =
+        await enrichCandidatesWithInterviewStatus(
+          filteredData
+        );
+
+      setCandidates(enrichedCandidates);
+    } catch (error) {
+      console.error(
+        "REFRESH ATS CANDIDATES ERROR:",
+        error?.response?.data || error
+      );
+    }
+  };
+
+  // ==========================================
+  // REFRESH ONE CANDIDATE INTERVIEW STATUS
+  // ==========================================
+  const refreshCandidateInterviewStatus = async (
+    candidateId
+  ) => {
+    if (!candidateId) return;
+
+    try {
+      const response =
+        await getCandidate(candidateId);
+
+      const latestCandidate =
+        response?.data?.data ||
+        response?.data;
+
+      if (!latestCandidate) return;
+
+      const interviewPassed =
+        isInterviewPassed(latestCandidate);
+
+      setCandidates((prev) =>
+        prev.map((item) => {
+          const itemId =
+            item?.candidateId ||
+            item?._id ||
+            item?.id;
+
+          if (
+            String(itemId) ===
+            String(candidateId)
+          ) {
+            return {
+              ...item,
+              ...latestCandidate,
+              interviewPassed,
+            };
+          }
+
+          return item;
+        })
+      );
+    } catch (error) {
+      console.error(
+        "REFRESH CANDIDATE INTERVIEW STATUS ERROR:",
+        error?.response?.data || error
+      );
+    }
+  };
+
+  // ==========================================
+  // GET REQUISITIONS
+  // ==========================================
   useEffect(() => {
     const fetchRequisitionList = async () => {
       try {
         setRequisitionLoading(true);
 
-        const response = await getRequisitions();
+        const response =
+          await getRequisitions();
 
         const data =
           response?.data?.data ||
@@ -113,18 +292,30 @@ function ATSRanking() {
     fetchRequisitionList();
   }, []);
 
+  // ==========================================
+  // GET ATS CANDIDATES
+  // ==========================================
   useEffect(() => {
     const fetchCandidates = async () => {
       try {
         setLoading(true);
         setError("");
 
-        const response = await getATSRanking(
-          selectedRequisition || undefined
-        );
+        const response =
+          await getATSRanking(
+            selectedRequisition || undefined
+          );
 
         if (response?.success) {
-          setCandidates(response.data || []);
+          const atsCandidates =
+            response.data || [];
+
+          const enrichedCandidates =
+            await enrichCandidatesWithInterviewStatus(
+              atsCandidates
+            );
+
+          setCandidates(enrichedCandidates);
         } else {
           const fallbackResponse =
             await fetchAllCandidates();
@@ -135,23 +326,32 @@ function ATSRanking() {
           let filteredData = data;
 
           if (selectedRequisition) {
-            filteredData = data.filter((candidate) => {
-              const candidateRequisitionId =
-                candidate?.requisitionId?._id ||
-                candidate?.requisitionId ||
-                candidate?.jobId?._id ||
-                candidate?.jobId;
+            filteredData = data.filter(
+              (candidate) => {
+                const candidateRequisitionId =
+                  candidate?.requisitionId?._id ||
+                  candidate?.requisitionId ||
+                  candidate?.jobId?._id ||
+                  candidate?.jobId;
 
-              return (
-                String(candidateRequisitionId) ===
-                String(selectedRequisition)
-              );
-            });
+                return (
+                  String(
+                    candidateRequisitionId
+                  ) ===
+                  String(selectedRequisition)
+                );
+              }
+            );
           }
 
-          setCandidates(filteredData);
+          const enrichedCandidates =
+            await enrichCandidatesWithInterviewStatus(
+              filteredData
+            );
 
-          if (!filteredData.length) {
+          setCandidates(enrichedCandidates);
+
+          if (!enrichedCandidates.length) {
             const message =
               response?.message ||
               "No candidates found.";
@@ -175,23 +375,32 @@ function ATSRanking() {
           let filteredData = data;
 
           if (selectedRequisition) {
-            filteredData = data.filter((candidate) => {
-              const candidateRequisitionId =
-                candidate?.requisitionId?._id ||
-                candidate?.requisitionId ||
-                candidate?.jobId?._id ||
-                candidate?.jobId;
+            filteredData = data.filter(
+              (candidate) => {
+                const candidateRequisitionId =
+                  candidate?.requisitionId?._id ||
+                  candidate?.requisitionId ||
+                  candidate?.jobId?._id ||
+                  candidate?.jobId;
 
-              return (
-                String(candidateRequisitionId) ===
-                String(selectedRequisition)
-              );
-            });
+                return (
+                  String(
+                    candidateRequisitionId
+                  ) ===
+                  String(selectedRequisition)
+                );
+              }
+            );
           }
 
-          setCandidates(filteredData);
+          const enrichedCandidates =
+            await enrichCandidatesWithInterviewStatus(
+              filteredData
+            );
 
-          if (!filteredData.length) {
+          setCandidates(enrichedCandidates);
+
+          if (!enrichedCandidates.length) {
             const message =
               error?.response?.data?.message ||
               "No candidates found.";
@@ -223,17 +432,98 @@ function ATSRanking() {
     fetchCandidates();
   }, [selectedRequisition]);
 
-  const handleRequisitionChange = (event) => {
-    setSelectedRequisition(event.target.value);
+  // ==========================================
+  // AUTO REFRESH WHEN ATS PAGE GETS FOCUS
+  // ==========================================
+  useEffect(() => {
+    const handleWindowFocus = async () => {
+      await refreshATSCandidates();
+    };
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === "visible") {
+        await refreshATSCandidates();
+      }
+    };
+
+    window.addEventListener(
+      "focus",
+      handleWindowFocus
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+
+    return () => {
+      window.removeEventListener(
+        "focus",
+        handleWindowFocus
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+    };
+  }, [selectedRequisition]);
+
+  // ==========================================
+  // INTERVIEW FEEDBACK EVENT
+  // ==========================================
+  useEffect(() => {
+    const handleInterviewFeedbackUpdated = async (
+      event
+    ) => {
+      const candidateId =
+        event?.detail?.candidateId;
+
+      if (!candidateId) {
+        await refreshATSCandidates();
+        return;
+      }
+
+      await refreshCandidateInterviewStatus(
+        candidateId
+      );
+    };
+
+    window.addEventListener(
+      "interviewFeedbackUpdated",
+      handleInterviewFeedbackUpdated
+    );
+
+    return () => {
+      window.removeEventListener(
+        "interviewFeedbackUpdated",
+        handleInterviewFeedbackUpdated
+      );
+    };
+  }, [selectedRequisition]);
+
+  const handleRequisitionChange = (
+    event
+  ) => {
+    setSelectedRequisition(
+      event.target.value
+    );
   };
 
-  const handleViewCandidate = async (candidate) => {
+  // ==========================================
+  // VIEW CANDIDATE
+  // ==========================================
+  const handleViewCandidate = async (
+    candidate
+  ) => {
     const candidateId =
       candidate?.candidateId ||
       candidate?._id;
 
     if (!candidateId) {
-      toast.error("Candidate ID not found.");
+      toast.error(
+        "Candidate ID not found."
+      );
       return;
     }
 
@@ -250,7 +540,9 @@ function ATSRanking() {
         );
       }
 
-      setSelectedCandidate(fullCandidate);
+      setSelectedCandidate(
+        fullCandidate
+      );
     } catch (error) {
       console.error(
         "GET CANDIDATE ERROR:",
@@ -264,6 +556,9 @@ function ATSRanking() {
     }
   };
 
+  // ==========================================
+  // REJECT CANDIDATE
+  // ==========================================
   const handleRejectCandidate = (
     updatedCandidate
   ) => {
@@ -274,7 +569,9 @@ function ATSRanking() {
         updatedCandidate?.id;
 
       if (!candidateId) {
-        toast.error("Candidate ID not found.");
+        toast.error(
+          "Candidate ID not found."
+        );
         return;
       }
 
@@ -293,6 +590,7 @@ function ATSRanking() {
               ...item,
               stage: "Rejected",
               status: "Rejected",
+              interviewPassed: false,
             };
           }
 
@@ -345,11 +643,16 @@ function ATSRanking() {
     }
   };
 
+  // ==========================================
+  // SCHEDULE INTERVIEW
+  // ==========================================
   const handleScheduleInterview = (
     candidate
   ) => {
     if (!candidate) {
-      toast.error("Candidate not found.");
+      toast.error(
+        "Candidate not found."
+      );
       return;
     }
 
@@ -358,11 +661,16 @@ function ATSRanking() {
       candidate?._id;
 
     if (!candidateId) {
-      toast.error("Candidate ID not found.");
+      toast.error(
+        "Candidate ID not found."
+      );
       return;
     }
 
-    if (candidate?.stage === "Rejected") {
+    if (
+      candidate?.stage ===
+      "Rejected"
+    ) {
       toast.error(
         "Rejected candidate cannot be scheduled for an interview."
       );
@@ -392,6 +700,9 @@ function ATSRanking() {
     setScheduleModalOpen(true);
   };
 
+  // ==========================================
+  // SUBMIT INTERVIEW
+  // ==========================================
   const handleSubmitInterview = async (
     candidate,
     interviewData
@@ -402,7 +713,9 @@ function ATSRanking() {
         candidate?._id;
 
       if (!candidateId) {
-        toast.error("Candidate ID not found.");
+        toast.error(
+          "Candidate ID not found."
+        );
         return;
       }
 
@@ -470,7 +783,9 @@ function ATSRanking() {
           interviewData.notes || "",
       };
 
-      await scheduleInterview(payload);
+      await scheduleInterview(
+        payload
+      );
 
       await moveCandidateStage(
         candidateId,
@@ -490,6 +805,7 @@ function ATSRanking() {
             return {
               ...item,
               stage: "Interview",
+              interviewPassed: false,
             };
           }
 
@@ -518,11 +834,16 @@ function ATSRanking() {
     }
   };
 
+  // ==========================================
+  // OPEN OFFER
+  // ==========================================
   const handleOpenOffer = async (
     candidate
   ) => {
     if (!candidate) {
-      toast.error("Candidate not found.");
+      toast.error(
+        "Candidate not found."
+      );
       return;
     }
 
@@ -531,7 +852,9 @@ function ATSRanking() {
       candidate?._id;
 
     if (!candidateId) {
-      toast.error("Candidate ID not found.");
+      toast.error(
+        "Candidate ID not found."
+      );
       return;
     }
 
@@ -549,10 +872,13 @@ function ATSRanking() {
 
     try {
       const response =
-        await getCandidate(candidateId);
+        await getCandidate(
+          candidateId
+        );
 
       const latestCandidate =
-        response?.data?.data;
+        response?.data?.data ||
+        response?.data;
 
       if (!latestCandidate) {
         toast.error(
@@ -575,18 +901,40 @@ function ATSRanking() {
         return;
       }
 
+      // Update local state immediately
+      setCandidates((prev) =>
+        prev.map((item) => {
+          const itemId =
+            item?.candidateId ||
+            item?._id ||
+            item?.id;
+
+          if (
+            String(itemId) ===
+            String(candidateId)
+          ) {
+            return {
+              ...item,
+              ...latestCandidate,
+              interviewPassed: true,
+            };
+          }
+
+          return item;
+        })
+      );
+
       setSelectedCandidate(null);
 
       setOfferCandidate({
         ...latestCandidate,
-
         _id:
           latestCandidate?._id ||
           candidateId,
-
         candidateId:
           latestCandidate?.candidateId ||
           candidateId,
+        interviewPassed: true,
       });
 
       setOpenModal(true);
@@ -603,6 +951,9 @@ function ATSRanking() {
     }
   };
 
+  // ==========================================
+  // SEND OFFER
+  // ==========================================
   const handleSendOffer = async (
     candidate,
     offerData
@@ -637,10 +988,13 @@ function ATSRanking() {
       }
 
       const candidateResponse =
-        await getCandidate(candidateId);
+        await getCandidate(
+          candidateId
+        );
 
       const latestCandidate =
-        candidateResponse?.data?.data;
+        candidateResponse?.data?.data ||
+        candidateResponse?.data;
 
       if (!latestCandidate) {
         toast.error(
@@ -651,8 +1005,10 @@ function ATSRanking() {
       }
 
       const offerAlreadySent =
-        latestCandidate?.stage === "Offer Sent" ||
-        latestCandidate?.offer?.status === "Sent";
+        latestCandidate?.stage ===
+          "Offer Sent" ||
+        latestCandidate?.offer?.status ===
+          "Sent";
 
       if (offerAlreadySent) {
         toast.error(
@@ -698,9 +1054,8 @@ function ATSRanking() {
           ) {
             return {
               ...item,
-
               stage: "Offer Sent",
-
+              interviewPassed: true,
               offer: {
                 ...(item.offer || {}),
                 ...offerData,
@@ -763,27 +1118,29 @@ function ATSRanking() {
               : "Show All"}
           </option>
 
-          {requisitions.map((requisition) => {
-            const requisitionId =
-              requisition?._id ||
-              requisition?.id;
+          {requisitions.map(
+            (requisition) => {
+              const requisitionId =
+                requisition?._id ||
+                requisition?.id;
 
-            const requisitionTitle =
-              requisition?.title ||
-              requisition?.jobTitle ||
-              requisition?.position ||
-              requisition?.role ||
-              "Untitled Job";
+              const requisitionTitle =
+                requisition?.title ||
+                requisition?.jobTitle ||
+                requisition?.position ||
+                requisition?.role ||
+                "Untitled Job";
 
-            return (
-              <option
-                key={requisitionId}
-                value={requisitionId}
-              >
-                {requisitionTitle}
-              </option>
-            );
-          })}
+              return (
+                <option
+                  key={requisitionId}
+                  value={requisitionId}
+                >
+                  {requisitionTitle}
+                </option>
+              );
+            }
+          )}
         </select>
       </div>
 
@@ -815,13 +1172,14 @@ function ATSRanking() {
           candidates.map(
             (candidate, index) => {
               const offerAlreadySent =
-                candidate?.stage === "Offer Sent" ||
-                candidate?.offer?.status === "Sent";
+                candidate?.stage ===
+                  "Offer Sent" ||
+                candidate?.offer?.status ===
+                  "Sent";
 
               const interviewPassed =
-                isInterviewPassed(
-                  candidate
-                );
+                candidate?.interviewPassed ===
+                true;
 
               const candidateExperience =
                 candidate?.candidateExperience ??
@@ -852,9 +1210,11 @@ function ATSRanking() {
                       candidate?.score || 0,
 
                     color:
-                      candidate?.score >= 75
+                      candidate?.score >=
+                      75
                         ? "green"
-                        : candidate?.score >= 50
+                        : candidate?.score >=
+                          50
                         ? "yellow"
                         : "red",
 
@@ -867,7 +1227,8 @@ function ATSRanking() {
                         : "Experience information not detected",
 
                     role:
-                      candidate?.role || "",
+                      candidate?.role ||
+                      "",
 
                     skills:
                       candidate?.detectedSkills ||
@@ -882,6 +1243,8 @@ function ATSRanking() {
 
                     offerAlreadySent,
 
+                    // IMPORTANT
+                    // Controls Move to Offer
                     interviewPassed,
                   }}
 
@@ -928,7 +1291,9 @@ function ATSRanking() {
           !!selectedCandidate
         }
         onClose={() => {
-          setSelectedCandidate(null);
+          setSelectedCandidate(
+            null
+          );
         }}
         candidate={
           selectedCandidate

@@ -20,6 +20,8 @@ function OfferLetter({
       joiningDate: "",
       salary: "385000",
       probation: "3 months",
+      workingType: "On-Site",
+      acknowledgeByDate: "",
       personalNote: "",
     },
   });
@@ -55,6 +57,10 @@ function OfferLetter({
 
   const onSubmit = async (data) => {
     try {
+      // -----------------------------------------------
+      // CANDIDATE CHECK
+      // -----------------------------------------------
+
       if (!candidate) {
         toast.error("Candidate not found.");
         return;
@@ -83,19 +89,44 @@ function OfferLetter({
       }
 
       // -----------------------------------------------
-      // JOINING DATE VALIDATION
+      // REQUIRED FIELD VALIDATION
       // -----------------------------------------------
 
-      if (!data.joiningDate) {
+      if (
+        !data.template ||
+        !data.joiningDate ||
+        !data.salary ||
+        !data.probation ||
+        !data.workingType ||
+        !data.acknowledgeByDate
+      ) {
         toast.error(
-          "Joining date is required."
+          "Please fill all required offer fields."
         );
         return;
       }
 
+      // -----------------------------------------------
+      // JOINING DATE VALIDATION
+      // -----------------------------------------------
+
       if (data.joiningDate < todayString) {
         toast.error(
           "Joining date cannot be in the past."
+        );
+        return;
+      }
+
+      // -----------------------------------------------
+      // ACKNOWLEDGE DATE VALIDATION
+      // -----------------------------------------------
+
+      if (
+        data.acknowledgeByDate >
+        data.joiningDate
+      ) {
+        toast.error(
+          "Acknowledge by date should be on or before the joining date."
         );
         return;
       }
@@ -120,11 +151,6 @@ function OfferLetter({
         error
       );
 
-      // IMPORTANT:
-      // Only this component handles errors here.
-      // Parent should not show another error toast
-      // for the same failed request.
-
       toast.error(
         error?.response?.data?.message ||
           error?.message ||
@@ -133,11 +159,19 @@ function OfferLetter({
     }
   };
 
+  // =====================================================
+  // CANDIDATE DATA
+  // =====================================================
+
   const candidateName =
     candidate?.name || "Candidate";
 
   const candidateRole =
     candidate?.role || "Selected Candidate";
+
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -190,7 +224,14 @@ function OfferLetter({
         ================================================= */}
 
         <form
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={handleSubmit(
+            onSubmit,
+            () => {
+              toast.error(
+                "Please fill all required offer fields."
+              );
+            }
+          )}
         >
 
           <div className="space-y-4 p-6">
@@ -219,7 +260,10 @@ function OfferLetter({
 
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                  Offer Template
+                  Offer Template{" "}
+                  <span className="ml-1 text-red-500">
+                    *
+                  </span>
                 </label>
 
                 <select
@@ -258,9 +302,9 @@ function OfferLetter({
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
                   Joining Date{" "}
-            <span className="text-red-500 ml-1">
-              *
-            </span>
+                  <span className="ml-1 text-red-500">
+                    *
+                  </span>
                 </label>
 
                 <input
@@ -304,7 +348,10 @@ function OfferLetter({
 
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                  Offered Salary (PKR)
+                  Offered Salary (PKR){" "}
+                  <span className="ml-1 text-red-500">
+                    *
+                  </span>
                 </label>
 
                 <input
@@ -312,12 +359,22 @@ function OfferLetter({
                   {...register("salary", {
                     required:
                       "Salary is required",
+
+                    validate: (value) => {
+                      if (
+                        Number(value) <= 0
+                      ) {
+                        return "Salary must be greater than 0.";
+                      }
+
+                      return true;
+                    },
                   })}
                   disabled={
                     isRejected ||
                     isOfferSent
                   }
-                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
                 />
 
                 {errors.salary && (
@@ -331,7 +388,10 @@ function OfferLetter({
 
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                  Probation Period
+                  Probation Period{" "}
+                  <span className="ml-1 text-red-500">
+                    *
+                  </span>
                 </label>
 
                 <select
@@ -361,6 +421,103 @@ function OfferLetter({
                 {errors.probation && (
                   <p className="mt-1 text-xs text-red-500">
                     {errors.probation.message}
+                  </p>
+                )}
+              </div>
+
+            </div>
+
+            {/* =================================================
+                WORKING TYPE + ACKNOWLEDGE DATE
+            ================================================= */}
+
+            <div className="grid grid-cols-2 gap-3">
+
+              {/* WORKING TYPE */}
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Working Type{" "}
+                  <span className="ml-1 text-red-500">
+                    *
+                  </span>
+                </label>
+
+                <select
+                  {...register("workingType", {
+                    required:
+                      "Working type is required",
+                  })}
+                  disabled={
+                    isRejected ||
+                    isOfferSent
+                  }
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                >
+                  <option value="On-Site">
+                    On-Site
+                  </option>
+
+                  <option value="Remote">
+                    Remote
+                  </option>
+
+                  <option value="Hybrid">
+                    Hybrid
+                  </option>
+                </select>
+
+                {errors.workingType && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.workingType.message}
+                  </p>
+                )}
+              </div>
+
+              {/* ACKNOWLEDGE BY DATE */}
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Acknowledge By Date{" "}
+                  <span className="ml-1 text-red-500">
+                    *
+                  </span>
+                </label>
+
+                <input
+                  type="date"
+                  min={todayString}
+                  {...register(
+                    "acknowledgeByDate",
+                    {
+                      required:
+                        "Acknowledge by date is required",
+
+                      validate: (value) => {
+                        if (
+                          value < todayString
+                        ) {
+                          return "Acknowledge by date cannot be in the past.";
+                        }
+
+                        return true;
+                      },
+                    }
+                  )}
+                  disabled={
+                    isRejected ||
+                    isOfferSent
+                  }
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                />
+
+                {errors.acknowledgeByDate && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {
+                      errors
+                        .acknowledgeByDate
+                        .message
+                    }
                   </p>
                 )}
               </div>
