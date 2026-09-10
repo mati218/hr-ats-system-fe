@@ -36,7 +36,9 @@ const ApplyModal = ({ job, onClose, onSubmit }) => {
     }
 
     if (name === "name") {
-      const cleanedValue = value.replace(/[^A-Za-z\s]/g, "");
+      const cleanedValue = value
+        .replace(/[^A-Za-z\s]/g, "")
+        .replace(/\b\w/g, (char) => char.toUpperCase());
 
       setForm((prev) => ({
         ...prev,
