@@ -176,7 +176,7 @@ function ReportsAnalytics() {
             <div className="flex flex-wrap items-end gap-3">
 
               {/* Start Date */}
-              <div>
+              <div className="min-w-32 flex-1 sm:flex-none">
                 <label className="mb-1 block text-[9px] font-semibold text-slate-500">
                   Start date
                 </label>
@@ -188,12 +188,12 @@ function ReportsAnalytics() {
                   onChange={(e) =>
                     setStartDate(e.target.value)
                   }
-                  className="h-8 w-[140px] rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400"
+                  className="h-8 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400 sm:w-35"
                 />
               </div>
 
               {/* End Date */}
-              <div>
+              <div className="min-w-32 flex-1 sm:flex-none">
                 <label className="mb-1 block text-[9px] font-semibold text-slate-500">
                   End date
                 </label>
@@ -205,7 +205,7 @@ function ReportsAnalytics() {
                   onChange={(e) =>
                     setEndDate(e.target.value)
                   }
-                  className="h-8 w-[140px] rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400"
+                  className="h-8 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400 sm:w-35"
                 />
               </div>
 

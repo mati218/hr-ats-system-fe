@@ -64,7 +64,7 @@
   };
 
   return (
-    <table className="w-full">
+    <table className="w-full min-w-180">
       <thead>
         <tr className="border-b border-gray-200">
           {columns.map((column, index) => (

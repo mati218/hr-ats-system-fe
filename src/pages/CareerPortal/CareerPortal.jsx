@@ -54,49 +54,48 @@ const CareerPortal = () => {
 }, []);
   return (
     <div className="min-h-screen bg-[#F5F6FA] font-sans">
-      <section className="relative bg-[#101118] text-white">
-        <button
-          type="button"
-          className="
-            absolute
-            right-6
-            top-6
-            rounded-xl
-            border
-            border-[#DDE2EA]
-            bg-white
-            px-3
-            py-1
-            text-[13px]
-            font-semibold
-            text-[#111827]
-          "
-        >
-          Career Portal (public)
-        </button>
-
+      <section className="bg-[#101118] text-white">
         <div className="mx-auto max-w-285 px-6 pt-8">
-          <div className="flex items-center gap-3">
-            <div
-              className="
-                flex
-                h-8.75
-                w-8.75
-                items-center
-                justify-center
-                rounded-xl
-                bg-linear-to-br
-                from-[#315FEA]
-                to-[#7351D8]
-                text-[16px]
-                font-bold
-              "
-            >
-              T
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div
+                className="
+                  flex
+                  h-8.75
+                  w-8.75
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-linear-to-br
+                  from-[#315FEA]
+                  to-[#7351D8]
+                  text-[16px]
+                  font-bold
+                "
+              >
+                T
+              </div>
+
+              <span className="text-[25px] font-bold">
+                Talenta Careers
+              </span>
             </div>
 
-            <span className="text-[25px] font-bold">
-              Talenta Careers
+            <span
+              className="
+                shrink-0
+                rounded-xl
+                border
+                border-[#DDE2EA]
+                bg-white
+                px-3
+                py-1
+                text-[13px]
+                font-semibold
+                text-[#111827]
+              "
+            >
+              Career Portal (public)
             </span>
           </div>
 
@@ -176,17 +175,21 @@ const CareerPortal = () => {
                 key={job._id || job.id || job.role}
                 className={`
                   flex
-                  items-center
-                  justify-between
-                  px-8
+                  flex-col
+                  gap-3
+                  px-6
                   py-4
+                  sm:flex-row
+                  sm:items-center
+                  sm:justify-between
+                  sm:px-8
                   ${index !== jobs.length - 1
                     ? "border-b border-[#E5E7EB]"
                     : ""
                   }
                 `}
               >
-                <div>
+                <div className="min-w-0">
                   <h2
                     className="
                       text-[16px]
@@ -222,7 +225,7 @@ const CareerPortal = () => {
                     navigate(`/apply/${job._id || job.id}`)
                   }
                   className="
-                    ml-6
+                    self-start
                     shrink-0
                     rounded-xl
                     bg-[#315FEA]
@@ -233,6 +236,8 @@ const CareerPortal = () => {
                     text-white
                     transition
                     hover:bg-[#2853D5]
+                    sm:ml-6
+                    sm:self-auto
                   "
                 >
                   Apply Now

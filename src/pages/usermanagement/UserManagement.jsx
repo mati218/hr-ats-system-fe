@@ -183,7 +183,7 @@ const UserManagement = () => {
         )}
       </div>
 
-      <div className="mx-8 bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <div className="mx-8 overflow-x-auto rounded-2xl border border-gray-200 bg-white">
         <Table
           columns={columns}
           data={users}

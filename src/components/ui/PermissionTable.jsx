@@ -135,9 +135,9 @@ function PermissionTable({
           PERMISSION TABLE
       ===================================== */}
 
-      <div className="overflow-hidden rounded-lg border border-slate-200">
+      <div className="overflow-x-auto rounded-lg border border-slate-200">
 
-        <table className="w-full border-collapse">
+        <table className="w-full min-w-130 border-collapse">
 
           {/* TABLE HEADER */}
 

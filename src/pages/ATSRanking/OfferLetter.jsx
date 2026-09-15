@@ -307,7 +307,7 @@ function OfferLetter({
                 TEMPLATE + JOINING DATE
             ================================================= */}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
               {/* TEMPLATE */}
 
@@ -395,7 +395,7 @@ function OfferLetter({
                 SALARY + PROBATION
             ================================================= */}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
               {/* SALARY */}
 
@@ -484,7 +484,7 @@ function OfferLetter({
                 WORKING TYPE + ACKNOWLEDGE BY DATE
             ================================================= */}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
               {/* WORKING TYPE */}
 

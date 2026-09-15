@@ -214,7 +214,7 @@ const NewRequisition = ({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="flex text-sm font-semibold text-gray-800">
               Department{" "}
@@ -287,7 +287,7 @@ const NewRequisition = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="flex text-sm font-semibold text-gray-800">
               Location{" "}
@@ -329,7 +329,7 @@ const NewRequisition = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="flex text-sm font-semibold text-gray-800">
               Experience Level{" "}
@@ -388,7 +388,7 @@ const NewRequisition = ({
           Compensation
         </p>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="flex text-sm font-semibold text-gray-800">
               Salary Range — Min (PKR){" "}
@@ -495,7 +495,7 @@ const NewRequisition = ({
           Publishing
         </p>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <button
             type="button"
             onClick={() =>
