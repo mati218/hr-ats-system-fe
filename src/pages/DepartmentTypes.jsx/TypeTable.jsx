@@ -35,6 +35,17 @@ const TypeTable = ({ title, tableType, data, handleEdit }) => {
         </thead>
 
         <tbody>
+          {(Array.isArray(data) ? data : []).length === 0 && (
+            <tr>
+              <td
+                colSpan={isDepartment ? 3 : 1}
+                className="px-2 py-6 text-center text-sm text-slate-500"
+              >
+                No Record Found
+              </td>
+            </tr>
+          )}
+
           {(Array.isArray(data) ? data : []).map(
             (item, index) => (
               <tr

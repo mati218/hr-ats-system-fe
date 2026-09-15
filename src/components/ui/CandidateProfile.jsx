@@ -162,6 +162,9 @@ useEffect(() => {
   const isRejected =
     candidate.stage === "Rejected";
 
+  const isHired =
+    candidate.stage === "Hired";
+
   // =====================================================
   // INTERVIEW STATUS
   // =====================================================
@@ -313,6 +316,7 @@ useEffect(() => {
   const handleReject = async () => {
     if (
       isRejected ||
+      isHired ||
       rejecting
     ) {
       return;
@@ -1082,7 +1086,7 @@ useEffect(() => {
 
                 {/* REJECT */}
 
-                {!isRejected && (
+                {!isRejected && !isHired && (
                   <button
                     type="button"
                     onClick={

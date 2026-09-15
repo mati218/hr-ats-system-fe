@@ -804,6 +804,17 @@ function MyInterviews() {
 
               <tbody>
 
+                {feedbackHistory.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="py-8 text-center text-sm text-slate-500"
+                    >
+                      No Record Found
+                    </td>
+                  </tr>
+                )}
+
                 {feedbackHistory.map(
                   (interview) => {
                     const candidate =

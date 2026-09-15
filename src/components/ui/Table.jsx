@@ -79,6 +79,17 @@
       </thead>
 
       <tbody>
+        {data.length === 0 && (
+          <tr>
+            <td
+              colSpan={columns.length}
+              className="px-4 py-8 text-center text-sm text-gray-500"
+            >
+              No Record Found
+            </td>
+          </tr>
+        )}
+
         {data.map((user, index) => {
           const roleLabel = normalizeValue(user.role);
           const departmentLabel = normalizeValue(

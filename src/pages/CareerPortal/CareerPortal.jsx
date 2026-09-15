@@ -1,17 +1,12 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import ApplyModal from "./ApplyModal";
-import ApplicationSuccess from "./ApplicationSuccess";
-
 import {getPublicOpenRequisitions,} from "../../lib/api/requisitionApi";
-import { applyNow } from "../../lib/api/candidateApi";
 
 const CareerPortal = () => {
+  const navigate = useNavigate();
 
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [submittedJob, setSubmittedJob] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,63 +52,6 @@ const CareerPortal = () => {
 
   fetchJobs();
 }, []);
-const handleApplySubmit = async (form) => {
-  if (!selectedJob) {
-    toast.error("Please select a job first.");
-    throw new Error("Please select a job first.");
-  }
-
-  if (!(form.resume instanceof File)) {
-    toast.error("Please select your PDF resume.");
-    throw new Error("Please select your PDF resume.");
-  }
-
-  const jobId = selectedJob._id || selectedJob.id;
-
-  if (!jobId) {
-    toast.error("Job ID not found.");
-    throw new Error("Job ID not found.");
-  }
-
-  try {
-    console.log("CAREER PORTAL APPLICATION");
-
-    const response = await applyNow({
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      role: selectedJob.role,
-      requisitionId: jobId,
-      experience: form.experience,
-      coverNote: form.coverNote,
-      resume: form.resume,
-      currentSalary: form.currentSalary,
-      expectedSalary: form.expectedSalary,
-      noticePeriod: form.noticePeriod,
-      currentCity: form.currentCity,
-      willingToRelocate: form.willingToRelocate,
-    });
-
-    console.log("APPLICATION RESPONSE:", response?.data);
-    console.log("APPLICATION SUBMITTED SUCCESSFULLY");
-    setSubmittedJob(selectedJob);
-    setSelectedJob(null);
-    setShowSuccess(true);
-
-    return response;
-  } catch (error) {
-    console.error(
-      "APPLICATION ERROR:",
-      error?.response?.data || error
-    );
-    throw error;
-  }
-};
-  const handleSuccessClose = () => {
-    setShowSuccess(false);
-    setSubmittedJob(null);
-  };
-
   return (
     <div className="min-h-screen bg-[#F5F6FA] font-sans">
       <section className="relative bg-[#101118] text-white">
@@ -280,7 +218,9 @@ const handleApplySubmit = async (form) => {
 
                 <button
                   type="button"
-                  onClick={() => setSelectedJob(job)}
+                  onClick={() =>
+                    navigate(`/apply/${job._id || job.id}`)
+                  }
                   className="
                     ml-6
                     shrink-0
@@ -300,19 +240,6 @@ const handleApplySubmit = async (form) => {
               </div>
             ))}
         </div>
-
-        <ApplyModal
-          job={selectedJob}
-          onClose={() => setSelectedJob(null)}
-          onSubmit={handleApplySubmit}
-        />
-
-        {showSuccess && (
-          <ApplicationSuccess
-            job={submittedJob}
-            onClose={handleSuccessClose}
-          />
-        )}
       </main>
     </div>
   );

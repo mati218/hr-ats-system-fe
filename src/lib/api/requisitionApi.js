@@ -11,6 +11,11 @@ export const getPublicOpenRequisitions = () => {
   return api.get("/requisitions/public/open");
 };
 
+// Apply Page — single open job, no auth required
+export const getPublicRequisitionById = (id) => {
+  return api.get("/requisitions/public/open/" + id);
+};
+
 
 // =====================================
 // INTERNAL PROTECTED APIs

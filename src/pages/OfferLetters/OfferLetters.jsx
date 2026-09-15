@@ -204,6 +204,17 @@ const OfferLetters = () => {
                 </thead>
 
                 <tbody>
+                  {offers.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-3 py-8 text-center text-sm text-gray-500"
+                      >
+                        No Record Found
+                      </td>
+                    </tr>
+                  )}
+
                   {offers.map((offer, index) => {
                     const candidateName =
                       getCandidateName(offer);

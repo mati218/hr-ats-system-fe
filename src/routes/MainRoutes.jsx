@@ -4,6 +4,7 @@ import { useAuth } from "../context/useAuth";
 import AuthRoutes from "./AuthRoutes";
 import ProtectedRoutes from "./ProtectedRoutes";
 import CareerPortal from "../pages/CareerPortal/CareerPortal";
+import ApplyPage from "../pages/CareerPortal/ApplyPage";
 
 const MainRoutes = () => {
   const { token, user } = useAuth();
@@ -48,6 +49,11 @@ const MainRoutes = () => {
       <Route
         path="/career-portal"
         element={<CareerPortal />}
+      />
+
+      <Route
+        path="/apply/:jobId"
+        element={<ApplyPage />}
       />
 
       {/* ================= AUTH / PROTECTED ================= */}

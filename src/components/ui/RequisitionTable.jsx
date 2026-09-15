@@ -26,7 +26,17 @@ const RequisitionTable = ({ columns, data, onEdit, onView, onDelete }) => {
           </tr>
         </thead>
         <tbody>
-          {data.map((req, index) => (
+          {data.length === 0 ? (
+            <tr>
+              <td
+                colSpan={columns.length + 1}
+                className="px-4 py-8 text-center text-sm text-gray-500"
+              >
+                No Record Found
+              </td>
+            </tr>
+          ) : (
+            data.map((req, index) => (
             <tr
               key={req._id || index}
               className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
@@ -107,7 +117,8 @@ const RequisitionTable = ({ columns, data, onEdit, onView, onDelete }) => {
                 </div>
               </td>
             </tr>
-          ))}
+            ))
+          )}
         </tbody>
       </table>
     </div>
