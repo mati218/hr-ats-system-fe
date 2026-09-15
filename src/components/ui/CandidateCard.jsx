@@ -1,3 +1,4 @@
+
 import ScoreCircle from "./ScoreCircle";
 
 function CandidateCard({
@@ -15,6 +16,9 @@ function CandidateCard({
     candidate?.offer?.status === "Sent" ||
     candidate?.offer?.status === "Accepted";
 
+  // INTERVIEW PASSED CHECK
+  const interviewPassed = candidate?.interviewPassed === true;
+
   // REJECTED CHECK
   const candidateRejected =
     candidate?.stage === "Rejected" ||
@@ -25,6 +29,11 @@ function CandidateCard({
 
     // Rejected candidate cannot move to offer
     if (candidateRejected) {
+      return;
+    }
+
+    // Interview must be passed before moving to offer
+    if (!interviewPassed) {
       return;
     }
 
@@ -105,9 +114,15 @@ function CandidateCard({
         <button
           type="button"
           onClick={handleOfferClick}
-          disabled={offerAlreadySent || candidateRejected}
+          disabled={
+            !interviewPassed ||
+            offerAlreadySent ||
+            candidateRejected
+          }
           className={`rounded-xl px-6 py-3 font-semibold text-white ${
-            candidateRejected || offerAlreadySent
+            candidateRejected ||
+            offerAlreadySent ||
+            !interviewPassed
               ? "cursor-not-allowed bg-slate-400 opacity-70"
               : "bg-blue-600 hover:bg-blue-700"
           }`}

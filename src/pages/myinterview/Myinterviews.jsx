@@ -351,6 +351,26 @@ function MyInterviews() {
       );
 
       // ================================================
+      // NOTIFY ATS RANKING
+      // ================================================
+
+      const candidateId =
+        feedbackTarget?.candidateId?._id ||
+        feedbackTarget?.candidateId?.id ||
+        feedbackTarget?.candidateId;
+
+      window.dispatchEvent(
+        new CustomEvent(
+          "interviewFeedbackUpdated",
+          {
+            detail: {
+              candidateId,
+            },
+          }
+        )
+      );
+
+      // ================================================
       // UPDATE CURRENT INTERVIEW IMMEDIATELY
       // ================================================
 
@@ -378,21 +398,27 @@ function MyInterviews() {
       // UPDATE INTERVIEWS LIST
       // ================================================
 
-      setInterviews((previousInterviews) =>
-        previousInterviews.map((interview) => {
-          const currentId =
-            interview?._id ||
-            interview?.id;
+      setInterviews(
+        (previousInterviews) =>
+          previousInterviews.map(
+            (interview) => {
+              const currentId =
+                interview?._id ||
+                interview?.id;
 
-          if (currentId !== interviewId) {
-            return interview;
-          }
+              if (
+                currentId !== interviewId
+              ) {
+                return interview;
+              }
 
-          return {
-            ...interview,
-            feedback: updatedFeedback,
-          };
-        })
+              return {
+                ...interview,
+                feedback:
+                  updatedFeedback,
+              };
+            }
+          )
       );
 
       // ================================================
@@ -406,7 +432,8 @@ function MyInterviews() {
 
         return {
           ...previous,
-          feedback: updatedFeedback,
+          feedback:
+            updatedFeedback,
         };
       });
 
@@ -430,7 +457,9 @@ function MyInterviews() {
   // VIEW CANDIDATE
   // ===================================================
 
-  const handleViewCandidate = async (candidate) => {
+  const handleViewCandidate = async (
+    candidate
+  ) => {
     if (!candidate) {
       toast.error(
         "Candidate information not found."
@@ -456,9 +485,10 @@ function MyInterviews() {
       // GET FULL CANDIDATE PROFILE
       // ================================================
 
-      const response = await getCandidate(
-        candidateId
-      );
+      const response =
+        await getCandidate(
+          candidateId
+        );
 
       const candidateData =
         response?.data?.data ||
@@ -476,8 +506,13 @@ function MyInterviews() {
       // OPEN PROFILE MODAL WITH API DATA
       // ================================================
 
-      setViewCandidate(candidateData);
-      setShowCandidateProfile(true);
+      setViewCandidate(
+        candidateData
+      );
+
+      setShowCandidateProfile(
+        true
+      );
 
     } catch (error) {
       console.error(
@@ -672,7 +707,9 @@ function MyInterviews() {
                       status
                     )}
                   >
-                    {getStatusLabel(status)}
+                    {getStatusLabel(
+                      status
+                    )}
                   </span>
 
                   {/* VIEW CANDIDATE */}
@@ -861,9 +898,15 @@ function MyInterviews() {
       {/* ============================================= */}
 
       <CandidateProfile
-        isOpen={showCandidateProfile}
-        candidate={viewCandidate}
-        onClose={closeCandidateProfile}
+        isOpen={
+          showCandidateProfile
+        }
+        candidate={
+          viewCandidate
+        }
+        onClose={
+          closeCandidateProfile
+        }
         readOnly={true}
       />
 
